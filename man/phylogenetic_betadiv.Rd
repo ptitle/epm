@@ -52,12 +52,26 @@ beta_phylo_nestedness <- phylogenetic_betadiv(tamiasEPM, radius = 70000,
 beta_phylo_full <- phylogenetic_betadiv(tamiasEPM, radius = 70000, 
 		component = 'full')
 
-
-colramp <- colorRampPalette(c('blue','yellow','red'))
 par(mfrow=c(1,3))
-plot(beta_phylo_turnover, col = colramp(100))
-plot(beta_phylo_nestedness, col = colramp(100))
-plot(beta_phylo_full, col = colramp(100))
+plot(beta_phylo_turnover, reset = FALSE, key.pos = NULL)
+plot(beta_phylo_nestedness, reset = FALSE, key.pos = NULL)
+plot(beta_phylo_full, reset = FALSE, key.pos = NULL)
+
+# using square grid epmGrid
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+	cellType = 'square', method = 'centroid')
+tamiasEPM2 <- addPhylo(tamiasEPM2, tamiasTree)
+
+beta_phylo_full <- phylogenetic_betadiv(tamiasEPM2, radius = 70000, 
+		component = 'full')
+beta_phylo_full_slow <- phylogenetic_betadiv(tamiasEPM2, radius = 70000, 
+		component = 'full', slow = TRUE)
+
+par(mfrow=c(1,2))
+terra::plot(beta_phylo_full, col = sf::sf.colors(100))
+terra::plot(beta_phylo_full_slow, col = sf::sf.colors(100))
+
+
 
 }
 }

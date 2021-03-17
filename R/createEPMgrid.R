@@ -73,10 +73,12 @@
 ##' # example dataset: a list of 24 chipmunk distributions as polygons
 ##' head(tamiasPolyList)
 ##' 
+##' # hexagonal grid
 ##' tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000, 
 ##' 	cellType = 'hexagon', method = 'centroid')
 ##' tamiasEPM
 ##'
+##' # square grid
 ##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2

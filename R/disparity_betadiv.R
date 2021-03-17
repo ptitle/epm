@@ -31,12 +31,19 @@
 ##' \donttest{
 ##' tamiasEPM
 ##'
-##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##'
 ##' z <- disparity_betadiv(tamiasEPM, radius = 150000)
 ##' 
-##' plot(z['disparityTurnover'])
+##' plot(z)
+##' 
+##' # using square grid epmGrid
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' 	cellType = 'square', method = 'centroid')
+##' tamiasEPM2 <- addTraits(tamiasEPM2, tamiasTraits)
+##' z2 <- disparity_betadiv(tamiasEPM2, radius = 150000)
+##'
+##' terra::plot(z2, col = sf::sf.colors(100), range = c(0,1))
 ##' 
 ##' }
 ##' @export
@@ -148,8 +155,10 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 		if (!slow) {
 			
 			# Generate list of neighborhoods
-			gridCentroids <- terra::xyFromCell(x[[1]], cell = which(terra::values(x[[1]]['spRichness']) > 0))
+			datCells <- which(terra::values(x[[1]]['spRichness']) > 0)
+			gridCentroids <- terra::xyFromCell(x[[1]], cell = datCells)
 			gridCentroids <- sf::st_as_sf(as.data.frame(gridCentroids), coords = 1:2, crs = attributes(x)$crs)
+			gridCentroids$cellInd <- datCells
 			nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
 			
 			# average neighborhood size
@@ -162,22 +171,23 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 					cl <- nThreads
 				} else {
 					cl <- parallel::makeCluster(nThreads)
-					parallel::clusterExport(cl, c('x', 'nb', 'getSpPartialDisparities'))
+					parallel::clusterExport(cl, c('x', 'datCells', 'nb', 'getSpPartialDisparities'))
 				}
 			}			
 
-			cellVals <- pbapply::pblapply(1:nrow(x[[1]]), function(i) {
+			cellVals <- pbapply::pblapply(1:nrow(gridCentroids), function(i) {
 				
-				focalCell <- i
+				focalCell <- datCells[i]
 				nbCells <- nb[[i]]
+				nbCells <- sf::st_drop_geometry(gridCentroids[nbCells, 'cellInd'])[,1]
 				
 				# # visual verification of focal cell + neighborhood
-				# plot(st_buffer(st_centroid(st_geometry(x[[1]][focalCell,])), dist = radius * 1.5), border = 'white')
-				# plot(st_geometry(x[[1]]), add = TRUE, border = 'gray95')
-				# plot(st_geometry(x[[1]])[nbCells,], add = TRUE)
-				# plot(st_geometry(x[[1]])[focalCell, ], col = 'red', add = TRUE)
-				# plot(st_buffer(st_centroid(st_geometry(x[[1]][focalCell,])), dist = radius), add = TRUE, border = 'blue')
-		
+				# plot(gridCentroids[nb[[i]],])
+				# plot(gridCentroids[i,], pch = 3, col = 'red', cex = 2, add = TRUE)
+				
+				# plot(xyFromCell(x[[1]], nbCells))
+				# points(xyFromCell(x[[1]], focalCell), col = 'red', cex = 2, pch = 3)
+						
 				# convert to cell indices
 				focalCell <- x[['cellCommInd']][focalCell]
 				nbCells <- x[['cellCommInd']][nbCells]
@@ -216,9 +226,19 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 				
 				focalCell <- i
 				if (!anyNA((x[['speciesList']][[x[['cellCommInd']][focalCell]]]))) {
+					
+					# get neighborhood for focal cell
 					focalxy <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], focalCell)), coords = 1:2, crs = terra::crs(x[[1]]))
-					focalCircle <- sf::st_buffer(focalxy, dist = radius)
-					nbCells <- setdiff(terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell'], focalCell)
+					focalCircle <- sf::st_buffer(focalxy, dist = radius * 2)
+					nbCells <- terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell']
+					gridCentroids <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], nbCells)), coords = 1:2, crs = terra::crs(x[[1]]))
+					nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+					nbCells <- nbCells[nb[[which(nbCells == focalCell)]]]
+					
+					# without dnearneigh step					
+					# focalxy <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], focalCell)), coords = 1:2, crs = terra::crs(x[[1]]))
+					# focalCircle <- sf::st_buffer(focalxy, dist = radius)
+					# nbCells <- setdiff(terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell'], focalCell)
 			
 					# convert to cell indices
 					focalCell <- x[['cellCommInd']][focalCell]
@@ -227,6 +247,8 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 					# get species
 					focalSp <- x[['speciesList']][[focalCell]]
 					nbSp <- unique(unlist(x[['speciesList']][nbCells]))
+					nbSp <- nbSp[!is.na(nbSp)]
+					
 					
 					pd <- getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])
 					# sum(getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])) - sum(diag(cov(x[['data']][union(focalSp, nbSp), ])))
@@ -263,12 +285,16 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 	if (inherits(x[[1]], 'sf')) {	
 		ret <- x[[1]]
 		ret[metricName] <- cellVals
+		ret <- ret[metricName]
 
 	} else {
 		ret <- terra::rast(x[[1]][[1]])
 		names(ret) <- metricName
-		terra::values(ret) <- cellVals
-		
+		if (slow) {
+			terra::values(ret) <- cellVals		
+		} else {
+			ret[which(terra::values(x[[1]]['spRichness']) > 0)] <- cellVals	
+		}
 	}
 	return(ret)
 }

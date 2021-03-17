@@ -55,11 +55,25 @@ beta_taxonomic_full <- taxonomic_betadiv(tamiasEPM, radius = 70000,
 
 
 
-colramp <- colorRampPalette(c('blue','yellow','red'))
 par(mfrow=c(1,3))
-plot(beta_taxonomic_turnover, col = colramp(100))
-plot(beta_taxonomic_nestedness, col = colramp(100))
-plot(beta_taxonomic_full, col = colramp(100))
+plot(beta_taxonomic_turnover, reset = FALSE, key.pos = NULL)
+plot(beta_taxonomic_nestedness, reset = FALSE, key.pos = NULL)
+plot(beta_taxonomic_full, reset = FALSE, key.pos = NULL)
+
+
+
+# using square grid epmGrid
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+	cellType = 'square', method = 'centroid')
+
+beta_taxonomic_full <- taxonomic_betadiv(tamiasEPM2, radius = 70000, 
+		component = 'full')
+beta_taxonomic_full_slow <- taxonomic_betadiv(tamiasEPM2, radius = 70000, 
+		component = 'full', slow = TRUE)
+
+par(mfrow=c(1,2))
+terra::plot(beta_taxonomic_full, col = sf::sf.colors(100))
+terra::plot(beta_taxonomic_full_slow, col = sf::sf.colors(100))
 
 }
 }

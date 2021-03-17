@@ -62,12 +62,27 @@
 ##'
 ##' 
 ##' 
-##' colramp <- colorRampPalette(c('blue','yellow','red'))
 ##' par(mfrow=c(1,3))
-##' plot(beta_taxonomic_turnover, col = colramp(100))
-##' plot(beta_taxonomic_nestedness, col = colramp(100))
-##' plot(beta_taxonomic_full, col = colramp(100))
+##' plot(beta_taxonomic_turnover, reset = FALSE, key.pos = NULL)
+##' plot(beta_taxonomic_nestedness, reset = FALSE, key.pos = NULL)
+##' plot(beta_taxonomic_full, reset = FALSE, key.pos = NULL)
 ##' 
+##'
+##'
+##' # using square grid epmGrid
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' 	cellType = 'square', method = 'centroid')
+##' 
+##' beta_taxonomic_full <- taxonomic_betadiv(tamiasEPM2, radius = 70000, 
+##' 		component = 'full')
+##' beta_taxonomic_full_slow <- taxonomic_betadiv(tamiasEPM2, radius = 70000, 
+##' 		component = 'full', slow = TRUE)
+##'
+##' par(mfrow=c(1,2))
+##' terra::plot(beta_taxonomic_full, col = sf::sf.colors(100))
+##' terra::plot(beta_taxonomic_full_slow, col = sf::sf.colors(100))
+
+##'
 ##' }
 ##' @export
 
@@ -150,8 +165,10 @@ taxonomic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nThre
 		if (!slow) {
 			
 			# convert grid cells to points, and get neighborhoods
-			gridCentroids <- terra::xyFromCell(x[[1]], cell = which(terra::values(x[[1]]['spRichness']) > 0))
+			datCells <- which(terra::values(x[[1]]['spRichness']) > 0)
+			gridCentroids <- terra::xyFromCell(x[[1]], cell = datCells)
 			gridCentroids <- sf::st_as_sf(as.data.frame(gridCentroids), coords = 1:2, crs = attributes(x)$crs)
+			gridCentroids$cellInd <- datCells
 			nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
 			
 			message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)), ' cells')
@@ -172,8 +189,9 @@ taxonomic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nThre
 			cellVals <- pbapply::pblapply(1:nrow(gridCentroids), function(i) {
 			# for (i in 1:nrow(x[[1]])) {
 		
-				focalCell <- i
+				focalCell <- datCells[i]
 				nbCells <- nb[[i]]
+				nbCells <- sf::st_drop_geometry(gridCentroids[nbCells, 'cellInd'])[,1]
 			
 				# convert to cell indices
 				focalCell <- x[['cellCommInd']][focalCell]
@@ -209,9 +227,18 @@ taxonomic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nThre
 				
 				focalCell <- i
 				if (!anyNA((x[['speciesList']][[x[['cellCommInd']][focalCell]]]))) {
+					# get neighborhood for focal cell
 					focalxy <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], focalCell)), coords = 1:2, crs = terra::crs(x[[1]]))
-					focalCircle <- sf::st_buffer(focalxy, dist = radius)
-					nbCells <- setdiff(terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell'], focalCell)
+					focalCircle <- sf::st_buffer(focalxy, dist = radius * 2)
+					nbCells <- terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell']
+					gridCentroids <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], nbCells)), coords = 1:2, crs = terra::crs(x[[1]]))
+					nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+					nbCells <- nbCells[nb[[which(nbCells == focalCell)]]]
+					
+					# without dnearneigh step					
+					# focalxy <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], focalCell)), coords = 1:2, crs = terra::crs(x[[1]]))
+					# focalCircle <- sf::st_buffer(focalxy, dist = radius)
+					# nbCells <- setdiff(terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell'], focalCell)
 			
 					# convert to cell indices
 					focalCell <- x[['cellCommInd']][focalCell]
@@ -242,7 +269,11 @@ taxonomic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nThre
 	} else {
 		ret <- terra::rast(x[[1]][[1]])
 		names(ret) <- metricName
-		terra::values(ret) <- cellVals
+		if (slow) {
+			terra::values(ret) <- cellVals		
+		} else {
+			ret[which(terra::values(x[[1]]['spRichness']) > 0)] <- cellVals	
+		}
 	}
 
 	return(ret)

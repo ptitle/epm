@@ -33,12 +33,19 @@ Disparity is calculated for each cell + its neighboring cells. Partial disparity
 \donttest{
 tamiasEPM
 
-tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 
 z <- disparity_betadiv(tamiasEPM, radius = 150000)
 
-plot(z['disparityTurnover'])
+plot(z)
+
+# using square grid epmGrid
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+	cellType = 'square', method = 'centroid')
+tamiasEPM2 <- addTraits(tamiasEPM2, tamiasTraits)
+z2 <- disparity_betadiv(tamiasEPM2, radius = 150000)
+
+terra::plot(z2, col = sf::sf.colors(100), range = c(0,1))
 
 }
 }
