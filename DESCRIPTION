@@ -1,0 +1,21 @@
+Package: epm
+Type: Package
+Title: EcoPhyloMapper
+Version: 1.0
+Date: 2021-02-15
+Author: Pascal Title
+Maintainer: Pascal Title <pascal.title@stonybrook.edu>
+Depends: R (>= 3.5)
+Imports: terra, raster, sf, spdep, ape, geomorph, picante, pbapply, methods, Rcpp (>= 0.12.9)
+Suggests: tmap, lwgeom, sp, rgdal
+Description: An R package that facilitates the aggregation of species'
+	geographic ranges from vector or raster spatial data, and that enables
+	the calculation of various morphological and phylogenetic community metrics across geography.
+License: GPL (>= 2)
+NeedsCompilation: yes
+SystemRequirements: C++11
+LinkingTo: Rcpp, RcppProgress
+LazyData: true
+RoxygenNote: 7.1.1
+ByteCompile: true
+Encoding: UTF-8
