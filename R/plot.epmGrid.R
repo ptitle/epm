@@ -35,7 +35,7 @@
 ##' plot(tamiasEPM)
 ##' 
 ##' plot(tamiasEPM, legend = FALSE)
-##' # addLegend(tamiasEPM, location = 'top', ramp=c('blue','yellow','red'))
+##' # addLegend(tamiasEPM['spRichness'], location = 'top', ramp=c('blue','yellow','red'))
 ##' 
 ##' # Example for how to plot multiple epmGrids on the same color scale
 ##' # for illustration purposes, we will compare weighted endemism to
@@ -104,13 +104,13 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	ncol <- 1000
 	isInt <- FALSE
 	if (inherits(x[[1]], 'sf')) {
-		if (is.integer(sf::st_drop_geometry(x[[1]])[, plotMetric]) & max(x[[1]][[plotMetric]]) < 100) {
+		if (is.integer(sf::st_drop_geometry(x[[1]])[, plotMetric]) & max(x[[1]][[plotMetric]]) <= 10) {
 			ncol <- max(x[[1]][[plotMetric]])
 			isInt <- TRUE
 		}	
 	} else if (inherits(x[[1]], 'SpatRaster')) {
 		samp <- sample(as.vector(stats::na.omit(terra::values(x[[1]][plotMetric]))), 1000)
-		if (all(as.integer(samp) == samp) & max(terra::minmax(x[[1]][plotMetric])) < 100) {
+		if (all(as.integer(samp) == samp) & max(terra::minmax(x[[1]][plotMetric])) <= 10) {
 			ncol <- max(terra::minmax(x[[1]][plotMetric]))
 			isInt <- TRUE
 		}
@@ -141,8 +141,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 		
 	metricName <- plotMetric
-	
-	
+		
 	if (inherits(x[[1]], 'sf')) {
 	
 	
@@ -195,11 +194,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		} else {
 			# use sf plotting
 			
-			if (legend) {
-				key.pos <- 4
-			} else {
-				key.pos <- NULL
-			}
+			# if (legend) {
+				# key.pos <- 4
+			# } else {
+				# key.pos <- NULL
+			# }
 			
 			if (is.null(colorRampRange)) {
 				valRange <- range(sf::st_drop_geometry(x[[1]])[, plotMetric])
@@ -210,11 +209,42 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	
 			
 			if (!plotSingleCells) {
-				plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = key.pos, lwd = lwd, reset = FALSE, pal = colramp(ncol), breaks = breaks, ...)
+				plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colramp(ncol), breaks = breaks, ...)
 			} else {
-				plot(grid_multiSp[plotMetric], axes = includeFrame, main = NULL, key.pos = key.pos, lwd = lwd, reset = FALSE, extent = sf::st_bbox(x[[1]]), pal = colramp(ncol), breaks = breaks, ...)
-				plot(grid_singleSp[plotMetric], add = TRUE, pal = singleSpCol, border = NA)
-				plot(grid_multiSp[plotMetric], lwd = lwd, pal = colramp(ncol), breaks = breaks, add = TRUE)
+				plot(grid_multiSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, extent = sf::st_bbox(x[[1]]), pal = colramp(ncol), breaks = breaks, ...)
+				plot(grid_singleSp[plotMetric], add = TRUE, pal = singleSpCol, border = NA, reset = FALSE)
+				plot(grid_multiSp[plotMetric], lwd = lwd, pal = colramp(ncol), breaks = breaks, add = TRUE, reset = FALSE)
+			}
+			
+			if (legend) {
+	
+				if (!plotSingleCells) {
+					if (isInt) {
+						if (inherits(x[[1]], 'sf')) {
+							nTicks <- max(x[[1]][[plotMetric]])
+						} else if (inherits(x[[1]], 'SpatRaster')) {
+							nTicks <- max(terra::minmax(x[[1]][plotMetric]))
+						}
+					} else {
+						nTicks <- 3
+					}
+
+					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+
+				} else {
+
+					if (isInt) {
+						if (inherits(x[[1]], 'sf')) {
+							nTicks <- max(grid_multiSp[plotMetric])
+						} else if (inherits(x[[1]], 'SpatRaster')) {
+							nTicks <- max(terra::minmax(grid_multiSp[plotMetric]))
+						}
+					} else {
+						nTicks <- 3
+					}
+
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+				}
 			}
 	
 			if (basemap == 'worldmap') {
@@ -228,6 +258,10 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 
 	} else if (inherits(x[[1]], 'SpatRaster')) {
 		
+			# get bounding box of grid cells with data. We will do this so that we can leave out of the plot those grid cells that are empty and that may take up quite a bit of geographic space. Only an issue for rasters.
+			datBB <- sf::st_bbox(sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], which(!is.na(terra::values(x[[1]][[plotMetric]]))))), coords = 1:2, crs = sf::st_crs(x[[1]])))
+		
+				
 		if (log) {
 			metricName <- paste0('log ', plotMetric)
 			if (!plotSingleCells) {
@@ -245,11 +279,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		}
 		
 		if (use_tmap) {
-		
+					
 			if (basemap == 'worldmap') {
 				
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
-				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.5)
+				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = datBB) + tmap::tm_borders(lwd = 0.5)
 			}
 			
 			if (basemap == 'none') {
@@ -268,11 +302,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 #			}
 			
 			if (!plotSingleCells) {
-				map <- map + tmap::tm_shape(metricMap) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 				
 			} else {
 				
-				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = sf::st_bbox(x[[1]])) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = singleSpCol, legend.show = FALSE) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = singleSpCol, legend.show = FALSE) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -281,9 +315,15 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		} else {
 
 			# use terra plotting
+			
+			datBB2 <- terra::ext(x[[1]])
+			datBB2[1] <- datBB['xmin']
+			datBB2[2] <- datBB['xmax']
+			datBB2[3] <- datBB['ymin']
+			datBB2[4] <- datBB['ymax']
+					
 
 			if (is.null(colorRampRange)) {
-				
 				valRange <- range(terra::minmax(metricMap))
 			} else {
 				valRange <- colorRampRange
@@ -291,14 +331,46 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 		
 			if (!plotSingleCells) {
-				terra::plot(metricMap, col = colramp(ncol), axes = includeFrame, legend = legend, plg = list(shrink = 0.7, title = metricName), range = valRange)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange)
 				
 			} else {
 				
-				terra::plot(metricMap, col = colramp(ncol), axes = includeFrame, legend = legend, plg = list(shrink = 0.7, title = metricName), range = valRange)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange)
 				terra::plot(grid_singleSp, col = singleSpCol, axes = includeFrame, legend = FALSE, range = valRange, add = TRUE)
 				
 			}
+			
+			if (legend) {
+	
+				if (!plotSingleCells) {
+					if (isInt) {
+						if (inherits(x[[1]], 'sf')) {
+							nTicks <- max(x[[1]][[plotMetric]])
+						} else if (inherits(x[[1]], 'SpatRaster')) {
+							nTicks <- max(terra::minmax(x[[1]][plotMetric]))
+						}
+					} else {
+						nTicks <- 3
+					}
+
+					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+
+				} else {
+
+					if (isInt) {
+						if (inherits(x[[1]], 'sf')) {
+							nTicks <- max(grid_multiSp[plotMetric])
+						} else if (inherits(x[[1]], 'SpatRaster')) {
+							nTicks <- max(terra::minmax(grid_multiSp[plotMetric]))
+						}
+					} else {
+						nTicks <- 3
+					}
+
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+				}
+			}
+			
 	
 			if (basemap == 'worldmap') {
 				# add map for context

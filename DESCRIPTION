@@ -1,7 +1,7 @@
 Package: epm
 Type: Package
 Title: EcoPhyloMapper
-Version: 1.0
+Version: 0.9
 Date: 2021-02-15
 Author: Pascal Title
 Maintainer: Pascal Title <pascal.title@stonybrook.edu>

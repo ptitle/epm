@@ -23,12 +23,11 @@ addLegend(
   locs = NULL,
   cex.axis = 0.8,
   labelDist = 0.7,
-  minDigits = 2,
-  ...
+  minDigits = 2
 )
 }
 \arguments{
-\item{r}{the epmGrid, rasterLayer or sf object that has been plotted}
+\item{r}{the epmGrid, rasterLayer, SpatRaster or sf object that has been plotted}
 
 \item{direction}{direction of color ramp. If omitted, then direction is automatically 
 inferred, otherwise can be specified as \code{horizontal} or \code{vertical}.}
@@ -78,8 +77,6 @@ as a character vector, then the labels will be plotted verbatim.}
 \item{labelDist}{distance from axis to axis labels (passed to \code{mgp})}
 
 \item{minDigits}{minimum number of significant digits for labels}
-
-\item{...}{additional parameters to be passed to \code{\link{axis}}.}
 }
 \value{
 Invisibly returns a list with the following components.
@@ -111,8 +108,8 @@ A number of predefined locations exist in this function to make it easy to
 See examples.
 }
 \examples{
-library(raster)
-r <- raster(system.file("external/test.grd", package="raster"))
+library(terra)
+r <- rast(system.file("ex/elev.tif", package="terra"))
 
 plot(r, legend = FALSE)
 addLegend(r, location = 'right')

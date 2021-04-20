@@ -505,15 +505,19 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	attributes(x)$metric <- metric
 	
 	# update species richness, as some species may have been dropped for this metric calculation.
-	if (inherits(x[[1]], 'sf')) {
-		for (i in 1:length(x[['speciesList']])) {
-			x[['grid']][which(x[['cellCommInd']] == i), 'spRichness'] <- length(x[['speciesList']][[i]])
-		}
-	} else {
-		for (i in 1:length(x[['speciesList']])) {
-			x[['grid']][['spRichness']][which(x[['cellCommInd']] == i)] <- length(x[['speciesList']][[i]])
-		}
-	}
+	## Maybe we don't want to do this, as we want the species richness to be our best understanding.
+	# if (inherits(x[[1]], 'sf')) {
+		# for (i in 1:length(x[['speciesList']])) {
+			# x[['grid']][which(x[['cellCommInd']] == i), 'spRichness'] <- length(x[['speciesList']][[i]])
+		# }
+	# } else {
+		# tmpVec <- terra::values(x[['grid']][['spRichness']])
+		# for (i in 1:length(x[['speciesList']])) {
+			# tmpVec[which(x[['cellCommInd']] == i)] <- length(x[['speciesList']][[i]])
+		# }
+		# terra::values(x[['grid']][['spRichness']]) <- tmpVec
+		# rm(tmpVec)
+	# }
 		
 	# update geog species
 	x[['geogSpecies']] <- sort(unique(unlist(x[['geogSpecies']])))

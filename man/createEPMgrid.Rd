@@ -5,7 +5,7 @@
 \title{Create epmGrid object}
 \usage{
 createEPMgrid(
-  polyList,
+  spDat,
   resolution = 50000,
   method = "centroid",
   cellType = "hexagon",
@@ -13,12 +13,14 @@ createEPMgrid(
   retainSmallRanges = TRUE,
   extent = "auto",
   checkValidity = FALSE,
+  crs = NULL,
   nThreads = 1,
+  template = NULL,
   nGroups = 1
 )
 }
 \arguments{
-\item{polyList}{a list of polygon objects (sf or sp), named with taxon names.}
+\item{spDat}{a list of polygon objects (sf or sp), named with taxon names.}
 
 \item{resolution}{vertical and horizontal spacing of grid cells, in units 
 of the polygons' projection.}
@@ -33,7 +35,7 @@ of the polygons' projection.}
 See details.}
 
 \item{extent}{if 'auto', then the maximal extent of the polygons will be used. 
-If not 'auto', can be a SpatialPolygon or sf object, in which case the resulting epmGrid
+If not 'auto', can be a SpatialPolygon, sf object, or raster, in which case the resulting epmGrid
 will be cropped and masked with respect to the polygon, or a spatial coordinates object, 
 from which an extent object will be generated, or a numeric vector of length 4 
 with minLong, maxLong, minLat, maxLat. If 'interactive', then an interactive plot
@@ -42,7 +44,13 @@ will appear in which the user can draw the desired polygon extent. That extent w
 \item{checkValidity}{if \code{TRUE}, then check polygon validity and repair if needed, 
 using sf::st_make_valid and the lwgeom package.}
 
+\item{crs}{if supplying occurrence records in a non-spatial format, then you must specify the crs}
+
 \item{nThreads}{if > 1, then employ parallel computing.}
+
+\item{template}{an object of class \code{SpatRaster} or \code{RasterLayer} that can be used to 
+get extent and resolution. If \code{cellType = 'square'}, then the template will be used as the 
+reference grid.}
 
 \item{nGroups}{break up the grid into this many groups for processing. This will alleviate memory 
 usage for datasets that are very high resolution (not relevant for large numbers of species)}

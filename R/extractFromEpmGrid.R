@@ -111,7 +111,7 @@ extractFromEpmGrid <- function(x, spatial, returnCells = FALSE, collapse=TRUE) {
 	} else {
 			
 		# extract species from epmGrid
-		res <- sapply(x[['cellCommInd']][cells], function(y) x[['speciesList']][[y]])
+		res <- sapply(x[['cellCommInd']][cells], function(y) x[['speciesList']][[y]], simplify = FALSE)
 		names(res) <- paste0('cell', cells)
 		
 		if (collapse) {

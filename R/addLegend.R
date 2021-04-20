@@ -2,7 +2,7 @@
 ##'
 ##' @description Adds a legend to an existing plot, with some additional manual controls.
 
-##'	@param r the epmGrid, rasterLayer or sf object that has been plotted
+##'	@param r the epmGrid, rasterLayer, SpatRaster or sf object that has been plotted
 
 ##'	@param direction direction of color ramp. If omitted, then direction is automatically 
 ##'		inferred, otherwise can be specified as \code{horizontal} or \code{vertical}.
@@ -53,7 +53,6 @@
 
 ##'	@param minDigits minimum number of significant digits for labels
 
-##'	@param ... additional parameters to be passed to \code{\link{axis}}.
 
 
 ##' @details A number of predefined locations exist in this function to make it easy to 
@@ -83,8 +82,8 @@
 ##' @author Pascal Title
 ##'
 ##' @examples
-##' library(raster)
-##' r <- raster(system.file("external/test.grd", package="raster"))
+##' library(terra)
+##' r <- rast(system.file("ex/elev.tif", package="terra"))
 ##' 
 ##' plot(r, legend = FALSE)
 ##' addLegend(r, location = 'right')
@@ -96,14 +95,21 @@
 ##'  
 ##' @export
 
-addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp = "terrain", isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, labelDist = 0.7, minDigits = 2, ...) {
+addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp = "terrain", isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, labelDist = 0.7, minDigits = 2) {
+	
+	# for testing
+	# r = tamiasEPM[[1]]; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; ramp = "terrain"; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
 		
 	if (inherits(r, 'epmGrid')) {
-		r <- r[[1]]
+		r <- r[[1]][attributes(r)$metric]
 	}
 	
-	if (!inherits(r, c('epmGrid', 'sf', 'RasterLayer'))) {
-		stop("r must be a epmGrid, sf or RasterLayer object.")
+	if (inherits(r, 'RasterLayer')) {
+		r <- as(r, 'SpatRaster')
+	}
+	
+	if (!inherits(r, c('epmGrid', 'sf', 'SpatRaster'))) {
+		stop("r must be a epmGrid, sf, RasterLayer or SpatRaster object.")
 	}
 		
 	if(!methods::hasArg('direction')) {
@@ -138,29 +144,72 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = 
 		}
 	}
 	
+	# #if minmax provided, use to generate linear color breaks
+	# if (is.null(minmax)) {
+		# if (inherits(r, 'RasterLayer')) {
+			# colorbreaks <- seq(terra::min(r), terra::max(r), length.out = (ncolors+1))
+		# } else if (inherits(r, 'sf')) {
+			# datCol <- setdiff(colnames(r), attributes(r)$sf_column)
+			# if (length(datCol) > 1) {
+				# stop('Input contains more than one attribute.')
+			# }
+			# colorbreaks <- seq(min(r[[datCol]], na.rm = TRUE), max(r[[datCol]], na.rm = TRUE), length.out = (ncolors+1))
+		# }
+	# } else {
+		# colorbreaks <- seq(minmax[1], minmax[2], length.out = (ncolors + 1))
+	# }
+
 	#if minmax provided, use to generate linear color breaks
 	if (is.null(minmax)) {
-		if (inherits(r, 'RasterLayer')) {
-			colorbreaks <- seq(raster::minValue(r), raster::maxValue(r), length.out = (ncolors+1))
+		if (inherits(r, 'SpatRaster')) {
+			minval <- min(terra::minmax(r))
+			maxval <- max(terra::minmax(r))
 		} else if (inherits(r, 'sf')) {
 			datCol <- setdiff(colnames(r), attributes(r)$sf_column)
 			if (length(datCol) > 1) {
 				stop('Input contains more than one attribute.')
 			}
-			colorbreaks <- seq(min(r[[datCol]], na.rm = TRUE), max(r[[datCol]], na.rm = TRUE), length.out = (ncolors+1))
+			minval <- min(r[[datCol]], na.rm = TRUE)
+			maxval <- max(r[[datCol]], na.rm = TRUE)
 		}
 	} else {
-		colorbreaks <- seq(minmax[1], minmax[2], length.out = (ncolors + 1))
+		minval <- minmax[1]
+		maxval <- minmax[2]
 	}
+	
+	#if raster values are integer, then make legend have integer values
+	if (isInteger == 'auto') {
+		if (inherits(r, 'SpatRaster')) {
+			randomSample <- sample(terra::values(r)[which(!is.na(terra::values(r)))], size = 1000, replace = TRUE)
+		} else if (inherits(r, 'sf')) {
+			datCol <- setdiff(colnames(r), attributes(r)$sf_column)
+			randomSample <- sample(r[[datCol]], size=1000, replace = TRUE)
+		}
+		#if (identical(randomSample, trunc(randomSample))) {
+		if (is.integer(randomSample)) {
+			isInteger <- TRUE
+		} else {
+			isInteger <- FALSE
+		}
+	} 
+	
+
+	if (isInteger == TRUE & ncolors <= 10) {
+		# if there are 10 or fewer integer values, then have this many colors plotted
+		colorbreaks <- seq.int(minval, maxval, length.out = ncolors)
+		n <- length(colorbreaks) + 1
+	} else {
+		colorbreaks <- seq(minval, maxval, length.out = (ncolors + 1))
+		n <- length(colorbreaks)
+	}
+
 	
 	#if supplied, use custom set of breaks
 	if (!is.null(breaks)) {
 		colorbreaks <- breaks
 		ncolors <- length(breaks) + 1
 	}
-	
-	n <- length(colorbreaks)
-	
+		
 	#return plot region extremes and define outer coordinates
 	minX <- grconvertX(par('fig')[1], from = 'ndc', to = 'user') 
 	maxX <- grconvertX(par('fig')[2], from = 'ndc', to = 'user')
@@ -337,97 +386,102 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = 
 		width <- location[1:2]
 	}
 	
+		
 	#get bin coordinates
 	x <- rep(x,each = 2)
 	x <- x[-c(1,length(x))]
 	x <- matrix(x, ncol = 2, byrow = TRUE)
+
+	# special treatment if integer and 10 or fewer values
+	if (isInteger == TRUE & ncolors <= 10) {
+		tx <- colorbreaks
+
+		#find tick locations
+		#get equivalent color bins
+		tickLocs <- apply(x, 1, mean)
+		tickLabels <- colorbreaks
+		
+		
+	} else {	
+
+		#find tick locations
+		#get equivalent color bins
+		z <- rep(colorbreaks,each = 2)
+		z <- z[-c(1,length(z))]
+		z <- matrix(z, ncol = 2, byrow = TRUE)
+		
 	
-	#find tick locations
-	#get equivalent color bins
-	z <- rep(colorbreaks,each = 2)
-	z <- z[-c(1,length(z))]
-	z <- matrix(z, ncol = 2, byrow = TRUE)
-
-	#if tick locations are supplied, use them, otherwise generate regularly spaced tick locations
-	if (!is.null(locs)) {
-		# if max value is included, add in manually
-		# tol <- 1e-10
-		tickLabels <- as.character(locs)
-		if (is.character(locs)) {
-			locs <- as.numeric(locs)
-		}
-		# tol <- (diff(raster::cellStats(r, stat=range)) / n)
-		# maxValueIncluded <- FALSE
-		# minValueIncluded <- FALSE
-		# if (any(abs(raster::maxValue(r) - locs) < tol)) {
-			# locs <- locs[which(abs(raster::maxValue(r) - locs) >= tol)]
-			# maxValueIncluded <- TRUE
-		# }
-
-		# if (any(abs(raster::minValue(r) - locs) < tol)) {
-			# locs <- locs[which(abs(raster::minValue(r) - locs) >= tol)]
-			# minValueIncluded <- TRUE
-		# }
-
-		# tickLocs <- x[sapply(locs, function(x) which((x >= z[,1] & x < z[,2]) == TRUE)), 1]
-		tickLocs <- numeric(length(locs))
-		for (i in 1:length(locs)) {
-			if (any(locs[i] >= z[1,1])) {
-				binSearch1 <- which(locs[i] >= z[,1])
-			} else {
-				binSearch1 <- 1
+		#if tick locations are supplied, use them, otherwise generate regularly spaced tick locations
+		if (!is.null(locs)) {
+			# if max value is included, add in manually
+			# tol <- 1e-10
+			tickLabels <- as.character(locs)
+			if (is.character(locs)) {
+				locs <- as.numeric(locs)
 			}
-			if (any(locs[i] < z[,2])) {
-				binSearch2 <- which(locs[i] < z[,2])
-			} else {
-				binSearch2 <- nrow(z)
-			}
-			tickLocs[i] <- x[intersect(binSearch1, binSearch2), 1]
-		}
-		
-		# if (maxValueIncluded) {
-			# tickLocs <- c(tickLocs, max(x[,2]))
-			# locs <- c(locs, max(colorbreaks))
-		# }
-
-		# if (minValueIncluded) {
-			# tickLocs <- c(min(x[,1]), tickLocs)
-			# locs <- c(min(colorbreaks), locs)
-		# }
-		
-		tx <- locs
-		
-	} else {
-		tickLabels <- NULL
-		tx <- trunc(seq(from = 1, to = nrow(x), length.out = nTicks + 2))
-		tickLocs <- x[tx,1]
-		tx <- z[tx,1]
-		tickLocs[length(tickLocs)] <- max(x[,2])
-		tx[length(tx)] <- max(z[,2])
-	}
+			# tol <- (diff(raster::cellStats(r, stat=range)) / n)
+			# maxValueIncluded <- FALSE
+			# minValueIncluded <- FALSE
+			# if (any(abs(raster::maxValue(r) - locs) < tol)) {
+				# locs <- locs[which(abs(raster::maxValue(r) - locs) >= tol)]
+				# maxValueIncluded <- TRUE
+			# }
 	
-	#if raster values are integer, then make legend have integer values
-	if (isInteger == 'auto') {
-		if (inherits(r, 'RasterLayer')) {
-			randomSample <- sample(raster::values(r)[which(!is.na(raster::values(r)))], size=1000, replace = TRUE)
-		} else if (inherits(r, 'sf')) {
-			datCol <- setdiff(colnames(r), attributes(r)$sf_column)
-			randomSample <- sample(r[[datCol]], size=1000, replace = TRUE)
+			# if (any(abs(raster::minValue(r) - locs) < tol)) {
+				# locs <- locs[which(abs(raster::minValue(r) - locs) >= tol)]
+				# minValueIncluded <- TRUE
+			# }
+	
+			# tickLocs <- x[sapply(locs, function(x) which((x >= z[,1] & x < z[,2]) == TRUE)), 1]
+			tickLocs <- numeric(length(locs))
+			for (i in 1:length(locs)) {
+				if (any(locs[i] >= z[1,1])) {
+					binSearch1 <- which(locs[i] >= z[,1])
+				} else {
+					binSearch1 <- 1
+				}
+				if (any(locs[i] < z[,2])) {
+					binSearch2 <- which(locs[i] < z[,2])
+				} else {
+					binSearch2 <- nrow(z)
+				}
+				tickLocs[i] <- x[intersect(binSearch1, binSearch2), 1]
+			}
+			
+			# if (maxValueIncluded) {
+				# tickLocs <- c(tickLocs, max(x[,2]))
+				# locs <- c(locs, max(colorbreaks))
+			# }
+	
+			# if (minValueIncluded) {
+				# tickLocs <- c(min(x[,1]), tickLocs)
+				# locs <- c(min(colorbreaks), locs)
+			# }
+			
+			tx <- locs
+			
+		} else {
+			tickLabels <- NULL
+			tx <- trunc(seq(from = 1, to = nrow(x), length.out = nTicks + 2))
+			tickLocs <- x[tx,1]
+			tx <- z[tx,1]
+			tickLocs[length(tickLocs)] <- max(x[,2])
+			tx[length(tx)] <- max(z[,2])
 		}
-		if (identical(randomSample, trunc(randomSample))) {
+		
+		#if raster values are integer, then make legend have integer values
+		if (isInteger) {
 			tx <- round(tx, 0)
 		}
-	} else if (isInteger) {
-		tx <- round(tx, 0)
-	}
-
-	# if integer, it's possible that there are too few unique values. Adjust.
-	if (length(unique(tx)) < length(tx)) {
-		tx <- trunc(seq(from = 1, to = nrow(x), length.out = length(unique(tx))))
-		tickLocs <- x[tx,1]
-		tx <- z[tx,1]
-		tickLocs[length(tickLocs)] <- max(x[,2])
-		tx[length(tx)] <- max(z[,2])				
+	
+		# if integer, it's possible that there are too few unique values. Adjust.
+		if (length(unique(tx)) < length(tx)) {
+			tx <- trunc(seq(from = 1, to = nrow(x), length.out = length(unique(tx))))
+			tickLocs <- x[tx,1]
+			tx <- z[tx,1]
+			tickLocs[length(tickLocs)] <- max(x[,2])
+			tx[length(tx)] <- max(z[,2])				
+		}
 	}
 	
 	#plot bar
@@ -452,16 +506,16 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = 
 	
 	#add tickmarks
 	if (side == 1) { #bottom
-		axis(side, at = tickLocs, pos = location[3] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), ...)
+		axis(side, at = tickLocs, pos = location[3] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
 	} 
 	if (side == 3) { #top
-		axis(side, at = tickLocs, pos = location[4] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), ...)
+		axis(side, at = tickLocs, pos = location[4] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
 	}
 	if (side == 2) { #left
-		axis(side, at = tickLocs, pos = location[1] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), ...)
+		axis(side, at = tickLocs, pos = location[1] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
 	}
 	if (side == 4) { #right
-		axis(side, at = tickLocs, pos = location[2] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), ...)
+		axis(side, at = tickLocs, pos = location[2] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
 	}
 	
 	invisible(list(

@@ -180,6 +180,7 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 		}
 		
 		gridTemplate <- templateCentroids[goodCells,]
+		gridTemplate <- sf::st_geometry(gridTemplate)
 		
 		
 	} else {

@@ -66,7 +66,7 @@ If \code{x} is a metric as generated with \code{gridMetrics} that returns 0
 plot(tamiasEPM)
 
 plot(tamiasEPM, legend = FALSE)
-# addLegend(tamiasEPM, location = 'top', ramp=c('blue','yellow','red'))
+# addLegend(tamiasEPM['spRichness'], location = 'top', ramp=c('blue','yellow','red'))
 
 # Example for how to plot multiple epmGrids on the same color scale
 # for illustration purposes, we will compare weighted endemism to
