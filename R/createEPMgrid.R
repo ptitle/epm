@@ -538,6 +538,21 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	} else {
 		gridTemplate <- terra::rast(template)
 	}
+	
+	# if extent was polygon, then mask cells that fall outside
+	if (inherits(extentVec, 'sf')) {
+	
+		xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
+		if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
+			goodCells <- unique(xx[, 'cell'])
+			cellsToExclude <- TRUE
+		} else {
+			cellsToExclude <- FALSE
+		}
+	} else {
+		cellsToExclude <- FALSE
+	}
+	
 	# prep for parallel computing
 	if (nThreads == 1) {
 		cl <- NULL
@@ -552,29 +567,42 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 
 
 	spGridList <- pbapply::pblapply(poly, function(x) {
+	# for (i in 1:length(poly)) {
+		# x <- poly[[i]]
+		# message('\t', i)
 		
 		xx <- terra::cells(gridTemplate, y = terra::vect(x), weights = TRUE)
 		
-		# if polygon extends beyond grid template, cell may be NaN
-		if (anyNA(xx[, 'cell'])) {
-			xx <- xx[!is.na(xx[, 'cell']),]
-		}
-				
-		# cells are returned regardless of how much they are covered by polygon
-
-		if (method == 'centroid') {
-			centroids <- terra::xyFromCell(gridTemplate, cell = xx[, 'cell'])
-			centroids <- sf::st_as_sf(as.data.frame(centroids), coords = 1:2, crs = sf::st_crs(x))	
-			presenceCells <- xx[, 'cell'][unlist(sf::st_intersects(x, centroids))]
-
-		} else if (method == 'areaCutoff') {
-
-			presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
-			# terra::xyFromCell(gridTemplate, cell = presenceCells) # for testing
+		if (nrow(xx) > 0) {
+			# if polygon extends beyond grid template, cell may be NaN
+			if (anyNA(xx[, 'cell'])) {
+				xx <- xx[!is.na(xx[, 'cell']),]
+			}
+					
+			# cells are returned regardless of how much they are covered by polygon
 			
-		}		
+			# exclude some cells if needed
+			if (cellsToExclude) {
+				xx <- xx[xx[, 'cell'] %in% goodCells, ]
+			}
+			
+			if (nrow(xx) > 0) {
+	
+				if (method == 'centroid') {
+					centroids <- terra::xyFromCell(gridTemplate, cell = xx[, 'cell'])
+					centroids <- sf::st_as_sf(as.data.frame(centroids), coords = 1:2, crs = sf::st_crs(x))	
+					presenceCells <- xx[, 'cell'][unlist(sf::st_intersects(x, centroids))]
 		
-		return(presenceCells)
+				} else if (method == 'areaCutoff') {
+		
+					presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
+					# terra::xyFromCell(gridTemplate, cell = presenceCells) # for testing
+					
+				}		
+				
+				return(presenceCells)
+			}
+		}
 	}, cl = cl)
 	
 	if (nThreads > 1 & .Platform$OS.type == 'windows') parallel::stopCluster(cl)
@@ -599,10 +627,17 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 			for (i in 1:length(smallSp)) {
 				
 				xx <- terra::cells(gridTemplateHighRes, y = terra::vect(poly[[smallSp[i]]]), weights = TRUE)
-				
-				smallCells <- xx[which.max(xx[, 'weights']), 'cell']
-				smallCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateHighRes, cell = smallCells))
-				spGridList[[smallSp[i]]] <- smallCells
+
+				if (nrow(xx) > 0) {
+									
+					smallCells <- xx[which.max(xx[, 'weights']), 'cell']
+					smallCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateHighRes, cell = smallCells))
+					if (cellsToExclude) {
+						smallCells <- intersect(smallCells, goodCells)
+					}
+					
+					spGridList[[smallSp[i]]] <- smallCells
+				}
 
 				# ## alternative approach using point sampling
 				# xx <- terra::cells(gridTemplateHighRes, y = terra::vect(poly[[smallSp[i]]]), weights = TRUE)
@@ -625,14 +660,14 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 		}
 	}
 	
-	# if extent was polygon, then mask cells that fall outside
-	if (inherits(extentVec, 'sf')) {
+	# # if extent was polygon, then mask cells that fall outside
+	# if (inherits(extentVec, 'sf')) {
 	
-		xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
-		if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
-			spGridList <- lapply(spGridList, function(x) intersect(x, unique(xx[, 'cell'])))
-		}
-	}
+		# xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
+		# if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
+			# spGridList <- lapply(spGridList, function(x) intersect(x, unique(xx[, 'cell'])))
+		# }
+	# }
 	
 	return(list(gridTemplate, spGridList))
 }
