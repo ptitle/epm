@@ -4,10 +4,12 @@
 \alias{interactiveExtent}
 \title{Interactively choose extent}
 \usage{
-interactiveExtent(polyList)
+interactiveExtent(polyList, cellType = "square")
 }
 \arguments{
 \item{polyList}{a list of Simple Feature polygons.}
+
+\item{cellType}{either \code{hexagon} or \code{square}.}
 }
 \value{
 A list with a polygon, and its WKT string
