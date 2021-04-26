@@ -586,6 +586,11 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 				xx <- xx[xx[, 'cell'] %in% goodCells, ]
 			}
 			
+			if (!is.matrix(xx)) {
+				# if xx was a single row, the subsetting might cause it to become a vector
+				xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
+			}
+			
 			if (nrow(xx) > 0) {
 	
 				if (method == 'centroid') {
