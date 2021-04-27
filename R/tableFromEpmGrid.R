@@ -262,6 +262,15 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 	
 	# fill in grid coordinates
 	df[, 1:2] <- sf::st_coordinates(gridTemplate)
+	
+	# avoid identical column names
+	if (anyDuplicated(colnames(df)) > 0) {
+		dupNames <- names(which(table(colnames(df)) > 1) == TRUE)
+		for (i in 1:length(dupNames)) {
+			colnames(df)[which(colnames(df) == dupNames[i])] <- paste0(dupNames[i], '.', 1:length(which(colnames(df) == dupNames[i])))
+			
+		}
+	}
 
 	return(df)
 }

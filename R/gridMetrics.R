@@ -484,7 +484,6 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		})
 	}
 	
- 	
 	
 	## ----------------------------------
 	## REMAP RESULTS TO RELEVANT CELLS AND ASSIGN TO GRID
