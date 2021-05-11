@@ -22,6 +22,7 @@ addLegend(
   minmax = NULL,
   locs = NULL,
   cex.axis = 0.8,
+  tcl = NA,
   labelDist = 0.7,
   minDigits = 2
 )
@@ -73,6 +74,8 @@ as \code{NULL}, the min and max of \code{r} will be used.}
 as a character vector, then the labels will be plotted verbatim.}
 
 \item{cex.axis}{size of axis labels}
+
+\item{tcl}{length of tick marks (see help for tcl in ?par)}
 
 \item{labelDist}{distance from axis to axis labels (passed to \code{mgp})}
 

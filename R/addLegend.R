@@ -49,6 +49,8 @@
 
 ##'	@param cex.axis size of axis labels
 
+##'	@param tcl length of tick marks (see help for tcl in ?par)
+
 ##'	@param labelDist distance from axis to axis labels (passed to \code{mgp})
 
 ##'	@param minDigits minimum number of significant digits for labels
@@ -95,10 +97,10 @@
 ##'  
 ##' @export
 
-addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp = "terrain", isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, labelDist = 0.7, minDigits = 2) {
+addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp = "terrain", isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
 	
 	# for testing
-	# r = tamiasEPM[[1]]; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; ramp = "terrain"; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
+	# r = tamiasEPM; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; ramp = "terrain"; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
 		
 	if (inherits(r, 'epmGrid')) {
 		r <- r[[1]][attributes(r)$metric]
@@ -506,16 +508,16 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = 
 	
 	#add tickmarks
 	if (side == 1) { #bottom
-		axis(side, at = tickLocs, pos = location[3] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
+		axis(side, at = tickLocs, pos = location[3] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), tcl = tcl)
 	} 
 	if (side == 3) { #top
-		axis(side, at = tickLocs, pos = location[4] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
+		axis(side, at = tickLocs, pos = location[4] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), tcl = tcl)
 	}
 	if (side == 2) { #left
-		axis(side, at = tickLocs, pos = location[1] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
+		axis(side, at = tickLocs, pos = location[1] - axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), tcl = tcl)
 	}
 	if (side == 4) { #right
-		axis(side, at = tickLocs, pos = location[2] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0))
+		axis(side, at = tickLocs, pos = location[2] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), tcl = tcl)
 	}
 	
 	invisible(list(
