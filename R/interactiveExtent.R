@@ -30,8 +30,8 @@ interactiveExtent <- function(polyList, cellType = 'square') {
 	cellType <- match.arg(cellType, c('hexagon', 'square'))
 		
 	# coarse template
-	# if projected, use 100km, if not, use 20 degrees
-	quickRes <- ifelse(sf::st_is_longlat(polyList[[1]]), 20, 100000)
+	# if projected, use 100km, if not, use 2 degrees
+	quickRes <- ifelse(sf::st_is_longlat(polyList[[1]]), 2, 100000)
 	
 	if (cellType == 'hexagon') {
 		
@@ -49,7 +49,7 @@ interactiveExtent <- function(polyList, cellType = 'square') {
 		#get overall extent
 		masterExtent <- getExtentOfList(polyList, format = 'sf')
 		
-		quickTemplate <- terra::rast(xmin = masterExtent['xmin'], xmax = masterExtent['xmax'], ymin = masterExtent['ymin'], ymax = masterExtent['ymax'], resolution = c(quickRes, quickRes), crs = sf::st_crs(polyList[[1]])$input)
+		quickTemplate <- terra::rast(xmin = masterExtent['xmin'], xmax = masterExtent['xmax'], ymin = masterExtent['ymin'], ymax = masterExtent['ymax'], resolution = c(quickRes, quickRes), crs = ifelse(sf::st_is_longlat(polyList[[1]]), '', sf::st_crs(polyList[[1]])$input))
 		
 		quick <- pbapply::pblapply(polyList, function(x) {
 		
