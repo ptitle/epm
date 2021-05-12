@@ -394,10 +394,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		
 		
 		
-		
-		
-		
-		
+	
+# library(ggplot2)
+# gg <- ggplot(spRas[[1]]) + geom_sf(aes(fill = spRichness), color = NA) + scale_fill_viridis_c(option = "plasma")
+# gg
+
 		
 		
 			

@@ -24,8 +24,13 @@
 ##' 	with minLong, maxLong, minLat, maxLat. If 'interactive', then an interactive plot
 ##'		will appear in which the user can draw the desired polygon extent. That extent will then be returned.
 ##'
+##' @param percentWithin The percentage of a species range that must be within the defined extent in order
+##' 	for that species to be included. This filter can be used to exclude species whose range barely enters
+##' 	the area of interest. The default value of 0 will disable this filter. If \code{extent == 'auto'},
+##'		then this filter will also have no effect, as the extent is defined by the species' ranges.
+##'
 ##' @param checkValidity if \code{TRUE}, then check polygon validity and repair if needed, 
-##' 		using sf::st_make_valid and the lwgeom package. 
+##' 	using sf::st_make_valid and the lwgeom package. 
 ##'
 ##' @param crs if supplying occurrence records in a non-spatial format, then you must specify the crs
 ##'
@@ -36,7 +41,7 @@
 ##' 	reference grid.
 ##' 
 ##' @param nGroups break up the grid into this many groups for processing. This will alleviate memory 
-##' 		usage for datasets that are very high resolution (not relevant for large numbers of species)
+##' 	usage for datasets that are very high resolution (not relevant for large numbers of species).
 ##'
 ##'
 ##' @details 
@@ -91,9 +96,9 @@
 ##' 
 ##' @export
 
-createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', coverCutoff = 0.1, retainSmallRanges = TRUE, extent = 'auto', checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, nGroups = 1) {
+createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', coverCutoff = 0.1, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, nGroups = 1) {
 	
-	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; checkValidity = FALSE; nThreads = 1; nGroups = 1
+	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; nGroups = 1
 	
 	# test with occurrences
 	# spOccList <- lapply(tamiasPolyList, function(x) st_sample(x, size = 10, type= 'random'))
@@ -259,6 +264,37 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		}
 	}
 	
+	# percentWithin: Implement a filter based on the percentage that each species' range overlaps the extent.
+	## This allows us to provide some threshold for species inclusion. For instance, 5% would imply that a 
+	## species must have at least 5% of its range within the extent to be considered. 
+	## Default will be 0, indicating that there is no filtering.
+	if (percentWithin > 0) {
+		
+		if (inherits(masterExtent, 'sf')) {
+			extentPoly <- masterExtent
+		} else {
+			extentPoly <- sf::st_as_sfc(sf::st_bbox(sf::st_sf(geom = sf::st_sfc(sf::st_point(masterExtent[c('xmin', 'ymin')]), sf::st_point(masterExtent[c('xmax', 'ymax')])), crs = proj)))
+		}
+		
+		includeSp <- logical(length(spDat))
+		for (i in 1:length(spDat)) {
+			overlap <- sf::st_intersection(sf::st_geometry(spDat[[i]]), extentPoly)
+			if (as.numeric(sum(sf::st_area(overlap)) / sum(sf::st_area(sf::st_geometry(spDat[[i]])))) >= percentWithin) {
+				includeSp[i] <- TRUE
+			} else {
+				includeSp[i] <- FALSE
+			}
+		}
+		
+		# exclude those species that did not satisfy the filter
+		spDat <- spDat[includeSp]
+		
+		if (any(includeSp == FALSE)) {
+			msg <- paste0('\n\t', sum(includeSp == FALSE), ' species ', ifelse(sum(includeSp == FALSE) == 1, 'was', 'were'), ' excluded due to the percentWithin filter.')
+			message(msg)
+		}
+	}
+	
 	
 	# here, we take one of two routes:
 	## if hexagonal grid, then use sf, if square grid, use terra
@@ -292,7 +328,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	if (length(smallSp) > 0) {
 		spGridList <- spGridList[ - smallSp]
 
-		msg <- paste0('The following species are being dropped:\n\t', paste(names(smallSp), collapse='\n\t'))
+		msg <- paste0('The following species are being dropped:\n\t', paste(names(smallSp), collapse = '\n\t'))
 		message(msg)
 	}
 	
@@ -349,7 +385,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	obj[['grid']] <- gridTemplate
 	obj[['speciesList']] <- uniqueComm
 	obj[['cellCommInd']] <- cellCommVec
-	obj[['geogSpecies']] <- uniqueSp
+	obj[['geogSpecies']] <- sort(unique(names(spGridList)))
 	obj[['cellCount']] <- lengths(spGridList)
 	attr(obj, 'resolution') <- resolution
 	if (inherits(gridTemplate, 'sf')) {
@@ -487,14 +523,19 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 	if (retainSmallRanges) {
 		if (length(smallSp) > 0) {
 			for (i in 1:length(smallSp)) {
+			  # message('\t', i)
 
 				tmp <- unlist(sf::st_intersects(poly[[smallSp[i]]], gridTemplate))
 				
-				# of grid cells intersected by small-ranged species, keep the cell most occupied.
-				# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
-				tmp <- tmp[which.max(as.vector(sf::st_area(sf::st_intersection(sf::st_union(poly[[smallSp[i]]]), gridTemplate[tmp,])) / sf::st_area(gridTemplate[tmp,])))]
+				if (length(tmp) > 0) {
 				
-				spGridList[[smallSp[i]]] <- tmp
+  				# of grid cells intersected by small-ranged species, keep the cell most occupied.
+  				# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
+  				tmp <- tmp[which.max(as.vector(sf::st_area(sf::st_intersection(sf::st_union(poly[[smallSp[i]]]), gridTemplate[tmp,])) / sf::st_area(gridTemplate[tmp,])))]
+				
+  				spGridList[[smallSp[i]]] <- tmp
+
+  			}
 			}
 			rescued <- setdiff(names(smallSp), names(which(lengths(spGridList) == 0)))
 			if (length(rescued) > 0) {

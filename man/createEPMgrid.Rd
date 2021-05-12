@@ -12,6 +12,7 @@ createEPMgrid(
   coverCutoff = 0.1,
   retainSmallRanges = TRUE,
   extent = "auto",
+  percentWithin = 0,
   checkValidity = FALSE,
   crs = NULL,
   nThreads = 1,
@@ -41,6 +42,11 @@ from which an extent object will be generated, or a numeric vector of length 4
 with minLong, maxLong, minLat, maxLat. If 'interactive', then an interactive plot
 will appear in which the user can draw the desired polygon extent. That extent will then be returned.}
 
+\item{percentWithin}{The percentage of a species range that must be within the defined extent in order
+for that species to be included. This filter can be used to exclude species whose range barely enters
+the area of interest. The default value of 0 will disable this filter. If \code{extent == 'auto'},
+then this filter will also have no effect, as the extent is defined by the species' ranges.}
+
 \item{checkValidity}{if \code{TRUE}, then check polygon validity and repair if needed, 
 using sf::st_make_valid and the lwgeom package.}
 
@@ -53,7 +59,7 @@ get extent and resolution. If \code{cellType = 'square'}, then the template will
 reference grid.}
 
 \item{nGroups}{break up the grid into this many groups for processing. This will alleviate memory 
-usage for datasets that are very high resolution (not relevant for large numbers of species)}
+usage for datasets that are very high resolution (not relevant for large numbers of species).}
 }
 \value{
 an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.
