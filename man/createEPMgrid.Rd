@@ -17,7 +17,8 @@ createEPMgrid(
   crs = NULL,
   nThreads = 1,
   template = NULL,
-  nGroups = 1
+  nGroups = 1,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -60,6 +61,8 @@ reference grid.}
 
 \item{nGroups}{break up the grid into this many groups for processing. This will alleviate memory 
 usage for datasets that are very high resolution (not relevant for large numbers of species).}
+
+\item{verbose}{if TRUE, list out all species that are dropped/excluded, rather than counts.}
 }
 \value{
 an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.

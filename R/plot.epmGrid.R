@@ -109,7 +109,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			isInt <- TRUE
 		}	
 	} else if (inherits(x[[1]], 'SpatRaster')) {
-		samp <- sample(as.vector(stats::na.omit(terra::values(x[[1]][plotMetric]))), 1000)
+		samp <- sample(as.vector(stats::na.omit(terra::values(x[[1]][plotMetric]))), size = 1000, replace = TRUE)
 		if (all(as.integer(samp) == samp) & max(terra::minmax(x[[1]][plotMetric])) <= 10) {
 			ncol <- max(terra::minmax(x[[1]][plotMetric]))
 			isInt <- TRUE

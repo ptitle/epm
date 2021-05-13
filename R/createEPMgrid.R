@@ -43,6 +43,8 @@
 ##' @param nGroups break up the grid into this many groups for processing. This will alleviate memory 
 ##' 	usage for datasets that are very high resolution (not relevant for large numbers of species).
 ##'
+##' @param verbose if TRUE, list out all species that are dropped/excluded, rather than counts.
+##'
 ##'
 ##' @details 
 ##'		If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf package.
@@ -96,9 +98,9 @@
 ##' 
 ##' @export
 
-createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', coverCutoff = 0.1, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, nGroups = 1) {
+createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', coverCutoff = 0.1, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, nGroups = 1, verbose = FALSE) {
 	
-	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; nGroups = 1
+	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; nGroups = 1; verbose = FALSE
 	
 	# test with occurrences
 	# spOccList <- lapply(tamiasPolyList, function(x) st_sample(x, size = 10, type= 'random'))
@@ -154,6 +156,9 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		if (inherits(extent, 'RasterLayer')) {
 			extent <- as(extent, 'SpatRaster')
 		}
+	    if (sum(c(terra::is.lonlat(extent, perhaps = TRUE), sf::st_is_longlat(spDat[[1]]))) == 1) {
+	        stop('Raster provided as extent has a different projection from input data.')
+	    }
 		extent <- as.vector(terra::ext(extent))
 	}
 	
@@ -164,8 +169,14 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		if (inherits(template, 'RasterLayer')) {
 			template <- as(template, 'SpatRaster')
 		}
-		resolution <- terra::res(template)
+	    if (sum(c(terra::is.lonlat(template, perhaps = TRUE), sf::st_is_longlat(spDat[[1]]))) == 1) {
+	        stop('Raster provided as template has a different projection from input data.')
+	    }
+	    resolution <- terra::res(template)
 		extent <- as.vector(terra::ext(template))
+        if (cellType == 'hexagon') {
+            stop('Use of the template argument is intended for square-cell grids only.')
+        }
 	}
 	
 	# if lwgeom package available, and checking is requested, check sf polygon validity. 
@@ -188,7 +199,12 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	if (!any(sapply(spDat, function(x) identical(sf::st_crs(spDat[[1]]), sf::st_crs(x))))) {
 		stop('proj4string or EPSG of all polygons must match.')
 	}
-	proj <- sf::st_crs(spDat[[1]])
+
+	if (sf::st_is_longlat(spDat[[1]])) {
+	    proj <- sf::st_crs(4326)
+	} else {
+	    proj <- sf::st_crs(spDat[[1]])
+	}
 	
 	# if WKT string, then convert to sf polygon
 	if (inherits(extent, 'character')) {
@@ -207,6 +223,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		
 			#get overall extent
 			masterExtent <- getExtentOfList(spDat, format = 'sf')
+			percentWithin <- 0
 		}
 	} else if (is.numeric(extent) & length(extent) == 4) {
 		# use user-specified bounds
@@ -286,13 +303,17 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 			}
 		}
 		
+		if (any(includeSp == FALSE)) {
+		    if (verbose) {
+		        msg <- paste0('The following species were excluded due to the percentWithin filter:\n\t', paste(names(spDat)[which(includeSp == FALSE)], collapse = '\n\t'))
+		    } else {
+		        msg <- paste0('\n\t', sum(includeSp == FALSE), ' species ', ifelse(sum(includeSp == FALSE) == 1, 'was', 'were'), ' excluded due to the percentWithin filter.')
+		    }
+		    message(msg)
+		}
+		
 		# exclude those species that did not satisfy the filter
 		spDat <- spDat[includeSp]
-		
-		if (any(includeSp == FALSE)) {
-			msg <- paste0('\n\t', sum(includeSp == FALSE), ' species ', ifelse(sum(includeSp == FALSE) == 1, 'was', 'were'), ' excluded due to the percentWithin filter.')
-			message(msg)
-		}
 	}
 	
 	
@@ -327,9 +348,12 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	# OR if some species are outside of proposed extent, drop them
 	if (length(smallSp) > 0) {
 		spGridList <- spGridList[ - smallSp]
-
-		msg <- paste0('The following species are being dropped:\n\t', paste(names(smallSp), collapse = '\n\t'))
-		message(msg)
+        if (verbose) {
+    		msg <- paste0('\nThe following species are being dropped:\n\t', paste(names(smallSp), collapse = '\n\t'))
+        } else {
+            msg <- paste0('\n', length(smallSp), ' species ', ifelse(length(smallSp) == 1, 'is', 'are'), ' being dropped.\n')
+        }
+    	message(msg)
 	}
 	
 	# flip list from list of cells per species, to list of species per cells
@@ -438,19 +462,12 @@ polyToGridCells <- function(poly, method, gridTemplate, gridCentroids, coverCuto
 
 
 
-## IDEA: if hexagons, use sf, if square, use terra package. Creates same type of epm object, except that first slot contains a sf object or spatRaster object. Then, other functions will have to be able to handle either. 
-## best of both worlds: hexagons and squares, and slow vs fast options.
 
 
 
 
 
 
-
-
-## Hexagonal grid cells via the sf package. 
-### if method == 'centroid', then species belongs to cell if its range intersects a cell's centroid.
-### if method == 'areaCutoff', then species belongs to cell if it covers some specified percent of cell area.
 
 ## if retainSmallSpecies == TRUE, then the cell that has the greatest occupancy for a species (regardless of the amount) is marked as present. 
 
@@ -578,6 +595,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 		gridTemplate <- terra::rast(xmin = bb['xmin'], xmax = bb['xmax'], ymin = bb['ymin'], ymax = bb['ymax'], resolution = c(resolution, resolution), crs = crs$input)
 	} else {
 		gridTemplate <- terra::rast(template)
+		bb <- extentVec
 	}
 	
 	# if extent was polygon, then mask cells that fall outside
@@ -668,7 +686,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	if (retainSmallRanges) {
 		if (length(smallSp) > 0) {
 			
-			gridTemplateHighRes <- terra::rast(xmin = bb['xmin'], xmax = bb['xmax'], ymin = bb['ymin'], ymax = bb['ymax'], resolution = c(resolution/10, resolution/10), crs = crs$input)
+		    gridTemplateHighRes <- terra::rast(terra::disaggregate(gridTemplate, fact = 10))
 			
 			for (i in 1:length(smallSp)) {
 				
