@@ -6,7 +6,7 @@
 ##' @param filename filename with no extension
 ##'
 ##' @details This function writes a .rds file with xz compression. 
-##' This file can be read back in with \code{\link{readRDS}}.
+##' This file can be read back in with \code{\link{read.epmGrid}}.
 ##'
 ##' @return Nothing is returned, but object is written to disk.
 ##'
@@ -18,7 +18,7 @@
 ##' save(tamiasEPM, '~/tamiasEPM')
 ##' 
 ##' # read back in
-##' tamiasEPM <- readRDS('~/tamiasEPM.rds')
+##' tamiasEPM <- read.epmGrid('~/tamiasEPM.rds')
 ##' }
 ##' @export
 
@@ -33,9 +33,11 @@ write.epmGrid <- function(x, filename) {
 	}
 	
 	if (inherits(x[[1]], 'SpatRaster')) {
-		x[[1]] <- terra::setValues(x[[1]], terra::values(x[[1]]))
+	    x[[1]] <- terra::wrap(x[[1]])
 	}
 	
 	saveRDS(x, file = filename, compress = 'xz')	
 }
+
+
 
