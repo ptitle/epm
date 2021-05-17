@@ -8,6 +8,8 @@
 ##' 	the upper triangle of the matrix will be used for calculations.
 ##' @param replace boolean; if data is already a part of \code{x},
 ##' should it be replaced?
+##' @param verbose if TRUE, list out all species that are 
+##' dropped/excluded, rather than counts.
 ##'
 ##' @details If any species in \code{data} are not found in the epmGrid
 ##' geographical data, then those species will be dropped from \code{data}, and
@@ -27,7 +29,7 @@
 ##' @export
 
 
-addTraits <- function(x, data, replace = FALSE) {
+addTraits <- function(x, data, replace = FALSE, verbose = FALSE) {
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
@@ -73,7 +75,11 @@ addTraits <- function(x, data, replace = FALSE) {
 	}
 	
 	if (length(inDataNotGeog) > 0) {
-		msg <- paste0('The following species were dropped from the trait data because they lacked geographic data:\n\t', paste(inDataNotGeog, collapse='\n\t'))
+	    if (verbose) {
+		    msg <- paste0('The following species were dropped from the trait data because they lacked geographic data:\n\t', paste(inDataNotGeog, collapse='\n\t'))
+	    } else {
+	        msg <- paste0(length(inDataNotGeog), ' species ', ifelse(length(inDataNotGeog) > 1, 'were', 'was'), ' dropped from the trait data because ', ifelse(length(inDataNotGeog) > 1, 'they lack', 'it lacks'), ' geographic data.\n')
+	    }
 		warning(msg)
 	}
 	

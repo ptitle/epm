@@ -6,10 +6,11 @@
 ##' @param tree a phylogeny of class \code{phylo}
 ##' @param replace boolean; if a tree is already a part of \code{x},
 ##' should it be replaced?
+##' @param verbose if TRUE, list out all species that are 
+##' dropped/excluded, rather than counts.
 ##'
 ##' @details If any species in the phylogeny are not found in the epmGrid
-##' geographical data, then those species will be dropped from the phylogeny, and
-##' a warning will be issued. 
+##' geographical data, then those species will be dropped from the phylogeny, ##' and a warning will be issued. 
 ##'
 ##' @return object of class \code{epmGrid}, with a \code{phylo}
 ##' object as the list element named \code{phylo}. 
@@ -24,7 +25,7 @@
 ##' 
 ##' @export
 
-addPhylo <- function(x, tree, replace = FALSE) {
+addPhylo <- function(x, tree, replace = FALSE, verbose = FALSE) {
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
@@ -48,8 +49,12 @@ addPhylo <- function(x, tree, replace = FALSE) {
 	x[['phylo']] <- tree
 	
 	if (length(inPhyloNotGeog) > 0) {
-		msg <- paste0('The following species were pruned from the phylogeny because they lack geographic data:\n\t', paste(inPhyloNotGeog, collapse='\n\t'))
-		warning(msg)
+	    if (verbose) {
+		    msg <- paste0('The following species were pruned from the phylogeny because they lack geographic data:\n\t', paste(inPhyloNotGeog, collapse='\n\t'))
+    	} else {
+    	    msg <- paste0(length(inPhyloNotGeog), ' species ', ifelse(length(inPhyloNotGeog) > 1, 'were', 'was'), ' pruned from the phylogeny because ', ifelse(length(inPhyloNotGeog) > 1, 'they lack', 'it lacks'), ' geographic data.\n')
+    	}
+	    warning(msg)
 	}
 	
 	return(x)

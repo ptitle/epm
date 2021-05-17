@@ -4,7 +4,7 @@
 \alias{addTraits}
 \title{addTraits}
 \usage{
-addTraits(x, data, replace = FALSE)
+addTraits(x, data, replace = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -15,6 +15,9 @@ the upper triangle of the matrix will be used for calculations.}
 
 \item{replace}{boolean; if data is already a part of \code{x},
 should it be replaced?}
+
+\item{verbose}{if TRUE, list out all species that are 
+dropped/excluded, rather than counts.}
 }
 \value{
 object of class \code{epmGrid}, with trait data

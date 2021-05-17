@@ -4,7 +4,7 @@
 \alias{addPhylo}
 \title{addPhylo}
 \usage{
-addPhylo(x, tree, replace = FALSE)
+addPhylo(x, tree, replace = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -13,6 +13,9 @@ addPhylo(x, tree, replace = FALSE)
 
 \item{replace}{boolean; if a tree is already a part of \code{x},
 should it be replaced?}
+
+\item{verbose}{if TRUE, list out all species that are 
+dropped/excluded, rather than counts.}
 }
 \value{
 object of class \code{epmGrid}, with a \code{phylo}
@@ -23,8 +26,7 @@ Add a phylogeny to epmGrid object.
 }
 \details{
 If any species in the phylogeny are not found in the epmGrid
-geographical data, then those species will be dropped from the phylogeny, and
-a warning will be issued.
+geographical data, then those species will be dropped from the phylogeny, ##' and a warning will be issued.
 }
 \examples{
 tamiasEPM
