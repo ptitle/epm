@@ -15,7 +15,7 @@
 ##' @examples
 ##' \dontrun{
 ##' #save
-##' save(tamiasEPM, '~/tamiasEPM')
+##' write.epmGrid(tamiasEPM, '~/tamiasEPM')
 ##' 
 ##' # read back in
 ##' tamiasEPM <- read.epmGrid('~/tamiasEPM.rds')

@@ -24,7 +24,7 @@ This file can be read back in with \code{\link{read.epmGrid}}.
 \examples{
 \dontrun{
 #save
-save(tamiasEPM, '~/tamiasEPM')
+write.epmGrid(tamiasEPM, '~/tamiasEPM')
 
 # read back in
 tamiasEPM <- read.epmGrid('~/tamiasEPM.rds')
