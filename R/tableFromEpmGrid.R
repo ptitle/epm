@@ -45,6 +45,8 @@
 ##' @export
 
 tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = NULL) {
+    
+    # x <- list(tamiasEPM, morphoDisp, meanPat); n = 100; dropSingleSpCells = TRUE; coords = NULL
 
 	x <- list(...)
 	
@@ -94,16 +96,14 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 			if (inherits(x[[1]][[1]], 'sf')) {
 				templateCentroids <- sf::st_centroid(sf::st_geometry(grid_multiSp))
 			} else {
-				templateCentroids <- as.data.frame(terra::coords(terra::as.points(grid_multiSp, values = FALSE, na.rm = TRUE)))
-				templateCentroids <- sf::st_as_sf(templateCentroids, coords = 1:2, crs = terra::crs(grid_multiSp))
+				templateCentroids <- sf::st_as_sf(terra::as.points(grid_multiSp, values = FALSE, na.rm = TRUE))
 			}
 			rm(grid_multiSp)
 		} else if (inherits(x[[1]], 'sf')) {
 			templateCentroids <- sf::st_centroid(sf::st_geometry(x[[1]]))
 		} else if (inherits(x[[1]], 'SpatRaster')) {
 			rasterSum <- terra::app(x[[1]], fun = sum)
-			templateCentroids <- as.data.frame(terra::coords(terra::as.points(rasterSum, values = FALSE, na.rm = TRUE)))
-			templateCentroids <- sf::st_as_sf(templateCentroids, coords = 1:2, crs = terra::crs(x[[1]]))
+			templateCentroids <- sf::st_as_sf(terra::as.points(rasterSum, values = FALSE, na.rm = TRUE))
 		} else if (inherits(x[[1]], 'SpatialPolygonsDataFrame')) {
 			tmp <- sf::st_as_sfc(x[[1]], crs = sf::st_crs(x[[1]]))
 			templateCentroids <- sf::st_centroid(tmp)
