@@ -22,10 +22,11 @@ createEPMgrid(
 )
 }
 \arguments{
-\item{spDat}{a list of polygon objects (sf or sp), named with taxon names.}
+\item{spDat}{a list of polygon objects (sf or sp), named with taxon names. Alternatively, 
+a set of occurrence records. See details for more information.}
 
 \item{resolution}{vertical and horizontal spacing of grid cells, in units 
-of the polygons' projection.}
+of the polygons' or points' projection.}
 
 \item{method}{approach used for gridding. Either \code{centroid} or \code{areaCutoff}. See details below.}
 
@@ -51,7 +52,8 @@ then this filter will also have no effect, as the extent is defined by the speci
 \item{checkValidity}{if \code{TRUE}, then check polygon validity and repair if needed, 
 using sf::st_make_valid and the lwgeom package.}
 
-\item{crs}{if supplying occurrence records in a non-spatial format, then you must specify the crs}
+\item{crs}{if supplying occurrence records in a non-spatial format, then you must specify the crs.
+For unprojected long/lat data, you can simply provide \code{crs = 4326}.}
 
 \item{nThreads}{if > 1, then employ parallel computing.}
 
@@ -68,7 +70,7 @@ usage for datasets that are very high resolution (not relevant for large numbers
 an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.
 }
 \description{
-Takes a list of polygons and creates a epmGrid object.
+Takes a list of polygons or point occurrences and creates a epmGrid object.
 }
 \details{
 If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf package.
@@ -76,7 +78,7 @@ If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf pac
 	Hexagonal cells have several advantages, including being able to be of different sizes (if the grid is in 
 	unprojected long/lat), and may be able to more naturally follow coastlines and non-linear features.
 	However, the raster-based square cells will be much less memory intensive for high resolution datasets. 
-	Choice of grid type matters more for spatial resolution, than for number of species.
+	Choice of grid type matters more for spatial resolution (total number of cells), than for number of species.
 
 
 	In the polygon-to-grid conversion process, two approaches are implemented. 
@@ -95,6 +97,19 @@ If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf pac
 	In interactive mode for defining the extent, the user can draw a bounding polygon on a 
 	map. The drawn polygon will then be printed to the console so that the user can provide 
 	that bounding polygon in future calls as the extent.
+	
+	If input data consist of occurrence records rather than polygons, then a couple of formats are possible:
+    \enumerate{
+	  \item You can provide a list of species-specific spatial point objects. 
+ 	  \item You can provide a single spatial object, where points have a taxon attribute.
+	  \item You can provide a list of non-spatial species-specific dataframes.
+	  \item You can provide a single non-spatial dataframe.
+	}
+	
+	For options (1) and (3), the taxon names must be provided as the list names.
+	For options (3) and (4), the columns must be 'taxon', 'x' and 'y' (or 'long', 'lat').
+	For options (3) and (4), as these are non-spatial, you must provide a crs object to the
+	\code{crs} argument, so that the function knows what projection to use.
 
 	Any SpatialPolygon or SpatialPoints objects are converted to objects of class \code{sf}.
 
@@ -115,6 +130,36 @@ tamiasEPM
 tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
 	cellType = 'square', method = 'centroid')
 tamiasEPM2
+
+#######
+# With point occurrences
+## demonstrating all possible input formats
+
+# list of sf spatial objects
+spOccList <- lapply(tamiasPolyList, function(x) st_sample(x, size = 10, type= 'random'))
+tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'hexagon')
+
+# list of coordinate tables
+spOccList2 <- lapply(spOccList, function(x) st_coordinates(x))
+tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+
+# single table of coordinates
+spOccList3 <- spOccList2
+for (i in 1:length(spOccList3)) {
+	spOccList3[[i]] <- cbind.data.frame(taxon = names(spOccList3)[i], spOccList3[[i]])
+	colnames(spOccList3[[i]]) <- c('taxon', 'X', 'Y')
+}
+spOccList3 <- do.call(rbind, spOccList3)
+rownames(spOccList3) <- NULL
+spOccList3[, "taxon"] <- as.character(spOccList3[, "taxon"])
+tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+
+# a single labeled spatial object
+spOccList4 <- st_as_sf(spOccList3[, c("taxon", "X", "Y")], coords = c("X","Y"), 
+crs = st_crs(spOccList[[1]]))
+tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+
+
 
 }
 \author{

@@ -1,12 +1,13 @@
 ##' @title Create epmGrid object
 ##' 
-##' @description Takes a list of polygons and creates a epmGrid object.
+##' @description Takes a list of polygons or point occurrences and creates a epmGrid object.
 ##'
 ##'
-##' @param spDat a list of polygon objects (sf or sp), named with taxon names.
+##' @param spDat a list of polygon objects (sf or sp), named with taxon names. Alternatively, 
+##' a set of occurrence records. See details for more information.    
 ##'
 ##' @param resolution vertical and horizontal spacing of grid cells, in units 
-##'		of the polygons' projection.
+##'		of the polygons' or points' projection.
 ##'
 ##' @param method approach used for gridding. Either \code{centroid} or \code{areaCutoff}. See details below.
 ##'
@@ -32,7 +33,8 @@
 ##' @param checkValidity if \code{TRUE}, then check polygon validity and repair if needed, 
 ##' 	using sf::st_make_valid and the lwgeom package. 
 ##'
-##' @param crs if supplying occurrence records in a non-spatial format, then you must specify the crs
+##' @param crs if supplying occurrence records in a non-spatial format, then you must specify the crs.
+##' For unprojected long/lat data, you can simply provide \code{crs = 4326}.
 ##'
 ##' @param nThreads if > 1, then employ parallel computing. 
 ##'
@@ -52,7 +54,7 @@
 ##' 	Hexagonal cells have several advantages, including being able to be of different sizes (if the grid is in 
 ##' 	unprojected long/lat), and may be able to more naturally follow coastlines and non-linear features.
 ##'		However, the raster-based square cells will be much less memory intensive for high resolution datasets. 
-##' 	Choice of grid type matters more for spatial resolution, than for number of species.
+##' 	Choice of grid type matters more for spatial resolution (total number of cells), than for number of species.
 ##'
 ##' 
 ##' 	In the polygon-to-grid conversion process, two approaches are implemented. 
@@ -71,6 +73,19 @@
 ##'		In interactive mode for defining the extent, the user can draw a bounding polygon on a 
 ##'		map. The drawn polygon will then be printed to the console so that the user can provide 
 ##'		that bounding polygon in future calls as the extent.
+##'		
+##'		If input data consist of occurrence records rather than polygons, then a couple of formats are possible:
+##'     \enumerate{
+##'		  \item You can provide a list of species-specific spatial point objects. 
+##'	 	  \item You can provide a single spatial object, where points have a taxon attribute.
+##'		  \item You can provide a list of non-spatial species-specific dataframes.
+##'		  \item You can provide a single non-spatial dataframe.
+##'		}
+##'		
+##'		For options (1) and (3), the taxon names must be provided as the list names.
+##'		For options (3) and (4), the columns must be 'taxon', 'x' and 'y' (or 'long', 'lat').
+##'		For options (3) and (4), as these are non-spatial, you must provide a crs object to the
+##'		\code{crs} argument, so that the function knows what projection to use.
 ##'
 ##'		Any SpatialPolygon or SpatialPoints objects are converted to objects of class \code{sf}.
 ##'	
@@ -96,6 +111,36 @@
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2
 ##' 
+##' #######
+##' # With point occurrences
+##' ## demonstrating all possible input formats
+##' 
+##' # list of sf spatial objects
+##' spOccList <- lapply(tamiasPolyList, function(x) st_sample(x, size = 10, type= 'random'))
+##' tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'hexagon')
+##'
+##' # list of coordinate tables
+##' spOccList2 <- lapply(spOccList, function(x) st_coordinates(x))
+##' tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+##' 
+##' # single table of coordinates
+##' spOccList3 <- spOccList2
+##' for (i in 1:length(spOccList3)) {
+##' 	spOccList3[[i]] <- cbind.data.frame(taxon = names(spOccList3)[i], spOccList3[[i]])
+##' 	colnames(spOccList3[[i]]) <- c('taxon', 'X', 'Y')
+##' }
+##' spOccList3 <- do.call(rbind, spOccList3)
+##' rownames(spOccList3) <- NULL
+##' spOccList3[, "taxon"] <- as.character(spOccList3[, "taxon"])
+##' tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+##'
+##' # a single labeled spatial object
+##' spOccList4 <- st_as_sf(spOccList3[, c("taxon", "X", "Y")], coords = c("X","Y"), 
+##' crs = st_crs(spOccList[[1]]))
+##' tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+##' 
+##' 
+##' 
 ##' @export
 
 createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', coverCutoff = 0.1, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, nGroups = 1, verbose = FALSE) {
@@ -103,33 +148,77 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; nGroups = 1; verbose = FALSE
 	
 	# test with occurrences
-	# spOccList <- lapply(tamiasPolyList, function(x) st_sample(x, size = 10, type= 'random'))
-	# spDat <- spOccList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; checkValidity = FALSE; nThreads = 1; nGroups = 1	
+	# spOccList <- lapply(tamiasPolyList, function(x) sf::st_sample(x, size = 10, type= 'random'))
+	# spDat <- spOccList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; coverCutoff = 0.1; retainSmallRanges = TRUE; extent = 'auto'; checkValidity = FALSE; nThreads = 1; template = NULL; nGroups = 1; verbose = FALSE
 	
-	if (is.list(spDat)) {
-		if (inherits(spDat[[1]], c('SpatialPolygons', 'SpatialPolygonsDataFrame'))) {
-			# if class SpatialPolygons, convert to sf
-			for (i in 1:length(spDat)) {
-				spDat[[i]] <- sf::st_as_sf(spDat[[i]])
-			}
-		}
-	} else if (!inherits(spDat[[1]], c('SpatialPolygons', 'SpatialPolygonsDataFrame', 'sf', 'sfc'))) {
-		stop('spDat must be a list of SpatialPolygons, SpatialPoints or Simple Features.')
-	}
-	
+    if (inherits(spDat, 'Spatial')) {
+        # if class SpatialPolygons, convert to sf
+        spDat <- sf::st_as_sf(spDat)
+    }
+    
+    if (!inherits(spDat, 'Spatial') & inherits(spDat[[1]], 'Spatial')) {
+        # if class SpatialPolygons, convert to sf
+        for (i in 1:length(spDat)) {
+            spDat[[i]] <- sf::st_as_sf(spDat[[i]])
+        }
+    }
+
 	# determine whether input is occurrences or polygons
-	if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'MULTIPOLYGON') {
-		datType <- 'polygons'
-	} else if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'POINT') {
-		datType <- 'points'
-	} else {
-		stop('datType not recognized.')
-	}
-	
-	if (datType == 'points') {
-		spDat <- epmFromOccurrences(spDat)
-	}
-	
+    # and if occurrences, get crs
+    
+    # list of sf objects (only acceptable format for polygons)
+    if (!inherits(spDat, c('sf', 'sfc')) & inherits(spDat[[1]], c('sf', 'sfc'))) {
+        if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'MULTIPOLYGON') {
+            datType <- 'polygons'
+        } else if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'POINT') {
+            datType <- 'points'
+            proj <- sf::st_crs(spDat[[1]])
+        }
+        
+    # single sf object
+    } else if (inherits(spDat, c('sf', 'sfc')) & !inherits(spDat[[1]], c('sf', 'sfc'))) {
+        datType <- 'points'
+        proj <- sf::st_crs(spDat)
+    
+    # single non-spatial data table
+    } else if (!inherits(spDat, c('sf', 'sfc')) & inherits(spDat, c('data.frame', 'matrix'))) {
+        datType <- 'points'
+        if (!is.null(crs)) {
+            proj <- crs
+        } else {
+            stop('Input occurrence data need a crs but none provided.')
+        }
+    
+    # list of non-spatial tables
+    } else if (!inherits(spDat, c('data.frame', 'matrix')) & inherits(spDat[[1]], c('data.frame', 'matrix')) & !inherits(spDat[[1]], c('sf', 'sfc'))) {
+        datType <- 'points'
+        if (!is.null(crs)) {
+            proj <- crs
+        } else {
+            stop('Input occurrence data need a crs but none provided.')
+        }
+        
+    } else {
+        stop('Format of spDat not recognized.')
+    }
+        
+    if (datType == 'points') {
+        percentWithin <- 0
+        method <- 'centroid'
+        retainSmallRanges <- FALSE
+        nGroups <- 1
+       
+        # reformat occurrence data if necessary
+        ## all input formats are returned as a list of species-specific tables
+        occList <- occurrenceFormatting(spDat)
+      
+        # create list of sf objects
+        spDat <- lapply(occList, function(x) sf::st_as_sf(x, coords = 2:3, crs = proj))
+       
+        message('\t', 'Detected ', length(occList), ' taxa with point data.')
+    } 
+    
+    
 	cellType <- match.arg(cellType, c('hexagon', 'square'))
 	
 	if (!cellType %in% c('hexagon', 'square')) {
@@ -324,23 +413,22 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	spDat <- spDat[uniqueSp]
 
 	
-	if (cellType == 'hexagon') {
+    if (cellType == 'hexagon') {
 		
-		# poly = spDat; method = method; coverCutoff = coverCutoff; extentVec = masterExtent; resolution = resolution; crs = proj; nGroups = nGroups; retainSmallRanges = retainSmallRanges; nThreads = nThreads
-		spGridList <- polyToHex(poly = spDat, method = method, coverCutoff = coverCutoff, extentVec = masterExtent, resolution = resolution, crs = proj, nGroups = nGroups, retainSmallRanges = retainSmallRanges, nThreads = nThreads)
+    	# poly = spDat; method = method; coverCutoff = coverCutoff; extentVec = masterExtent; resolution = resolution; crs = proj; nGroups = nGroups; retainSmallRanges = retainSmallRanges; nThreads = nThreads
+    	spGridList <- polyToHex(poly = spDat, method = method, coverCutoff = coverCutoff, extentVec = masterExtent, resolution = resolution, crs = proj, nGroups = nGroups, retainSmallRanges = retainSmallRanges, nThreads = nThreads)
 		
-	} else if (cellType == 'square') {
+    } else if (cellType == 'square') {
 		
-		spGridList <- polyToTerra(poly = spDat, method = method, coverCutoff = coverCutoff, extentVec = masterExtent, resolution = resolution, crs = proj, retainSmallRanges = retainSmallRanges, template = template, nThreads = nThreads)
+    	spGridList <- polyToTerra(poly = spDat, method = method, coverCutoff = coverCutoff, extentVec = masterExtent, resolution = resolution, crs = proj, retainSmallRanges = retainSmallRanges, template = template, nThreads = nThreads)
 		
-	} else {
-		stop('Cell type not supported.')
-	}
+    } else {
+    	stop('Cell type not supported.')
+    }
 	
-	gridTemplate <- spGridList[[1]]
-	spGridList <- spGridList[[2]]
-	
-
+    gridTemplate <- spGridList[[1]]
+    spGridList <- spGridList[[2]]
+  
 	# update
 	smallSp <- which(lengths(spGridList) == 0)
 	
@@ -526,9 +614,13 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 	
 	
 	} else {
-				
-		spGridList <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, coverCutoff, subset = 0), cl = cl)
 		
+	    if (unique(as.character(sf::st_geometry_type(poly[[1]]))) == 'MULTIPOLYGON') {
+		    spGridList <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, coverCutoff, subset = 0), cl = cl)
+	    } else {
+	        # for points
+	        spGridList <- pbapply::pblapply(poly, function(x) unlist(sf::st_intersects(x, gridTemplate)), cl = cl)
+	    }
 	}
 
 	if (nThreads > 1 & .Platform$OS.type == 'windows') parallel::stopCluster(cl)
@@ -540,19 +632,19 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 	if (retainSmallRanges) {
 		if (length(smallSp) > 0) {
 			for (i in 1:length(smallSp)) {
-			  # message('\t', i)
+			    # message('\t', i)
 
 				tmp <- unlist(sf::st_intersects(poly[[smallSp[i]]], gridTemplate))
 				
 				if (length(tmp) > 0) {
 				
-  				# of grid cells intersected by small-ranged species, keep the cell most occupied.
-  				# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
-  				tmp <- tmp[which.max(as.vector(sf::st_area(sf::st_intersection(sf::st_union(poly[[smallSp[i]]]), gridTemplate[tmp,])) / sf::st_area(gridTemplate[tmp,])))]
+  				    # of grid cells intersected by small-ranged species, keep the cell most occupied.
+  				    # this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
+  				    tmp <- tmp[which.max(as.vector(sf::st_area(sf::st_intersection(sf::st_union(poly[[smallSp[i]]]), gridTemplate[tmp,])) / sf::st_area(gridTemplate[tmp,])))]
 				
-  				spGridList[[smallSp[i]]] <- tmp
+  				    spGridList[[smallSp[i]]] <- tmp
 
-  			}
+  			    }
 			}
 			rescued <- setdiff(names(smallSp), names(which(lengths(spGridList) == 0)))
 			if (length(rescued) > 0) {
@@ -565,8 +657,6 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 	return(list(gridTemplate, spGridList))
 }	
 	
-
-
 
 
 
@@ -629,44 +719,55 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	# for (i in 1:length(poly)) {
 		# x <- poly[[i]]
 		# message('\t', i)
+	    
+	    if (unique(as.character(sf::st_geometry_type(x))) == 'POINT') {
+	        
+	        presenceCells <- terra::cellFromXY(gridTemplate, sf::st_coordinates(x))
+	        if (cellsToExclude) {
+	            presenceCells <- intersect(presenceCells, goodCells)
+	        }
+	        
+        } else {
 		
-		xx <- terra::cells(gridTemplate, y = terra::vect(x), weights = TRUE)
-		
-		if (nrow(xx) > 0) {
-			# if polygon extends beyond grid template, cell may be NaN
-			if (anyNA(xx[, 'cell'])) {
-				xx <- xx[!is.na(xx[, 'cell']),]
-			}
-					
-			# cells are returned regardless of how much they are covered by polygon
-			
-			# exclude some cells if needed
-			if (cellsToExclude) {
-				xx <- xx[xx[, 'cell'] %in% goodCells, ]
-			}
-			
-			if (!is.matrix(xx)) {
-				# if xx was a single row, the subsetting might cause it to become a vector
-				xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
-			}
-			
-			if (nrow(xx) > 0) {
-	
-				if (method == 'centroid') {
-					centroids <- terra::xyFromCell(gridTemplate, cell = xx[, 'cell'])
-					centroids <- sf::st_as_sf(as.data.frame(centroids), coords = 1:2, crs = sf::st_crs(x))	
-					presenceCells <- xx[, 'cell'][unlist(sf::st_intersects(x, centroids))]
-		
-				} else if (method == 'areaCutoff') {
-		
-					presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
-					# terra::xyFromCell(gridTemplate, cell = presenceCells) # for testing
-					
-				}		
-				
-				return(presenceCells)
-			}
-		}
+    		xx <- terra::cells(gridTemplate, y = terra::vect(x), weights = TRUE)
+    		
+    		if (nrow(xx) > 0) {
+    			# if polygon extends beyond grid template, cell may be NaN
+    			if (anyNA(xx[, 'cell'])) {
+    				xx <- xx[!is.na(xx[, 'cell']),]
+    			}
+    					
+    			# cells are returned regardless of how much they are covered by polygon
+    			
+    			# exclude some cells if needed
+    			if (cellsToExclude) {
+    				xx <- xx[xx[, 'cell'] %in% goodCells, ]
+    			}
+    			
+    			if (!is.matrix(xx)) {
+    				# if xx was a single row, the subsetting might cause it to become a vector
+    				xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
+    			}
+    			
+                if (nrow(xx) > 0) {
+    			    
+                    if (method == 'centroid') {
+                        centroids <- terra::xyFromCell(gridTemplate, cell = xx[, 'cell'])
+                        centroids <- sf::st_as_sf(as.data.frame(centroids), coords = 1:2, crs = sf::st_crs(x))	
+                        presenceCells <- xx[, 'cell'][unlist(sf::st_intersects(x, centroids))]
+        		
+                    } else if (method == 'areaCutoff') {
+        		
+                        presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
+                        # terra::xyFromCell(gridTemplate, cell = presenceCells) # for testing
+        					
+                    }
+                }
+    		}
+        }
+	    
+	    return(presenceCells)
+	    
 	}, cl = cl)
 	
 	if (nThreads > 1 & .Platform$OS.type == 'windows') parallel::stopCluster(cl)
@@ -778,8 +879,40 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 ## 	crs = st_crs(spOccList[[1]])$proj4string)
 ## spStack <- rasterStackFromOccurrences(spOccList4, resolution = 50000)
 
+###########################################
 
-epmFromOccurrences <- function(occ) {
+## # list of sf spatial objects
+## spOccList <- lapply(tamiasPolyList, function(x) st_sample(x, size = 10, type= 'random'))
+## occurrenceFormatting(spOccList)
+##
+## # list of coordinate tables
+## spOccList2 <- lapply(spOccList, function(x) st_coordinates(x))
+## occurrenceFormatting(spOccList2)
+## 
+## # single table of coordinates
+## spOccList3 <- spOccList2
+## for (i in 1:length(spOccList3)) {
+## 	spOccList3[[i]] <- cbind.data.frame(taxon = names(spOccList3)[i], spOccList3[[i]])
+## 	colnames(spOccList3[[i]]) <- c('taxon', 'X', 'Y')
+## }
+## spOccList3 <- do.call(rbind, spOccList3)
+## rownames(spOccList3) <- NULL
+## spOccList3[, 'taxon'] <- as.character(spOccList3[, 'taxon'])
+## occurrenceFormatting(spOccList3)
+##
+## # a single labeled spatial object
+## spOccList4 <- st_as_sf(spOccList3[, c('taxon', 'X', 'Y')], coords = c('X','Y'), 
+## 	crs = st_crs(spOccList[[1]])$proj4string)
+## occurrenceFormatting(spOccList4)
+##
+## # unprojected list
+## spOccList5 <- lapply(spOccList, function(x) st_transform(x, crs = 4326))
+##
+## # unprojected list of tables
+## spOccList6 <- lapply(spOccList5, function(x) st_coordinates(x))
+
+
+occurrenceFormatting <- function(occ) {
 	
 	# detect format and convert. Target is a list of separate tables of coordinates, one per species.
 	if (inherits(occ, 'list')) {
@@ -842,10 +975,15 @@ epmFromOccurrences <- function(occ) {
 	}
 	
 
-	# Now, regardless of input format, occ should now be a single table of coordinates and associated taxon names
+	# Now, regardless of input format, occ should be a single table of coordinates and associated taxon names
 	
 	if (!all(c('long', 'lat') %in% colnames(occ))) {
-		stop('Coordinate headers not found in occ.')
+	    if (all(c('x', 'y') %in% tolower(colnames(occ)))) {
+	        colnames(occ)[which(tolower(colnames(occ)) == 'x')] <- 'long'
+	        colnames(occ)[which(tolower(colnames(occ)) == 'y')] <- 'lat'
+	    } else {
+    		stop('Coordinate headers not found in occ.')
+	    }
 	}
 	if (!'taxon' %in% colnames(occ)) {
 		stop('taxon header not found in occ.')
@@ -873,19 +1011,11 @@ epmFromOccurrences <- function(occ) {
 	}
 	
 	# split into list of tables
-	occList <- split(occ, occ[, 'taxon'])		
-	
-	# create list of sf objects
-	occList <- lapply(occList, function(x) sf::st_as_sf(x, coords = 2:3, crs = crs))
-	
-	message('\t', 'Detected ', length(occList), ' taxa.')
+	occList <- split(occ, occ[, 'taxon'])
 	
 	return(occList)
 
 }
-
-
-
 
 
 
