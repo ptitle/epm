@@ -89,7 +89,9 @@
 ##'
 ##'		Any SpatialPolygon or SpatialPoints objects are converted to objects of class \code{sf}.
 ##'	
-##' 
+##'     For \code{extent = 'interactive'}, you can additionally specify some bounding coordinates.
+##'     This can be helpful if the interactive map is too broad in extent, making it difficult to draw
+##'     the extent that you want. Instead, specify \code{extent = list('interactive', c(xmin, xmax, ymin, ymax))}.
 ##' 	In interactive mode, the basemap is from \url{www.naturalearthdata.com}. 
 ##' 
 ##' @return an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.
@@ -302,13 +304,13 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		}
 	}
 
-	if (inherits(extent, 'character')) {
+	if (inherits(extent, 'character') | 'interactive' %in% unlist(extent)) {
 		
-		if (!extent %in% c('auto', 'interactive')) {
+		if (!any(extent %in% c('auto', 'interactive'))) {
 			stop("If extent is a character vector, it can only be 'auto' or 'interactive'.")
 		}
 		
-		if (extent == 'auto') {
+		if (all(extent == 'auto')) {
 		
 			#get overall extent
 			masterExtent <- getExtentOfList(spDat, format = 'sf')
@@ -359,15 +361,20 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	# interactive extent: if this option is selected, a coarse richness grid
 	# will be plotted, so that the user can designate an extent polygon
 	wkt <- NULL
-	if (inherits(extent, 'character')) {
-		if (extent == 'interactive') {
-
+	if (inherits(extent, 'character') | 'interactive' %in% unlist(extent)) {
+		if (all(extent == 'interactive')) {
 			interactive <- interactiveExtent(spDat)
-			extent <- interactive$poly
-			wkt <- interactive$wkt
-			
-			return(wkt)
+		} else if ('interactive' %in% unlist(extent)) {
+		    bb <- extent[[which(sapply(extent, function(x) !all(x == 'interactive')) == TRUE)]]
+		    if (length(bb) != 4 | !inherits(bb, 'numeric')) {
+		        stop("If you are trying to provide bounding coordinates for the interactive extent, then something is wrong.\n You should specify extent = list('interactive', c(xmin, xmax, ymin, ymax))")
+		    }
+		    interactive <- interactiveExtent(spDat, bb = bb)
 		}
+		extent <- interactive$poly
+		wkt <- interactive$wkt
+			
+		return(wkt)
 	}
 	
 	# percentWithin: Implement a filter based on the percentage that each species' range overlaps the extent.

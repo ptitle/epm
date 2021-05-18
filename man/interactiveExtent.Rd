@@ -4,12 +4,15 @@
 \alias{interactiveExtent}
 \title{Interactively choose extent}
 \usage{
-interactiveExtent(polyList, cellType = "square")
+interactiveExtent(polyList, cellType = "square", bb = NULL)
 }
 \arguments{
 \item{polyList}{a list of Simple Feature polygons.}
 
 \item{cellType}{either \code{hexagon} or \code{square}.}
+
+\item{bb}{c(xmin, xmax, ymin, ymax) to limit the extent for 
+the interactive plot.}
 }
 \value{
 A list with a polygon, and its WKT string

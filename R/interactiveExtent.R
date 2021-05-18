@@ -7,6 +7,9 @@
 ##' @param polyList a list of Simple Feature polygons.
 ##'
 ##' @param cellType either \code{hexagon} or \code{square}.
+##' 
+##' @param bb c(xmin, xmax, ymin, ymax) to limit the extent for 
+##' the interactive plot.
 ##'
 ##' @return A list with a polygon, and its WKT string 
 ##'
@@ -25,49 +28,77 @@
 
 
 
-interactiveExtent <- function(polyList, cellType = 'square') {
+interactiveExtent <- function(polyList, cellType = 'square', bb = NULL) {
 	
 	cellType <- match.arg(cellType, c('hexagon', 'square'))
+	
+	if (!is.null(bb)) {
+	    # broaden just a bit for clearer plotting
+	    bb[1] <- bb[1] * 0.95
+	    bb[2] <- bb[2] * 1.05
+	    bb[3] <- bb[3] * 0.95
+	    bb[4] <- bb[4] * 1.05
+	}
 		
 	# coarse template
 	# if projected, use 100km, if not, use 2 degrees
 	quickRes <- ifelse(sf::st_is_longlat(polyList[[1]]), 2, 100000)
 	
 	if (cellType == 'hexagon') {
+	    
+	    #get overall extent
+	    masterExtent <- sf::st_as_sfc(getExtentOfList(polyList, format = 'sf'))
+	    
+	    if (!is.null(bb)) {
+	        masterExtent <- getExtentOfList(polyList, format = 'sf')
+	        masterExtent['xmin'] <- bb[1]
+	        masterExtent['xmax'] <- bb[2]
+	        masterExtent['ymin'] <- bb[3]
+	        masterExtent['ymax'] <- bb[4]
+	        masterExtent <- sf::st_as_sfc(masterExtent)
+	    }
 		
-		#get overall extent
-		masterExtent <- sf::st_as_sfc(getExtentOfList(polyList, format = 'sf'))
-
 		quickTemplate <- sf::st_make_grid(masterExtent, cellsize = c(quickRes, quickRes), square = FALSE, crs = sf::st_crs(masterExtent))
 		quickCentroids <- sf::st_centroid(quickTemplate)
 		quickTemplate <- sf::st_sf(quickTemplate, grid_id = 1:length(quickTemplate))
 		
-		quick <- lapply(polyList, function(x) polyToGridCells(x, method = 'centroid', quickTemplate, quickCentroids, subset = 0))
+		quick <- pbapply::pblapply(polyList, function(x) polyToGridCells(x, method = 'centroid', quickTemplate, quickCentroids, subset = 0))
 					
 	} else {
 		
-		#get overall extent
-		masterExtent <- getExtentOfList(polyList, format = 'sf')
-		
+	    #get overall extent
+	    masterExtent <- getExtentOfList(polyList, format = 'sf')
+	    
+	    if (!is.null(bb)) {
+	        masterExtent['xmin'] <- bb[1]
+	        masterExtent['xmax'] <- bb[2]
+	        masterExtent['ymin'] <- bb[3]
+	        masterExtent['ymax'] <- bb[4]
+	    }
+	    
 		quickTemplate <- terra::rast(xmin = masterExtent['xmin'], xmax = masterExtent['xmax'], ymin = masterExtent['ymin'], ymax = masterExtent['ymax'], resolution = c(quickRes, quickRes), crs = ifelse(sf::st_is_longlat(polyList[[1]]), '', sf::st_crs(polyList[[1]])$input))
 		
 		quick <- pbapply::pblapply(polyList, function(x) {
-		
+		# for (i in 1:length(polyList)) {
+		#     x <- polyList[[i]]
+		#     message(i)
+		    
 			xx <- terra::cells(quickTemplate, y = terra::vect(x), weights = TRUE)
 			
-			# if polygon extends beyond grid template, cell may be NaN
-			if (anyNA(xx[, 'cell'])) {
-				xx <- xx[!is.na(xx[, 'cell']),]
+			if (nrow(xx) > 0 & !all(is.na(xx[, 'cell']))) {
+    			# if polygon extends beyond grid template, cell may be NaN
+    			if (anyNA(xx[, 'cell'])) {
+    				xx <- xx[!is.na(xx[, 'cell']),]
+    			}
+    					
+    			# cells are returned regardless of how much they are covered by polygon
+    			# using centroid method
+    			quickCentroids <- terra::xyFromCell(quickTemplate, cell = xx[, 'cell'])
+    			quickCentroids <- sf::st_as_sf(as.data.frame(quickCentroids), coords = 1:2, crs = sf::st_crs(x))	
+    			
+    			xx[, 'cell'][unlist(sf::st_intersects(x, quickCentroids))]
 			}
-					
-			# cells are returned regardless of how much they are covered by polygon
-			# using centroid method
-			quickCentroids <- terra::xyFromCell(quickTemplate, cell = xx[, 'cell'])
-			quickCentroids <- sf::st_as_sf(as.data.frame(quickCentroids), coords = 1:2, crs = sf::st_crs(x))	
-			
-			xx[, 'cell'][unlist(sf::st_intersects(x, quickCentroids))]
-		})
-
+    	})
 	}
 	
 	# flip list from list of cells per species, to list of species per cells
@@ -132,3 +163,4 @@ interactiveExtent <- function(polyList, cellType = 'square') {
 	
 	return(list(poly = userPoly, wkt = wkt))
 }
+
