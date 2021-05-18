@@ -113,7 +113,9 @@ If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf pac
 
 	Any SpatialPolygon or SpatialPoints objects are converted to objects of class \code{sf}.
 
-
+    For \code{extent = 'interactive'}, you can additionally specify some bounding coordinates.
+    This can be helpful if the interactive map is too broad in extent, making it difficult to draw
+    the extent that you want. Instead, specify \code{extent = list('interactive', c(xmin, xmax, ymin, ymax))}.
 	In interactive mode, the basemap is from \url{www.naturalearthdata.com}.
 }
 \examples{

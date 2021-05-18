@@ -769,11 +769,15 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
                         # terra::xyFromCell(gridTemplate, cell = presenceCells) # for testing
         					
                     }
+                } else {
+                    presenceCells <- numeric(0)
                 }
+    		} else {
+    		    presenceCells <- numeric(0)
     		}
         }
 	    
-	    return(presenceCells)
+	    presenceCells
 	    
 	}, cl = cl)
 	
