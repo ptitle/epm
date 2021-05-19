@@ -626,7 +626,7 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 		    spGridList <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, coverCutoff, subset = 0), cl = cl)
 	    } else {
 	        # for points
-	        spGridList <- pbapply::pblapply(poly, function(x) unlist(sf::st_intersects(x, gridTemplate)), cl = cl)
+	        spGridList <- pbapply::pblapply(poly, function(x) which(lengths(sf::st_intersects(x, gridTemplate)) > 0), cl = cl)
 	    }
 	}
 
