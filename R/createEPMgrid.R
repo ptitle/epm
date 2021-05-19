@@ -362,20 +362,22 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	# will be plotted, so that the user can designate an extent polygon
 	wkt <- NULL
 	if (inherits(extent, 'character') | 'interactive' %in% unlist(extent)) {
-		if (all(extent == 'interactive')) {
-			interactive <- interactiveExtent(spDat)
-		} else if ('interactive' %in% unlist(extent)) {
-		    bb <- extent[[which(sapply(extent, function(x) !all(x == 'interactive')) == TRUE)]]
-		    if (length(bb) != 4 | !inherits(bb, 'numeric')) {
-		        stop("If you are trying to provide bounding coordinates for the interactive extent, then something is wrong.\n You should specify extent = list('interactive', c(xmin, xmax, ymin, ymax))")
-		    }
-		    interactive <- interactiveExtent(spDat, bb = bb)
-		}
-		extent <- interactive$poly
-		wkt <- interactive$wkt
-			
-		return(wkt)
-	}
+        if (!all(extent == 'auto')) {
+	    	if (all(extent == 'interactive')) {
+    			interactive <- interactiveExtent(spDat)
+    		} else if ('interactive' %in% unlist(extent)) {
+    		    bb <- extent[[which(sapply(extent, function(x) !all(x == 'interactive')) == TRUE)]]
+    		    if (length(bb) != 4 | !inherits(bb, 'numeric')) {
+    		        stop("If you are trying to provide bounding coordinates for the interactive extent, then something is wrong.\n You should specify extent = list('interactive', c(xmin, xmax, ymin, ymax))")
+    		    }
+    		    interactive <- interactiveExtent(spDat, bb = bb)
+    		}
+    		extent <- interactive$poly
+    		wkt <- interactive$wkt
+    			
+    		return(wkt)
+        }
+    }
 	
 	# percentWithin: Implement a filter based on the percentage that each species' range overlaps the extent.
 	## This allows us to provide some threshold for species inclusion. For instance, 5% would imply that a 
@@ -626,7 +628,7 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 		    spGridList <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, coverCutoff, subset = 0), cl = cl)
 	    } else {
 	        # for points
-	        spGridList <- pbapply::pblapply(poly, function(x) which(lengths(sf::st_intersects(x, gridTemplate)) > 0), cl = cl)
+	        spGridList <- pbapply::pblapply(poly, function(x) unlist(sf::st_intersects(x, gridTemplate)), cl = cl)
 	    }
 	}
 
