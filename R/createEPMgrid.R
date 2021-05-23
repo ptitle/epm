@@ -731,7 +731,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 		# x <- poly[[i]]
 		# message('\t', i)
 	    
-	    if (unique(as.character(sf::st_geometry_type(x))) == 'POINT') {
+	    if (all(unique(as.character(sf::st_geometry_type(x))) == 'POINT')) {
 	        
 	        presenceCells <- terra::cellFromXY(gridTemplate, sf::st_coordinates(x))
 	        if (cellsToExclude) {
