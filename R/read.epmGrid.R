@@ -23,6 +23,10 @@
 
 read.epmGrid <- function(filename) {
 	
+	if (!grepl('\\.rds$', filename)) {
+		filename <- paste0(filename, '.rds')
+	}
+	
 	x <- readRDS(filename)
 	
 	if (inherits(x[[1]], 'PackedSpatRaster')) {
