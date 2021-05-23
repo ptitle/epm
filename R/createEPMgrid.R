@@ -170,11 +170,13 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
     
     # list of sf objects (only acceptable format for polygons)
     if (!inherits(spDat, c('sf', 'sfc')) & inherits(spDat[[1]], c('sf', 'sfc'))) {
-        if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'MULTIPOLYGON') {
+        if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) %in% c('MULTIPOLYGON', 'POLYGON', 'GEOMETRY')) {
             datType <- 'polygons'
         } else if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'POINT') {
             datType <- 'points'
             proj <- sf::st_crs(spDat[[1]])
+        } else {
+        	stop('Geometry type not recognized.')
         }
         
     # single sf object
@@ -364,13 +366,13 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	if (inherits(extent, 'character') | 'interactive' %in% unlist(extent)) {
         if (!all(extent == 'auto')) {
 	    	if (all(extent == 'interactive')) {
-    			interactive <- interactiveExtent(spDat)
+    			interactive <- interactiveExtent(spDat, nThreads = nThreads)
     		} else if ('interactive' %in% unlist(extent)) {
     		    bb <- extent[[which(sapply(extent, function(x) !all(x == 'interactive')) == TRUE)]]
     		    if (length(bb) != 4 | !inherits(bb, 'numeric')) {
     		        stop("If you are trying to provide bounding coordinates for the interactive extent, then something is wrong.\n You should specify extent = list('interactive', c(xmin, xmax, ymin, ymax))")
     		    }
-    		    interactive <- interactiveExtent(spDat, bb = bb)
+    		    interactive <- interactiveExtent(spDat, bb = bb, nThreads = nThreads)
     		}
     		extent <- interactive$poly
     		wkt <- interactive$wkt
