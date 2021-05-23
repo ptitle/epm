@@ -28,8 +28,7 @@
 \item{legend}{boolean; should legend be included?}
 
 \item{col}{either a vector of color names that will be interpolated, or a color ramp
-function that takes an integer (see for example \code{\link{colorRampPalette}}).
-The default color ramp is \link{viridisLite::turbo}}
+function that takes an integer (see for example \code{\link{colorRampPalette}}).}
 
 \item{basemap}{if \code{'none'}, then only the grid is plotted. 
 If \code{'worldmap'}, then vector map is plotted.

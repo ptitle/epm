@@ -10,7 +10,6 @@
 ##' @param legend boolean; should legend be included?
 ##' @param col either a vector of color names that will be interpolated, or a color ramp
 ##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
-##'		The default color ramp is \link{viridisLite::turbo}
 ##'	@param basemap if \code{'none'}, then only the grid is plotted. 
 ##'		If \code{'worldmap'}, then vector map is plotted.
 ##' 	If \code{'interactive'}, then the \code{mapview} package is used.
