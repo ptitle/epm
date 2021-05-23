@@ -11,6 +11,8 @@
 ##' @param bb c(xmin, xmax, ymin, ymax) to limit the extent for 
 ##' the interactive plot.
 ##'
+##' @param nThreads if > 1, then employ parallel computing. 
+##'
 ##' @return A list with a polygon, and its WKT string 
 ##'
 ##' @author Pascal Title
@@ -28,7 +30,7 @@
 
 
 
-interactiveExtent <- function(polyList, cellType = 'square', bb = NULL) {
+interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads = 1) {
 	
 	cellType <- match.arg(cellType, c('hexagon', 'square'))
 	
@@ -41,8 +43,25 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL) {
 	}
 		
 	# coarse template
+	# For resolution, use latitudinal and longitudinal breadth
+	xrange <- abs(getExtentOfList(polyList, format = 'sf')['xmax'] - getExtentOfList(polyList, format = 'sf')['xmin']) / 100
+	yrange <- abs(getExtentOfList(polyList, format = 'sf')['ymax'] - getExtentOfList(polyList, format = 'sf')['ymin']) / 100
+	quickRes <- round((xrange + yrange) / 2, 0)
+	
 	# if projected, use 100km, if not, use 2 degrees
-	quickRes <- ifelse(sf::st_is_longlat(polyList[[1]]), 2, 100000)
+	# quickRes <- ifelse(sf::st_is_longlat(polyList[[1]]), 2, 100000)
+	
+	# prep for parallel computing
+	if (nThreads == 1) {
+		cl <- NULL
+	} else if (nThreads > 1) {
+		if (.Platform$OS.type != 'windows') {
+			cl <- nThreads
+		} else {
+			cl <- parallel::makeCluster(nThreads)
+			parallel::clusterExport(cl, c('method', 'gridTemplate', 'coverCutoff'))
+		}
+	}	
 	
 	if (cellType == 'hexagon') {
 	    
@@ -62,7 +81,7 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL) {
 		quickCentroids <- sf::st_centroid(quickTemplate)
 		quickTemplate <- sf::st_sf(quickTemplate, grid_id = 1:length(quickTemplate))
 		
-		quick <- pbapply::pblapply(polyList, function(x) polyToGridCells(x, method = 'centroid', quickTemplate, quickCentroids, subset = 0))
+		quick <- pbapply::pblapply(polyList, function(x) polyToGridCells(x, method = 'centroid', quickTemplate, quickCentroids, subset = 0), cl = cl)
 					
 	} else {
 		
@@ -98,8 +117,10 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL) {
     			
     			xx[, 'cell'][unlist(sf::st_intersects(x, quickCentroids))]
 			}
-    	})
+    	}, cl = cl)
 	}
+	
+	if (nThreads > 1 & .Platform$OS.type == 'windows') parallel::stopCluster(cl)
 	
 	# flip list from list of cells per species, to list of species per cells
 	if (inherits(quickTemplate, 'SpatRaster')) {
