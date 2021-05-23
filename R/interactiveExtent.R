@@ -158,7 +158,7 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads
 	if (inherits(quickTemplate, 'sf')) {
 		plot(quickTemplate['spRichness'], border = NA, key.pos = NULL, main = NULL, reset = FALSE)
 	} else {
-		terra::plot(quickTemplate, legend = FALSE, axes = FALSE, col = sf::sf.colors(100))
+		terra::plot(quickTemplate, legend = FALSE, axes = FALSE, col = grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))(100))
 	}
 
 	graphics::plot(wrld, add = TRUE, lwd = 1, border = gray(0.5))
