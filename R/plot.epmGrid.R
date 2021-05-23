@@ -9,16 +9,18 @@
 ##' 	plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. Not intended for mapview option.
 ##' @param legend boolean; should legend be included?
 ##' @param col either a vector of color names that will be interpolated, or a color ramp
-##' 	function that takes an integer (see for example \code{\link{colorRampPalette}})
+##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
+##'		The default color ramp is \link{viridisLite::turbo}
 ##'	@param basemap if \code{'none'}, then only the grid is plotted. 
 ##'		If \code{'worldmap'}, then vector map is plotted.
 ##' 	If \code{'interactive'}, then the \code{mapview} package is used.
 ##' @param singleSpCol color for single-species cells. See details.
 ##' @param lwd grid cell border width
 ##' @param borderCol color for grid cell borders
+##' @param alpha opacity of all colors and borders, ranging from 0 (fully transparent) to 1 (fully opaque)
 ##' @param includeFrame boolean; include frame around plot?
 ##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead of tmap package
-##' @param ... additional arguments that can be passed to sf::plot if \code{use_tmap = FALSE}
+##' @param ... additional arguments that can be passed to sf::plot or terra::plot if \code{use_tmap = FALSE}
 ##'
 ##'
 ##' @details If \code{x} is a metric as generated with \code{gridMetrics} that returns 0 
@@ -60,7 +62,7 @@
 ##' @aliases plot.epmGrid
 ##' @export
 
-plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, singleSpCol = gray(0.9), lwd, borderCol = 'black', includeFrame = FALSE, use_tmap = TRUE, ...) {
+plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, ...) {
 	
 	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE
 	
@@ -117,7 +119,9 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	}
 
 	if (missing(col)) {
-		colramp <- sf::sf.colors
+		# colramp <- sf::sf.colors
+		# colramp <- viridisLite::turbo
+		colramp <- grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))
 	} else {
 		if (class(col) == 'function') {
 			colramp <- col
@@ -181,11 +185,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			}
 			
 			if (!plotSingleCells) {
-				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_borders(col = borderCol, lwd = lwd) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 				
 			} else {
 				
-				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_borders(col = borderCol, lwd = 0.5) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE) + tmap::tm_borders(col = borderCol, lwd = 0.5) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = 0.5, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = 0.5, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -206,14 +210,18 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			} else {
 				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncol + 1)
 			}
+			
+			colors <- colramp(ncol)
+			colors <- grDevices::adjustcolor(colors, alpha.f = alpha)
+			borderColor <- grDevices::adjustcolor('black', alpha.f = alpha)
+			singleSpCol <- grDevices::adjustcolor(singleSpCol, alpha.f = alpha)
 	
 			
 			if (!plotSingleCells) {
-				plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colramp(ncol), breaks = breaks, ...)
+				plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colors, border = borderColor, breaks = breaks, ...)
 			} else {
-				plot(grid_multiSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, extent = sf::st_bbox(x[[1]]), pal = colramp(ncol), breaks = breaks, ...)
-				plot(grid_singleSp[plotMetric], add = TRUE, pal = singleSpCol, border = NA, reset = FALSE)
-				plot(grid_multiSp[plotMetric], lwd = lwd, pal = colramp(ncol), breaks = breaks, add = TRUE, reset = FALSE)
+				plot(grid_singleSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, pal = singleSpCol, border = NA, reset = FALSE, ...)
+				plot(grid_multiSp[plotMetric], lwd = lwd, pal = colors, border = borderCol, breaks = breaks, add = TRUE, reset = FALSE)
 			}
 			
 			if (legend) {
@@ -302,11 +310,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 #			}
 			
 			if (!plotSingleCells) {
-				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 				
 			} else {
 				
-				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = singleSpCol, legend.show = FALSE) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -331,12 +339,12 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 		
 			if (!plotSingleCells) {
-				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, ...)
 				
 			} else {
 				
-				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange)
-				terra::plot(grid_singleSp, col = singleSpCol, axes = includeFrame, legend = FALSE, range = valRange, add = TRUE)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, ...)
+				terra::plot(grid_singleSp, col = singleSpCol, axes = includeFrame, legend = FALSE, range = valRange, add = TRUE, alpha = alpha)
 				
 			}
 			

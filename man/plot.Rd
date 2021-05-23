@@ -14,6 +14,7 @@
   singleSpCol = gray(0.9),
   lwd,
   borderCol = "black",
+  alpha = 1,
   includeFrame = FALSE,
   use_tmap = TRUE,
   ...
@@ -27,7 +28,8 @@
 \item{legend}{boolean; should legend be included?}
 
 \item{col}{either a vector of color names that will be interpolated, or a color ramp
-function that takes an integer (see for example \code{\link{colorRampPalette}})}
+function that takes an integer (see for example \code{\link{colorRampPalette}}).
+The default color ramp is \link{viridisLite::turbo}}
 
 \item{basemap}{if \code{'none'}, then only the grid is plotted. 
 If \code{'worldmap'}, then vector map is plotted.
@@ -43,11 +45,13 @@ plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. Not inte
 
 \item{borderCol}{color for grid cell borders}
 
+\item{alpha}{opacity of all colors and borders, ranging from 0 (fully transparent) to 1 (fully opaque)}
+
 \item{includeFrame}{boolean; include frame around plot?}
 
 \item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead of tmap package}
 
-\item{...}{additional arguments that can be passed to sf::plot if \code{use_tmap = FALSE}}
+\item{...}{additional arguments that can be passed to sf::plot or terra::plot if \code{use_tmap = FALSE}}
 }
 \value{
 Nothing is returned.
