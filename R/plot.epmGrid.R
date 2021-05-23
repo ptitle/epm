@@ -73,7 +73,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	}
 	
 	if (use_tmap & !requireNamespace('tmap', quietly = TRUE)) {
-		message('\ttmap package not installed -- defaulting to sf plot')
+		message('\ttmap package not installed -- defaulting to sf/terra plot')
 		use_tmap <- FALSE
 	}
 	

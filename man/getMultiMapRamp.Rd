@@ -24,11 +24,11 @@ can be supplied to \code{\link{plot.epmGrid}}. Also works with RasterLayer
 and sf objects. For sf object, only one attribute can be specified.
 }
 \examples{
-library(raster)
+library(terra)
 tamiasEPM
 
 # create a dummy raster for demonstration purposes.
-ras <- raster()
+ras <- rast()
 values(ras) <- runif(ncell(ras), min = 0, max = 40)
 
 getMultiMapRamp(list(tamiasEPM, ras))

@@ -4,7 +4,7 @@
 \alias{interactiveExtent}
 \title{Interactively choose extent}
 \usage{
-interactiveExtent(polyList, cellType = "square", bb = NULL)
+interactiveExtent(polyList, cellType = "square", bb = NULL, nThreads = 1)
 }
 \arguments{
 \item{polyList}{a list of Simple Feature polygons.}
@@ -13,6 +13,8 @@ interactiveExtent(polyList, cellType = "square", bb = NULL)
 
 \item{bb}{c(xmin, xmax, ymin, ymax) to limit the extent for 
 the interactive plot.}
+
+\item{nThreads}{if > 1, then employ parallel computing.}
 }
 \value{
 A list with a polygon, and its WKT string

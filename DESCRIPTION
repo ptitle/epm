@@ -6,7 +6,7 @@ Date: 2021-02-15
 Author: Pascal Title
 Maintainer: Pascal Title <pascal.title@stonybrook.edu>
 Depends: R (>= 3.5)
-Imports: terra, raster, sf, spdep, ape, geomorph, picante, pbapply, methods, Rcpp (>= 0.12.9)
+Imports: terra, raster, sf, spdep, ape, geomorph, picante, pbapply, RcppProgress, methods, Rcpp (>= 0.12.9)
 Suggests: tmap, lwgeom, sp, rgdal
 Description: An R package that facilitates the aggregation of species'
 	geographic ranges from vector or raster spatial data, and that enables

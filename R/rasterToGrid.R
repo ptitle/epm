@@ -22,7 +22,7 @@
 ##' 
 ##' # We have a terra grid object (for example, climate data read in as a raster)
 ##' # Here, we are just generating some random data for demo
-##' env <- aggregate(rasterize(vect(tamiasEPM[[1]]), rast(vect(tamiasEPM[[1]]))), 2)
+##' env <- rast(vect(tamiasEPM[[1]]), resolution = 100000)
 ##' env[] <- sample(1:100, ncell(env), replace = TRUE)
 ##' plot(env)
 ##'

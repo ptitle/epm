@@ -16,11 +16,11 @@
 ##' @author Pascal Title
 ##' 
 ##' @examples
-##' library(raster)
+##' library(terra)
 ##' tamiasEPM
 ##'
 ##' # create a dummy raster for demonstration purposes.
-##' ras <- raster()
+##' ras <- rast()
 ##' values(ras) <- runif(ncell(ras), min = 0, max = 40)
 ##' 
 ##' getMultiMapRamp(list(tamiasEPM, ras))
@@ -80,6 +80,6 @@ getMultiMapRamp <- function(x) {
 	}
 		
 	# find global min and max
-	return(c(sapply(rangeList, min), sapply(rangeList, max)))
+	return(range(unlist(rangeList)))
 		
 }
