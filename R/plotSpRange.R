@@ -56,12 +56,14 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 			map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_polygons(col = gray(0.95), border.col = gray(0.90), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(x[['grid']][cellInd, ]) + tmap::tm_polygons(col = taxonColor, border.col = 'black', lwd = lwd)
 
 		} else {
+			
+			datBB <- sf::st_bbox(sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], which(!is.na(terra::values(x[[1]][['spRichness']]))))), coords = 1:2, crs = sf::st_crs(x[[1]])))
 
 			fullGrid <- x[[1]]['spRichness']
 			fullGrid[!is.na(fullGrid)] <- 1
 			spGrid <- terra::rast(fullGrid)
 			spGrid[cellInd] <- 1
-			map <- map + tmap::tm_shape(fullGrid) + tmap::tm_raster(col = 'spRichness', palette = gray(0.95), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(col = 'spRichness', palette = taxonColor, legend.show = FALSE)
+			map <- map + tmap::tm_shape(fullGrid, bbox = datBB) + tmap::tm_raster(col = 'spRichness', palette = gray(0.95), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(col = 'spRichness', palette = taxonColor, legend.show = FALSE)
 		}
 		map
 
