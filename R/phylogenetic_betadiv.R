@@ -92,8 +92,8 @@ phylogenetic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nT
 		stop('x must be of class epmGrid.')
 	}
 	
-	if (radius < attributes(x)$resolution) {
-		stop(paste0('The radius must at minimum be ', attributes(x)$resolution, '.'))
+	if (radius <= attributes(x)$resolution) {
+		stop(paste0('The radius must at greater than ', attributes(x)$resolution, '.'))
 	}
 	
 	component <- match.arg(component, choices = c('turnover', 'nestedness', 'full'))

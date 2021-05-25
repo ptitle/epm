@@ -89,13 +89,15 @@
 
 taxonomic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nThreads = 1) {
 	# radius is in map units
-		
+	
+	# x <- tamiasEPM; radius <- 70000; component = 'full'; slow = FALSE; nThreads = 1
+	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
 	}
 	
-	if (radius < attributes(x)$resolution) {
-		stop(paste0('The radius must at minimum be ', attributes(x)$resolution, '.'))
+	if (radius <= attributes(x)$resolution) {
+		stop(paste0('The radius must at greater than ', attributes(x)$resolution, '.'))
 	}
 	
 	component <- match.arg(component, choices = c('turnover', 'nestedness', 'full'))
@@ -150,7 +152,7 @@ taxonomic_betadiv <- function(x, radius, component = 'full', slow = FALSE, nThre
 			nbCells <- x[['cellCommInd']][nbCells]
 			
 			# visual verification of focal cell + neighborhood
-			# plot(st_geometry(x[[1]])[nbCells,], border = 'white')
+			# plot(st_geometry(x[[1]])[nbCells,], border = NA)
 			# plot(st_geometry(x[[1]]), add = TRUE, border = 'gray95')
 			# plot(st_geometry(x[[1]])[nbCells,], add = TRUE)
 			# plot(st_geometry(x[[1]])[focalCell, ], col = 'red', add = TRUE)

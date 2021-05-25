@@ -56,8 +56,8 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 		stop('x must be of class epmGrid.')
 	}
 	
-	if (radius < attributes(x)$resolution) {
-		stop(paste0('The radius must at minimum be ', attributes(x)$resolution, '.'))
+	if (radius <= attributes(x)$resolution) {
+		stop(paste0('The radius must at greater than ', attributes(x)$resolution, '.'))
 	}
 	
 	if (nThreads > parallel::detectCores()) {
