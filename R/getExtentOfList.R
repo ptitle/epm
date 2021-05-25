@@ -19,6 +19,10 @@
 
 getExtentOfList <- function(shapes, format = 'raster') {
 	
+	if (inherits(shapes, c('sf', 'sfc')) & !inherits(shapes, 'list')) {
+		shapes <- list(shapes)
+	}
+
 	if (inherits(shapes[[1]], c('SpatialPolygons', 'SpatialPolygonsDataFrame'))) {	
 		shapes <- lapply(shapes, function(x) sf::st_as_sf(x))
 	} 
