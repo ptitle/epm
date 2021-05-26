@@ -161,9 +161,13 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		# }
 		
 		if (use_tmap) {
+		    
+		    if (basemap != 'interactive' & getOption("tmap.mode") == 'view') {
+		        tmap::tmap_mode('plot')
+		    }
 		
 			if (basemap == 'worldmap') {
-				
+
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
 				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.5)
 			}
@@ -204,7 +208,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			# }
 			
 			if (is.null(colorRampRange)) {
-				valRange <- range(sf::st_drop_geometry(x[[1]])[, plotMetric])
+				valRange <- range(sf::st_drop_geometry(x[[1]])[, plotMetric], na.rm = TRUE)
 				breaks <- seq(min(valRange), max(valRange), length.out = ncol + 1)
 			} else {
 				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncol + 1)
@@ -286,9 +290,13 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		}
 		
 		if (use_tmap) {
+		    
+		    if (basemap != 'interactive' & getOption("tmap.mode") == 'view') {
+		        tmap::tmap_mode('plot')
+		    }
 					
 			if (basemap == 'worldmap') {
-				
+
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
 				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = datBB) + tmap::tm_borders(lwd = 0.5)
 			}

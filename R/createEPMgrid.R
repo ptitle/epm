@@ -628,6 +628,10 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 		
 	    if (unique(as.character(sf::st_geometry_type(poly[[1]]))) == 'MULTIPOLYGON') {
 		    spGridList <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, coverCutoff, subset = 0), cl = cl)
+		    # for (i in 1:length(poly)) {
+		    #     message(i)
+		    #     tmp <- epm:::polyToGridCells(poly[[i]], method = method, gridTemplate, gridCentroids, coverCutoff, subset = 0)
+		    # }
 	    } else {
 	        # for points
 	        spGridList <- pbapply::pblapply(poly, function(x) unlist(sf::st_intersects(x, gridTemplate)), cl = cl)
