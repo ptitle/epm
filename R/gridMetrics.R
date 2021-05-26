@@ -284,8 +284,8 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	if (metric == 'phylosignal' & metricType == 'uniVar') {
 		if (verbose & metricType == 'uniVar') message('\t...calculating univariate metric: ', metric, '...\n')
 		resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		ind <- which(lengths(uniqueComm) > 1)
-		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(x[['data']][y], phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
+		ind <- which(lengths(uniqueComm) > 2)
+		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(x[['data']][y]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
 	}
 
 	## MULTIVARIATE
@@ -350,8 +350,8 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	if (metric == 'phylosignal' & metricType == 'multiVar') {
 		if (verbose & metricType == 'multiVar') message('\t...calculating multivariate metric: ', metric, '...\n')
 		resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		ind <- which(lengths(uniqueComm) > 1)
-		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(x[['data']][y, ], phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
+		ind <- which(lengths(uniqueComm) > 2)
+		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(x[['data']][y, ]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
 	}
 	
 	## ----------------------------------
