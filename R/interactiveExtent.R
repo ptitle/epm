@@ -115,7 +115,11 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads
     			quickCentroids <- terra::xyFromCell(quickTemplate, cell = xx[, 'cell'])
     			quickCentroids <- sf::st_as_sf(as.data.frame(quickCentroids), coords = 1:2, crs = sf::st_crs(x))	
     			
-    			xx[, 'cell'][unlist(sf::st_intersects(x, quickCentroids))]
+    			if ((all(unique(as.character(sf::st_geometry_type(x))) == 'POINT'))) {
+    				xx[, 'cell']
+    			} else {
+					xx[, 'cell'][unlist(sf::st_intersects(x, quickCentroids))]
+				}
 			}
     	}, cl = cl)
 	}
