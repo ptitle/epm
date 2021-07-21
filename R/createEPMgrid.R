@@ -514,7 +514,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	if (inherits(gridTemplate, 'sf')) {
 		attr(obj, 'crs') <- sf::st_crs(gridTemplate)$input
 	} else {
-		attr(obj, 'crs') <- terra::crs(gridTemplate, proj4 = TRUE)
+		attr(obj, 'crs') <- terra::crs(gridTemplate, proj = TRUE)
 	}
 	if (inherits(gridTemplate, 'sf')) {
 		attr(obj, 'projected') <- !sf::st_is_longlat(gridTemplate)
@@ -582,7 +582,7 @@ polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGr
 	
 	# if extent was polygon, then mask the grid template
 	if (inherits(masterExtent, c('sf', 'sfc'))) {
-		gridTemplate <- gridTemplate[lengths(sf::st_intersects(gridTemplate, masterExtent)) > 0,]
+		gridTemplate <- gridTemplate[lengths(sf::st_intersects(gridTemplate, masterExtent)) > 0]
 	}	
 	
 	gridTemplate <- sf::st_sf(gridTemplate, grid_id = 1:length(gridTemplate))
