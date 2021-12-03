@@ -22,12 +22,16 @@ rebuildEpmGrid <- function(x, spCellList) {
 	# 	list of unique cell communities
 	#	vector of indices to map these back to grid cells
 	if (inherits(x[[1]], 'sf')) {
-		cellCommVec <- integer(length = nrow(x[[1]]))
+		grid <- x[[1]]
+		grid <- grid[which(sapply(spCellList, anyNA) == FALSE), ]
+		spCellList <- spCellList[which(sapply(spCellList, anyNA) == FALSE)]
+		cellCommVec <- integer(length = nrow(grid))
 	} else if (inherits(x[[1]], 'SpatRaster')) {
 		cellCommVec <- integer(length = terra::ncell(x[[1]]))
 	} else {
 		stop('Grid format not recognized.')
 	}
+	
 	uniqueComm <- unique(spCellList)
 	fullList2 <- sapply(spCellList, function(y) paste(y, collapse = '|'))
 	uniqueComm2 <- sapply(uniqueComm, function(y) paste(y, collapse = '|'))
@@ -35,6 +39,9 @@ rebuildEpmGrid <- function(x, spCellList) {
 		cellCommVec[which(fullList2 == uniqueComm2[i])] <- i
 	}
 	
+	# set empty cells to NA, rather than NULL
+	uniqueComm[sapply(uniqueComm, is.null)] <- NA
+
 	uniqueSp <- sort(unique(unlist(uniqueComm)))
 	
 	spCellCount <- countCells(convertNAtoEmpty(spCellList), uniqueSp)
@@ -44,9 +51,12 @@ rebuildEpmGrid <- function(x, spCellList) {
 	gridVals[which(sapply(spCellList, anyNA))] <- NA
 
 	if (inherits(x[[1]], 'sf')) {
+		x[[1]] <- grid
 		x[[1]]['spRichness'] <- gridVals
+		x[[1]]['uniqueComm'] <- cellCommVec
 	} else {
 		x[[1]][['spRichness']] <- gridVals
+		x[[1]][['uniqueComm']] <- cellCommVec
 	}
 	
 	x[['speciesList']] <- uniqueComm

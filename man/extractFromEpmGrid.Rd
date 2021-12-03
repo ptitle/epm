@@ -10,7 +10,7 @@ extractFromEpmGrid(x, spatial, returnCells = FALSE, collapse = TRUE)
 \item{x}{object of class \code{epmGrid}}
 
 \item{spatial}{coordinates as either a spatial points object (sp or sf), 
-a marix/dataframe with two columns, a numeric vector of c(long, lat), 
+a matrix/dataframe with two columns, a numeric vector of c(long, lat), 
 or as a spatial polygon object (sp or sf).}
 
 \item{returnCells}{boolean, if \code{TRUE}, cell indices are returned rather than taxa}

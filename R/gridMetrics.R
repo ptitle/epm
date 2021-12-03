@@ -11,12 +11,14 @@
 ##' 	data in \code{x} are multivariate, which trait should be used?
 ##' 	This can also specify which subset of columns a multivariate metric should be applied to.
 ##' 
-##' @param nreps Number of repetitions for Foote metric distribution.
+##' @param nreps Number of repetitions for Foote metric distribution (mean and min_NN_dist).
 ##'
 ##' @param verbose Intended primarily for debugging, prints progress to the console
 ##' 
 ##' @return object of class \code{epmGrid} where the grid represents
-##' 	calculations of the metric at every cell. 
+##' 	calculations of the metric at every cell. The species identities per grid cell are those 
+##' that had data for the calculation of the metric. If taxa were dropped from the initial 
+##' 	epmGrid object, then they have been removed from this epmGrid. 
 ##' 
 ##' @details 
 ##' 	Univariate trait metrics
@@ -85,7 +87,7 @@
 ##' @export
 
 
-gridMetrics <- function(x, metric, var = NULL, nreps = 20, taxa = NULL, verbose = FALSE) {
+gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')

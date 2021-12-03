@@ -84,6 +84,10 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		use_tmap <- FALSE
 	}
 	
+	if (fastPoints) {
+		use_tmap <- FALSE
+	}
+	
 	if (add) {
 		use_tmap <- FALSE
 		basemap <- 'none'

@@ -4,7 +4,7 @@
 \alias{gridMetrics}
 \title{Grid Metrics}
 \usage{
-gridMetrics(x, metric, var = NULL, nreps = 20, taxa = NULL, verbose = FALSE)
+gridMetrics(x, metric, var = NULL, nreps = 20, verbose = FALSE)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -15,13 +15,15 @@ gridMetrics(x, metric, var = NULL, nreps = 20, taxa = NULL, verbose = FALSE)
 data in \code{x} are multivariate, which trait should be used?
 This can also specify which subset of columns a multivariate metric should be applied to.}
 
-\item{nreps}{Number of repetitions for Foote metric distribution.}
+\item{nreps}{Number of repetitions for Foote metric distribution (mean and min_NN_dist).}
 
 \item{verbose}{Intended primarily for debugging, prints progress to the console}
 }
 \value{
 object of class \code{epmGrid} where the grid represents
-	calculations of the metric at every cell.
+	calculations of the metric at every cell. The species identities per grid cell are those 
+that had data for the calculation of the metric. If taxa were dropped from the initial 
+	epmGrid object, then they have been removed from this epmGrid.
 }
 \description{
 Calculate various morphological and phylogenetic community
