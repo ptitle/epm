@@ -6,7 +6,8 @@
 ##' @param log boolean; should the cell values be logged?
 ##' @param colorRampRange numeric vector of min and max value for scaling the color
 ##' 	ramp. Automatically inferred if set to \code{NULL}. This is relevant if multiple
-##' 	plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. Not intended for mapview option.
+##' 	plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. 
+##' 		Not intended for mapview option.
 ##' @param legend boolean; should legend be included?
 ##' @param col either a vector of color names that will be interpolated, or a color ramp
 ##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
@@ -16,10 +17,15 @@
 ##' @param singleSpCol color for single-species cells. See details.
 ##' @param lwd grid cell border width
 ##' @param borderCol color for grid cell borders
-##' @param alpha opacity of all colors and borders, ranging from 0 (fully transparent) to 1 (fully opaque)
+##' @param alpha opacity of all colors and borders, ranging from 0 (fully transparent) 
+##' 		to 1 (fully opaque)
 ##' @param includeFrame boolean; include frame around plot?
 ##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead of tmap package
-##' @param ... additional arguments that can be passed to sf::plot or terra::plot if \code{use_tmap = FALSE}
+##' @param fastPoints Intended for debugging purposes. For hex grids and use_tmap = F, 
+##' 	plot points instead of polygons.
+##' @param add logical, add to existing plot?
+##' @param ... additional arguments that can be passed to sf::plot or terra::plot 
+##' 		if \code{use_tmap = FALSE}
 ##'
 ##'
 ##' @details If \code{x} is a metric as generated with \code{gridMetrics} that returns 0 
@@ -61,9 +67,9 @@
 ##' @aliases plot.epmGrid
 ##' @export
 
-plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, ...) {
+plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, add = FALSE, ...) {
 	
-	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE
+	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('Object must be of class epmGrid')
@@ -78,15 +84,24 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		use_tmap <- FALSE
 	}
 	
+	if (add) {
+		use_tmap <- FALSE
+		basemap <- 'none'
+		legend <- FALSE
+	}
+	
 	plotMetric <- attributes(x)$metric
 	
 	# if x is a epmGrid that represents a metric that only makes sense for communities with multiple species, 
 	# then single species cells have a value of zero, and we will plot those cells as gray.
-	if (plotMetric %in% c('range', 'mean_NN_dist', 'min_NN_dist', 'variance', 'disparity', 'rangePCA', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV')) {
+	# We must also then specify a new minimum bound for the color palette to be the min of multi-sp cells.
+	if (plotMetric %in% c('range', 'mean_NN_dist', 'min_NN_dist', 'variance', 'disparity', 'rangePCA', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'PSR')) {
 		# determine which cells have just 1 species
 		singleSpCells <- singleSpCellIndex(x)
 		
 		if (inherits(x[[1]], 'sf')) {
+			# add on cells that do not have species
+			singleSpCells <- sort(c(singleSpCells, which(x[['cellCommInd']] %in% which(sapply(x[['speciesList']], anyNA) == TRUE))))
 			grid_multiSp <- x[[1]][- singleSpCells,]
 			grid_singleSp <- x[[1]][singleSpCells,]
 		} else {
@@ -96,7 +111,9 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			grid_singleSp[] <- NA
 			grid_singleSp[singleSpCells] <- 1
 		}
+				
 		plotSingleCells <- TRUE
+		
 	} else {
 		plotSingleCells <- FALSE
 	}	
@@ -119,8 +136,9 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 
 	if (missing(col)) {
 		# colramp <- sf::sf.colors
-		# colramp <- viridisLite::turbo
-		colramp <- grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))
+		# default color ramp: viridis turbo, but without the most extreme values
+		colramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
+		# colramp <- grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))
 	} else {
 		if (class(col) == 'function') {
 			colramp <- col
@@ -208,7 +226,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			# }
 			
 			if (is.null(colorRampRange)) {
-				valRange <- range(sf::st_drop_geometry(x[[1]])[, plotMetric], na.rm = TRUE)
+				if (!plotSingleCells) {
+					valRange <- range(x[[1]][[plotMetric]], na.rm = TRUE)
+				} else {
+					valRange <- range(grid_multiSp[[plotMetric]], na.rm = TRUE)
+				}
 				breaks <- seq(min(valRange), max(valRange), length.out = ncol + 1)
 			} else {
 				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncol + 1)
@@ -218,13 +240,26 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			colors <- grDevices::adjustcolor(colors, alpha.f = alpha)
 			borderColor <- grDevices::adjustcolor('black', alpha.f = alpha)
 			singleSpCol <- grDevices::adjustcolor(singleSpCol, alpha.f = alpha)
+			
+			# helpful for debugging because much faster than plotting polygons
+			if (fastPoints) {
+				if (!plotSingleCells) {
+					cols <- colors[findInterval(x[[1]][[plotMetric]], breaks)]
+					plot(sf::st_centroid(sf::st_geometry(x[[1]][plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5)
+				} else {
+					cols <- colors[findInterval(grid_multiSp[[plotMetric]], breaks)]
+					plot(sf::st_centroid(sf::st_geometry(grid_singleSp[plotMetric])), pch = 20, reset = FALSE, col = singleSpCol, cex = 0.5)
+					plot(sf::st_centroid(sf::st_geometry(grid_multiSp[plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5, add = TRUE)	
+				}
+			} else {
 	
 			
-			if (!plotSingleCells) {
-				plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colors, border = borderColor, breaks = breaks, ...)
-			} else {
-				plot(grid_singleSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, pal = singleSpCol, border = NA, reset = FALSE, ...)
-				plot(grid_multiSp[plotMetric], lwd = lwd, pal = colors, border = borderCol, breaks = breaks, add = TRUE, reset = FALSE)
+				if (!plotSingleCells) {
+					plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colors, border = borderColor, breaks = breaks, add = add, ...)
+				} else {
+					plot(grid_singleSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, pal = singleSpCol, border = NA, reset = FALSE, add = add, ...)
+					plot(grid_multiSp[plotMetric], lwd = lwd, pal = colors, border = borderCol, breaks = breaks, add = TRUE, reset = FALSE)
+				}
 			}
 			
 			if (legend) {
@@ -254,7 +289,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 						nTicks <- 3
 					}
 
-					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = range(sf::st_drop_geometry(grid_multiSp[plotMetric])))
 				}
 			}
 	
@@ -346,11 +381,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 		
 			if (!plotSingleCells) {
-				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, ...)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
 				
 			} else {
 				
-				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, ...)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
 				terra::plot(grid_singleSp, col = singleSpCol, axes = includeFrame, legend = FALSE, range = valRange, add = TRUE, alpha = alpha)
 				
 			}

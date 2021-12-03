@@ -31,7 +31,7 @@ identify.epmGrid <- function(x, returnCell = FALSE, ...) {
 			plot(x[[1]][plotMetric], lwd = 0.5, reset = FALSE, ...)
 			cell <- identify(sf::st_coordinates(sf::st_centroid(sf::st_geometry(x[[1]]))), n = 1, labels = '')
 			
-			plot(sf::st_centroid(sf::st_geometry(x[[1]])[cell,]), col = 'orange', add = TRUE, pch = 3)
+			plot(sf::st_centroid(sf::st_geometry(x[[1]])[cell]), col = 'orange', add = TRUE, pch = 3)
 			
 		} else if (inherits(x[[1]], 'SpatRaster')) {
 			

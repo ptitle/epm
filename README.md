@@ -5,9 +5,9 @@
 
 The following R package dependencies are required:
 
-`terra, sf, rgdal, spdep, ape, geomorph, picante, pbapply`
+`terra, sf, rgdal, spdep, ape, geomorph, pbapply`
 
-Additionally, the R packages `tmap` and `lwgeom` provide additional functionality.
+Additionally, the R package `tmap` provides additional functionality.
 
 To install, run the following in R: `remotes::install_github('ptitle/epm')`
 

@@ -31,7 +31,7 @@
 
 ##'	@param ramp either a vector of color names that will be interpolated, or a color ramp
 ##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
-##' 	If omitted, default raster colors ('terrain')
+##' 	If omitted, defaults to default epm color palette.
 
 ##'	@param isInteger If \code{auto}, automatically determines if \code{r} is made up of integer 
 ##'		values, otherwise \code{TRUE} or \code{FALSE}
@@ -97,12 +97,29 @@
 ##'  
 ##' @export
 
-addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp = "terrain", isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
+addLegend <- function(r, direction, side, location = 'right', nTicks = 3, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp, isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
 	
 	# for testing
-	# r = tamiasEPM; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; ramp = "terrain"; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
+	# r = tamiasEPM; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
 		
 	if (inherits(r, 'epmGrid')) {
+		
+		# if r is a epmGrid object that represents a metric that only makes sense for communities with multiple species, then we will ignore single-species grid cells when identifying the range of values for the legend. 
+		plotMetric <- attributes(r)$metric
+	
+		if (plotMetric %in% c('range', 'mean_NN_dist', 'min_NN_dist', 'variance', 'disparity', 'rangePCA', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV')) {
+			# determine which cells have just 1 species
+			singleSpCells <- singleSpCellIndex(r)
+		
+			if (inherits(r[[1]], 'sf')) {
+				grid_multiSp <- r[[1]][- singleSpCells,]
+			} else {
+				grid_multiSp <- r[[1]][plotMetric]
+				grid_multiSp[singleSpCells] <- NA
+			}
+			r[[1]] <- grid_multiSp					
+		}	
+			
 		r <- r[[1]][attributes(r)$metric]
 	}
 	
@@ -113,8 +130,9 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = 
 	if (!inherits(r, c('epmGrid', 'sf', 'SpatRaster'))) {
 		stop("r must be a epmGrid, sf, RasterLayer or SpatRaster object.")
 	}
+	
 		
-	if(!methods::hasArg('direction')) {
+	if (!methods::hasArg('direction')) {
 		direction <- 'auto'
 	}
 	
@@ -134,6 +152,10 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 2, adj = 
 	
 	if (is.numeric(location)) {
 		adj <- NULL
+	}
+	
+	if (missing(ramp)) {
+		ramp <- grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))
 	}
 	
 	if(!methods::hasArg('ramp')) {

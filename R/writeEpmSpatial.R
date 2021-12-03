@@ -1,0 +1,55 @@
+##' @title Write epmGrid Spatial Object to Disk
+##'
+##' @description Writes the grid to disk for use in other GIS applications.
+##'
+##' @param x object of class \code{epmGrid}
+##' @param filename filename to be written to, with the appropriate file extension
+##' @param ... additional arguments to be passed to \code{\link[sf]{st_write}} or \code{\link[terra]{writeRaster}}.
+##'
+##' @return the object is written to disk, nothing is returned.
+##'
+##' @details For hexagonal grid systems, appending .shp to the filename will result in a shapefile,
+##' whereas appending .gpkg results in a geopackage file. See \code{\link[sf]{st_write}} for 
+##'	additional options. For square grid cells, appending .tif will result in a GeoTiff file being written
+##' to disk. If no extensions are included with the filename, then this function will default to 
+##' geopackage files for hexagonal grids and GeoTiffs for square grids. 
+##' 
+##' @author Pascal Title
+##'
+##' 
+##' @examples
+##' \dontrun{
+##' tamiasEPM
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' cellType = 'square', method = 'centroid')
+##'	writeEpmSpatial(tamiasEPM, filename = 'tamiasGrid.shp')
+##' writeEpmSpatial(tamiasEPM, filename = 'tamiasGrid.gpkg')
+##' writeEpmSpatial(tamiasEPM, filename = 'tamiasGrid') # will automatically append .gpkg
+##' 
+##'	writeEpmSpatial(tamiasEPM2, filename = 'tamiasGrid.tif')
+##' writeEpmSpatial(tamiasEPM2, filename = 'tamiasGrid') # will automatically append .tif
+##' }
+##' @export
+
+
+writeEpmSpatial <- function(x, filename, ...) {
+
+	if (!inherits(x, 'epmGrid')) {
+		stop('x must be of class epmGrid.')
+	}
+	
+	if (inherits(x[[1]], 'sf')) {
+		if (!grepl('\\.\\w+$', filename, ignore.case = TRUE)) {
+			filename <- paste0(filename, '.gpkg')
+		}
+		sf::st_write(x[[1]], dsn = filename, ...)
+	} else {
+		if (!grepl('\\.\\w+$', filename, ignore.case = TRUE)) {
+			filename <- paste0(filename, '.tif')
+		}		
+		metric <- attributes(x)$metric
+		terra::writeRaster(x[[1]][metric], filename, ...)
+	}
+}
+
+

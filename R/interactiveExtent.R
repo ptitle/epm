@@ -80,8 +80,14 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads
 		quickTemplate <- sf::st_make_grid(masterExtent, cellsize = c(quickRes, quickRes), square = FALSE, crs = sf::st_crs(masterExtent))
 		quickCentroids <- sf::st_centroid(quickTemplate)
 		quickTemplate <- sf::st_sf(quickTemplate, grid_id = 1:length(quickTemplate))
+
+		taxonNames <- names(polyList)
+		polyList <- lapply(polyList, function(x) sf::st_combine(sf::st_geometry(x)))
+		polyList <- do.call(c, polyList)
 		
-		quick <- pbapply::pblapply(polyList, function(x) polyToGridCells(x, method = 'centroid', quickTemplate, quickCentroids, subset = 0), cl = cl)
+		quick <- sf::st_intersects(polyList, quickCentroids, sparse = FALSE)
+		quick <- apply(quick, 1, function(x) which(x == TRUE))
+		names(quick) <- taxonNames
 					
 	} else {
 		

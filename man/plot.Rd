@@ -17,6 +17,8 @@
   alpha = 1,
   includeFrame = FALSE,
   use_tmap = TRUE,
+  fastPoints = FALSE,
+  add = FALSE,
   ...
 )
 }
@@ -36,7 +38,8 @@ If \code{'interactive'}, then the \code{mapview} package is used.}
 
 \item{colorRampRange}{numeric vector of min and max value for scaling the color
 ramp. Automatically inferred if set to \code{NULL}. This is relevant if multiple
-plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. Not intended for mapview option.}
+plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. 
+    Not intended for mapview option.}
 
 \item{singleSpCol}{color for single-species cells. See details.}
 
@@ -44,13 +47,20 @@ plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. Not inte
 
 \item{borderCol}{color for grid cell borders}
 
-\item{alpha}{opacity of all colors and borders, ranging from 0 (fully transparent) to 1 (fully opaque)}
+\item{alpha}{opacity of all colors and borders, ranging from 0 (fully transparent) 
+to 1 (fully opaque)}
 
 \item{includeFrame}{boolean; include frame around plot?}
 
 \item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead of tmap package}
 
-\item{...}{additional arguments that can be passed to sf::plot or terra::plot if \code{use_tmap = FALSE}}
+\item{fastPoints}{Intended for debugging purposes. For hex grids and use_tmap = F, 
+plot points instead of polygons.}
+
+\item{add}{logical, add to existing plot?}
+
+\item{...}{additional arguments that can be passed to sf::plot or terra::plot 
+if \code{use_tmap = FALSE}}
 }
 \value{
 Nothing is returned.

@@ -34,7 +34,7 @@
 ##' 	Multivariate trait metrics
 ##'		\itemize{
 ##'			\item{disparity} 
-##'			\item{partialDisparity:} {contribution of species in each grid cell to overall disparity}
+##'			\item{partialDisparity:} {contribution of species in each gridcell to overall disparity, returned as the ratio of summed partial disparities to total disparity.}
 ##' 		\item{range}
 ##' 		\item{rangePCA}
 ##' 		\item{mean_NN_dist:} {mean nearest neighbor distance}
@@ -49,6 +49,7 @@
 ##'			\item{minPatristicNN:} {minimum nearest neighbor in patristic distance}
 ##'			\item{phyloDisparity:} {sum of squared deviations in patristic distance}
 ##'			\item{PSV:} {Phylogenetic Species Variability}
+##'			\item{PSR:} P={Phylogenetic Species Richness}
 ##'			\item{DR:} {non-parametric estimate of speciation rates}
 ##' 	}
 ##' 	Range-weighted metrics
@@ -84,7 +85,7 @@
 ##' @export
 
 
-gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
+gridMetrics <- function(x, metric, var = NULL, nreps = 20, taxa = NULL, verbose = FALSE) {
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
@@ -98,7 +99,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		stop('You can only specify one metric.')
 	}
 	
-	metric <- match.arg(metric, choices = c('mean', 'median', 'range', 'variance', 'arithmeticWeightedMean', 'geometricWeightedMean', 'rangePCA', 'disparity', 'mean_NN_dist', 'min_NN_dist', 'pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'DR', 'weightedEndemism', 'correctedWeightedEndemism', 'phyloWeightedEndemism', 'phylosignal', 'partialDisparity'))
+	metric <- match.arg(metric, choices = c('mean', 'median', 'range', 'variance', 'arithmeticWeightedMean', 'geometricWeightedMean', 'rangePCA', 'disparity', 'mean_NN_dist', 'min_NN_dist', 'pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'PSR', 'DR', 'weightedEndemism', 'correctedWeightedEndemism', 'phyloWeightedEndemism', 'phylosignal', 'partialDisparity'))
 	
 	pairwise <- FALSE
 	
@@ -198,7 +199,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 			x[['speciesList']] <- intersectList(x[['speciesList']], rownames(x[['data']]))
 		}
 		
-	 } else if (metric %in% c('pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'phyloWeightedEndemism', 'PSV', 'DR')) {
+	 } else if (metric %in% c('pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'phyloWeightedEndemism', 'PSV', 'PSR', 'DR')) {
 	 	
 	 	# check that there is a phylogeny in epmGrid object
 		if (is.null(x[['phylo']])) {
@@ -211,10 +212,6 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	
 	} else if (!metric %in% c('weightedEndemism', 'correctedWeightedEndemism')) {
 		stop('Metric not recognized!')
-	} else {
-		# set empty entries to NA
-		emptyEntries <- which(lengths(x[[2]]) == 0)
-		x[['speciesList']][emptyEntries] <- rep(list(NA), length(emptyEntries))
 	}
 	
 	uniqueComm <- x[['speciesList']]
@@ -296,15 +293,14 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
 		resVal[sapply(uniqueComm, anyNA)] <- NA
-		ind <- which(sapply(uniqueComm, length) > 1)
+		ind <- which(lengths(uniqueComm) > 1)
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) sum(diag(cov(x[['data']][y,]))))
 	}
 	
 	if (metric == 'partialDisparity' & metricType == 'multiVar') {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		partialDisp <- getSpPartialDisparities(x[['data']])
-		# sum of the diagonal of the covariance matrix
-		resVal <- pbapply::pbsapply(uniqueComm, function(y) sum(partialDisp[y]))
+		resVal <- pbapply::pbsapply(uniqueComm, function(y) sum(partialDisp[y]) / sum(partialDisp))
 	}	
 	
 	if (metric == 'range' & metricType == 'multiVar') {
@@ -312,7 +308,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		# maximum of the distance matrix (0 if one sp)
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
-		ind <- which(sapply(uniqueComm, length) > 1)
+		ind <- which(lengths(uniqueComm) > 1)
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) max(dist(x[['data']][y, ])))
 	}
 	
@@ -321,11 +317,11 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		pc <- prcomp(x[['data']])
 		# retain 99% of the variation
 		keep <- 1:which(cumsum(((pc$sdev)^2) / sum(pc$sdev^2)) >= 0.99)[1]
-		if (length(keep) == 1) { keep <- 1:ncol(pc$x) }
+		if (length(keep) == 1) keep <- 1:ncol(pc$x)
 		pc <- pc$x[,keep]
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
-		ind <- which(sapply(uniqueComm, length) > 1)
+		ind <- which(lengths(uniqueComm) > 1)
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
 			sum(apply(pc[y,], 2, function(z) diff(range(z))))
 		})	
@@ -335,7 +331,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
-		ind <- which(sapply(uniqueComm, length) > 1)
+		ind <- which(lengths(uniqueComm) > 1)
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
 	}
 
@@ -343,7 +339,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
-		ind <- which(sapply(uniqueComm, length) > 1)
+		ind <- which(lengths(uniqueComm) > 1)
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
 	}
 	
@@ -357,7 +353,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	## ----------------------------------
 	## PHYLOGENY-RELATED METRICS
 	
-	if (metric %in% c('pd', 'meanPatristic', 'minPatristicNN', 'meanPatristicNN', 'phyloDisparity', 'PSV', 'DR')) {
+	if (metric %in% c('pd', 'meanPatristic', 'minPatristicNN', 'meanPatristicNN', 'phyloDisparity', 'PSV', 'PSR', 'DR')) {
 		
 		# calculate pairwise patristic distance
 		patdist <- cophenetic(x[['phylo']])
@@ -365,13 +361,29 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		
 		if (metric == 'pd') {
 			if (verbose) message('\t...calculating phylo metric: ', metric, '...\n')
-			mat <- matrix(0, nrow = length(uniqueComm), ncol = length(x$phylo$tip.label))
-			colnames(mat) <- x$phylo$tip.label
-			for (i in 1:length(uniqueComm)) {
-				mat[i, colnames(mat) %in% uniqueComm[[i]]] <- 1
-			}
-			resVal <- picante::pd(mat, x$phylo, include.root = TRUE)$PD
-			resVal[sapply(uniqueComm, anyNA)] <- NA
+			
+			resVal <- rep(NA, length(uniqueComm)) # set up with NA
+			ind <- which(sapply(uniqueComm, anyNA) == FALSE)		
+
+			# this version is overly redundant because it generates nodepath each time, when it is only needed once. 
+			# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) faithPD(x[['phylo']], y))
+			
+			spEdges <- ape::nodepath(x[['phylo']])
+			names(spEdges) <- x[['phylo']]$tip.label
+				
+			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
+				yy <- spEdges[y]
+				yy <- lapply(yy, function(z) setdiff(match(z, x[['phylo']]$edge[,2]), NA))
+				sum(x[['phylo']]$edge.length[unique(unlist(yy))])
+			})
+			
+			# mat <- matrix(0, nrow = length(uniqueComm), ncol = length(x$phylo$tip.label))
+			# colnames(mat) <- x$phylo$tip.label
+			# for (i in 1:length(uniqueComm)) {
+				# mat[i, colnames(mat) %in% uniqueComm[[i]]] <- 1
+			# }
+			# resVal <- picante::pd(mat, x$phylo, include.root = TRUE)$PD
+			# resVal[sapply(uniqueComm, anyNA)] <- NA
 		}
 		
 		if (metric == 'meanPatristic') {
@@ -379,7 +391,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 			# meanPatristic is 0 if 1 species, NA if no species
 			patdist[upper.tri(patdist, diag = TRUE)] <- NA
 			resVal <- pbapply::pbsapply(uniqueComm, function(y) mean(unlist(patdist[y, y]), na.rm = TRUE))
-			resVal[sapply(uniqueComm, length) == 1] <- 0
+			resVal[lengths(uniqueComm) == 1] <- 0
 			resVal[sapply(uniqueComm, anyNA)] <- NA
 		}
 		
@@ -388,7 +400,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 			# the mean of the minimum patristic distance for each species present
 			resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 			resVal[sapply(uniqueComm, anyNA)] <- NA
-			ind <- which(sapply(uniqueComm, length) > 1)
+			ind <- which(lengths(uniqueComm) > 1)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
 				return(mean(apply(patdist[y, y], MARGIN = 1, min, na.rm = TRUE)))
 			})
@@ -399,7 +411,7 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 			# the minimum of the minimum patristic distance for each species present
 			resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 			resVal[sapply(uniqueComm, anyNA)] <- NA
-			ind <- which(sapply(uniqueComm, length) > 1)
+			ind <- which(lengths(uniqueComm) > 1)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
 				return(min(apply(patdist[y, y], MARGIN = 1, min, na.rm = TRUE)))
 			})
@@ -410,15 +422,20 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 			# the sum of the squared deviations from the mean
 			# value of 0 if 1 species, NA if no species
 			
+			## note: the mean patristic distance is the mean of pairwise distances, so the sample size is the number of unique pairs, not the number of species. Therefore, in calculating the variance, we will not divide by the number of species, but rather by the number of unique pairs (this is where choose(length(y), 2) comes from). 
+			
 			resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 			resVal[sapply(uniqueComm, anyNA)] <- NA
-			ind <- which(sapply(uniqueComm, length) > 1)
+			ind <- which(lengths(uniqueComm) > 1)
 
 			patdist[upper.tri(patdist, diag = TRUE)] <- NA
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) sum((patdist[y, y] - mean(patdist[y,y], na.rm = TRUE)) ^ 2, na.rm = TRUE) / choose(length(y), 2))
+			
+			# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) sum(diag(ape::vcv.phylo(keep.tip(x[['phylo']], y)))))
+						
 		}		
 		
-		if (metric == 'PSV') {
+		if (metric %in% c('PSV', 'PSR')) {
 			if (verbose) message('\t...calculating phylo metric: ', metric, '...\n')
 			# Phylogenetic Species Variability is based on the variance-covariance matrix
 			# measure of phylogenetic diversity, ranges from 0-1, not confounded by species richness
@@ -427,9 +444,16 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 			
 			resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 			resVal[sapply(uniqueComm, anyNA)] <- NA
-			ind <- which(sapply(uniqueComm, length) > 1)
+			ind <- which(lengths(uniqueComm) > 1)
 			
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) (length(y) * sum(diag(vmat[y,y])) - sum(vmat[y,y]))/(length(y) * (length(y) - 1)))
+		}
+		
+		if (metric == 'PSR') {
+			# Phylogenetic Species Richness is richness * PSV
+			# Conveys richness, but where the more phylogenetically distinct the species, the more weight it has. Will be less than or equal to richness.
+			
+			resVal[ind] <- resVal[ind] * lengths(uniqueComm[ind])
 		}
 		
 		if (metric == 'DR') {
@@ -462,26 +486,75 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	
 	if (metric == 'phyloWeightedEndemism') {
 		if (verbose) message('\t...calculating phylogenetic weighted endemism...\n')
-		spEdges <- getRootToTipEdges(x[['phylo']])
-		if (!'edgeArea' %in% names(x)) {
-			if (verbose) message('\t...calculating branch-specific range sizes...\n')
 
-			# phylo branch ranges must be based on full list of cell communities, therefore we need to expand the speciesList
-			fullSpList <- expandSpeciesCellList(x)
-			x[['edgeArea']] <- do.call(cbind, phyloBranchRanges(x[['phylo']], convertNAtoEmpty(fullSpList), spEdges))
+		# spEdges <- getRootToTipEdges(x[['phylo']])
+		# if (!'edgeArea' %in% names(x)) {
+			# if (verbose) message('\t...calculating branch-specific range sizes...\n')
+
+			# # phylo branch ranges must be based on full list of cell communities, therefore we need to expand the speciesList
+			# fullSpList <- expandSpeciesCellList(x)
+			# x[['edgeArea']] <- do.call(cbind, phyloBranchRanges(x[['phylo']], convertNAtoEmpty(fullSpList), spEdges))
+		# }
+		# tipIndVec <- sapply(x[['phylo']]$tip.label, function(z) which(x[['phylo']]$tip.label == z))
+		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
+		# ind <- which(sapply(uniqueComm, anyNA) == FALSE)
+
+		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
+			# commEdges <- unique(unlist(spEdges[tipIndVec[y]])) + 1
+			# sub <- x[['edgeArea']][commEdges,]
+			# if (inherits(sub, 'numeric')) {
+				# sub <- matrix(sub, nrow = 1)
+			# }
+			# sum(sub[,1] / sub[,2])
+		# })
+
+	
+		## version 2 implementation
+		
+		# Phylogenetic endemism is total branch length for edges uniting a set of taxa, standardized
+		# by total tree branch length
+		# divided by
+		# sum of geographic area associated with those branches
+		
+		# list of descendant nodes from root to tip per taxon (includes root and terminal nodes)
+		spNodes <- ape::nodepath(x[['phylo']])
+		names(spNodes) <- x[['phylo']]$tip.label
+		
+		# list of branch indices from root to tip
+		spEdges <- lapply(spNodes, function(y) setdiff(match(y, x[['phylo']]$edge[,2]), NA))
+		totalPD <- sum(x[['phylo']]$edge.length[unique(unlist(spEdges))])
+		rootEdge <- x[['phylo']]$root.edge
+		if (is.null(rootEdge)) {
+			rootEdge <- 0
 		}
-		tipIndVec <- sapply(x[['phylo']]$tip.label, function(z) which(x[['phylo']]$tip.label == z))
+		
+		# get total geographic area covered by each branch
+		allnodes <- 1:ape::Nnode(x[['phylo']], internal.only = FALSE)
+		
+		fullSpList <- expandSpeciesCellList(x)
+		
+		# for each node, what is the geographic area (= number of grid cells)
+		cellsPerNode <- integer(length(allnodes))
+		for (i in 1:length(allnodes)) {
+			nodeTips <- names(which(sapply(spNodes, function(y) allnodes[i] %in% y) == TRUE))
+			cellsPerNode[i] <- length(which(sapply(fullSpList, function(y) any(nodeTips %in% y)) == TRUE))
+		}
+		
 		resVal <- rep(NA, length(uniqueComm)) # set up with NA
 		ind <- which(sapply(uniqueComm, anyNA) == FALSE)
-
+	
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
-			commEdges <- unique(unlist(spEdges[tipIndVec[y]])) + 1
-			sub <- x[['edgeArea']][commEdges,]
-			if (inherits(sub, 'numeric')) {
-				sub <- matrix(sub, nrow = 1)
-			}
-			sum(sub[,1] / sub[,2])
+			unitingEdges <- unique(unlist(spEdges[y]))
+			unitingNodes <- unique(unlist(spNodes[y]))
+			# relativePD <- sum(x[['phylo']]$edge.length[unitingEdges]) / totalPD
+			
+			# which descendant nodes belong to this set of branches?
+			sum(c(rootEdge, x[['phylo']]$edge.length[unitingEdges] / 1) / cellsPerNode[unitingNodes])
 		})
+	
+		# compare to:
+		# commMat <- epmToPhyloComm(x, sites = 'all')
+		# testPE <- phyloregion::phylo_endemism(commMat, x[['phylo']])
 	}
 	
 	
@@ -504,19 +577,18 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 	attributes(x)$metric <- metric
 	
 	# update species richness, as some species may have been dropped for this metric calculation.
-	## Maybe we don't want to do this, as we want the species richness to be our best understanding.
-	# if (inherits(x[[1]], 'sf')) {
-		# for (i in 1:length(x[['speciesList']])) {
-			# x[['grid']][which(x[['cellCommInd']] == i), 'spRichness'] <- length(x[['speciesList']][[i]])
-		# }
-	# } else {
-		# tmpVec <- terra::values(x[['grid']][['spRichness']])
-		# for (i in 1:length(x[['speciesList']])) {
-			# tmpVec[which(x[['cellCommInd']] == i)] <- length(x[['speciesList']][[i]])
-		# }
-		# terra::values(x[['grid']][['spRichness']]) <- tmpVec
-		# rm(tmpVec)
-	# }
+	if (inherits(x[[1]], 'sf')) {
+		for (i in 1:length(x[['speciesList']])) {
+			x[['grid']][which(x[['cellCommInd']] == i), 'spRichness'] <- length(x[['speciesList']][[i]])
+		}
+	} else {
+		tmpVec <- terra::values(x[['grid']][['spRichness']])
+		for (i in 1:length(x[['speciesList']])) {
+			tmpVec[which(x[['cellCommInd']] == i)] <- length(x[['speciesList']][[i]])
+		}
+		terra::values(x[['grid']][['spRichness']]) <- tmpVec
+		rm(tmpVec)
+	}
 		
 	# update geog species
 	x[['geogSpecies']] <- sort(unique(unlist(x[['geogSpecies']])))
@@ -527,82 +599,9 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 
 
 
-# # function to calculate phylo branch specific range areas
-
-# phyloBranchRanges <- function(x) {
-
-	# if (!'speciesRaster' %in% class(x)) {
-		# stop('x must be of class speciesRaster.')
-	# }
-	
-	# # check that there is a phylogeny in speciesRaster object
-	# if (is.null(x[['phylo']])) {
-		# stop('speciesRaster object does not contain a phylo object!')
-	# }
-	
-	# phylo <- x[['phylo']]
-	
-	# allLeaves <- phangorn::Descendants(phylo, phylo$edge[,2], type = 'tips')
-	# allLeaves <- lapply(allLeaves, function(y) phylo$tip.label[y])
-	
-	# branchTable <- matrix(nrow = length(phylo$edge.length), ncol = 2)
-	# colnames(branchTable) <- c('branchLength', 'branchArea')
-	# branchTable[,1] <- phylo$edge.length
-	
-	# for (i in 1:length(phylo$edge.length)) {
-		
-		# inCell <- sapply(x[['speciesList']], function(y) any(allLeaves[[i]] %in% y))
-		# branchTable[i, 2] <- sum(inCell)	
-	# }
-
-	# x[['edgeArea']] <- branchTable
-	# return(x)	
-# }
-
-
-
-# getCommEdges2 <- function(phylo, comm, indList) {
-	
-	# tipInd <- sapply(comm, function(z) which(phylo$tip.label == z))
-	# edges <- unique(unlist(indList[tipInd]))
-	# edges <- edges + 1
-	# # edgeColors <- ifelse(1:length(phylo$edge.length) %in% edges, 'red','black')
-	# # edgeWidths <- ifelse(1:length(phylo$edge.length) %in% edges, 2, 1)
-	# # plot(phylo, tip.color=ifelse(phylo$tip.label %in% comm, 'blue','gray'), root.edge=TRUE, edge.color = edgeColors, edge.width = edgeWidths)
-	# # nodelabels(node=nodes, frame='circle', bg='red', cex=0.1)
-	
-	# return(edges)
-# }
-
-
-
-
-# # library(raster)
-# library(maptools)
-# library(Rcpp)
-# # convert polygon ranges to raster
-# ranges <- rasterStackFromPolyList(tamiasPolyList, resolution = 20000)
-# x <- createSpeciesRaster(ranges = ranges)
-# x <- addPhylo_speciesRaster(x, tamiasTree)
-
-
-convertNAtoEmpty <- function(spCellList) {
-	ind <- which(sapply(spCellList, anyNA) == TRUE)
-	spCellList[ind] <- rep(list('empty'), length(ind))
-	return(spCellList)
+phyloTips <- function(spNodes, node) {
+	names(which(sapply(spNodes, function(y) node %in% y) == TRUE))
 }
-
-
-
-# # phylo2 <- x[['phylo']]
-# class(phylo2) <- 'list'
-
-# sourceCpp('~/Desktop/testing.cpp')
-
-# tipEdges <- getRootToTipEdges(phylo2)
-
-# q <- phyloBranchRanges(phylo2, spCellList, tipEdges)
-# q <- do.call(cbind, q)
 
 
 

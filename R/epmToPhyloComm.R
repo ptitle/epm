@@ -56,7 +56,7 @@ epmToPhyloComm <- function(x, sites) {
 	
 		
 	# extract relevant cells from empGrid
-	dat <- sapply(x[['cellCommInd']][sites], function(y) x[['speciesList']][[y]])
+	dat <- sapply(x[['cellCommInd']][sites], function(y) x[['speciesList']][[y]], simplify = FALSE)
 	uniqueSp <- sort(unique(unlist(dat)))
 	
 	if (all(is.null(uniqueSp))) {

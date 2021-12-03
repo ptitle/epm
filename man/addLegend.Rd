@@ -9,13 +9,13 @@ addLegend(
   direction,
   side,
   location = "right",
-  nTicks = 2,
+  nTicks = 3,
   adj = NULL,
   shortFrac = 0.02,
   longFrac = 0.3,
   axisOffset = 0,
   border = TRUE,
-  ramp = "terrain",
+  ramp,
   isInteger = "auto",
   ncolors = 64,
   breaks = NULL,
@@ -57,7 +57,7 @@ of the legend. Only applies to preset location options.}
 
 \item{ramp}{either a vector of color names that will be interpolated, or a color ramp
 function that takes an integer (see for example \code{\link{colorRampPalette}}).
-If omitted, default raster colors ('terrain')}
+If omitted, defaults to default epm color palette.}
 
 \item{isInteger}{If \code{auto}, automatically determines if \code{r} is made up of integer 
 values, otherwise \code{TRUE} or \code{FALSE}}

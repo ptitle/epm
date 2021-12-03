@@ -56,7 +56,7 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 	
 	# coerce any RasterLayer or RasterStack objects to SpatRaster
 	for (i in 1:length(x)) {
-		if (class(x[[i]]) %in% c('RasterStack', 'RasterLayer')) {
+		if (inherits(x[[i]], c('RasterStack', 'RasterLayer'))) {
 			x[[i]] <- as(x[[i]], 'SpatRaster')
 		}
 	}
@@ -175,11 +175,13 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 		goodCells <- Reduce(intersect, resList)
 		
 		# get subset if requested
-		if (!is.null(n) & n < length(goodCells)) {
-			goodCells <- sample(goodCells, size = n, replace = FALSE)
+		if (!is.null(n)) { 
+			if (n < length(goodCells)) {
+				goodCells <- sample(goodCells, size = n, replace = FALSE)
+			}
 		}
 		
-		gridTemplate <- templateCentroids[goodCells,]
+		gridTemplate <- templateCentroids[goodCells]
 		gridTemplate <- sf::st_geometry(gridTemplate)
 		
 		

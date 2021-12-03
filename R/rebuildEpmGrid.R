@@ -56,3 +56,10 @@ rebuildEpmGrid <- function(x, spCellList) {
 
 	return(x)
 }
+
+
+convertNAtoEmpty <- function(spCellList) {
+	ind <- which(sapply(spCellList, anyNA) == TRUE)
+	spCellList[ind] <- rep(list('empty'), length(ind))
+	return(spCellList)
+}

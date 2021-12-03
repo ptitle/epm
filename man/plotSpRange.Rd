@@ -4,7 +4,15 @@
 \alias{plotSpRange}
 \title{plot a single species' range}
 \usage{
-plotSpRange(x, taxon, taxonColor = "orange", basemap = "worldmap", lwd)
+plotSpRange(
+  x,
+  taxon,
+  taxonColor = "orange",
+  basemap = "worldmap",
+  lwd = 0.5,
+  use_tmap = TRUE,
+  add = TRUE
+)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -18,6 +26,10 @@ If \code{'worldmap'}, then vector map is plotted.
 If \code{'interactive'}, then the plotting is done via your web browser.}
 
 \item{lwd}{grid cell border width}
+
+\item{use_tmap}{if false, use sf or terra packages for plotting}
+
+\item{add}{logical. If TRUE, adds the gridded taxon range to existing plot.}
 }
 \value{
 nothing is returned

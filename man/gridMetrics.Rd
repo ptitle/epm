@@ -4,7 +4,7 @@
 \alias{gridMetrics}
 \title{Grid Metrics}
 \usage{
-gridMetrics(x, metric, var = NULL, nreps = 20, verbose = FALSE)
+gridMetrics(x, metric, var = NULL, nreps = 20, taxa = NULL, verbose = FALSE)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -43,7 +43,7 @@ Univariate trait metrics
 	Multivariate trait metrics
 	\itemize{
 		\item{disparity} 
-		\item{partialDisparity:} {contribution of species in each grid cell to overall disparity}
+		\item{partialDisparity:} {contribution of species in each gridcell to overall disparity, returned as the ratio of summed partial disparities to total disparity.}
 		\item{range}
 		\item{rangePCA}
 		\item{mean_NN_dist:} {mean nearest neighbor distance}
@@ -58,6 +58,7 @@ Univariate trait metrics
 		\item{minPatristicNN:} {minimum nearest neighbor in patristic distance}
 		\item{phyloDisparity:} {sum of squared deviations in patristic distance}
 		\item{PSV:} {Phylogenetic Species Variability}
+		\item{PSR:} P={Phylogenetic Species Richness}
 		\item{DR:} {non-parametric estimate of speciation rates}
 	}
 	Range-weighted metrics

@@ -1,30 +1,31 @@
 ##' @title Map change in morphological disparity
 ##'
-##' @description Change in morphological partial disparity is calculating across a moving window
+##' @description Change in morphological disparity is calculating across a moving window
 ##' of neighboring grid cells. 
 ##' 
 ##' @param x object of class \code{epmGrid}.
 ##' @param radius Radius of the moving window in map units.
-##' @param slow if TRUE, use an alternate implementation that has a lower memory footprint 
+##' @param slow if TRUE, use an alternate implementation that has a smaller memory footprint 
 ##' 	but that is likely to be much slower. Most useful for high spatial resolution.
 ##' @param nThreads number of threads for parallelization
 
 ##'
 ##' @details
-##' 	Disparity is calculated for each cell + its neighboring cells. Partial disparity is then calculated
-##' 	for each species, and mean partial disparity of species in neighboring cells (but not the focal cell)
-##' 	is calculated and assigned to the focal cell. The value at each grid cell is therefore a measure of how 
-##' 	much neighbors contribute to the overall local disparity. 
+##' 	For each gridcell neighborhood (defined by the radius), we calculate the proportion 
+##' 	of the full disparity contained in those grid cells, and then take the standard deviation of 
+##' 	those proportions across the gridcell neighborhood. This way, the returned values reflect
+##' 	how much disparity (relative to the overall total disparity) changes across a moving window.
 ##' 
 ##'
 ##' 
-##' @return Returns a sf polygons object with mean partial disparity.
+##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object (if square grid).
 ##' 
 ##' @author Pascal Title
 ##'
 ##' @references
 ##' 
-##' Foote M. 1993. Contributions of individual taxa to overall morphological disparity. Paleobiology. 19:403–419.
+##' Foote M. 1993. Contributions of individual taxa to overall morphological disparity. 
+##' Paleobiology. 19:403–419.
 ##' 
 ##' 
 ##' @examples
@@ -33,7 +34,7 @@
 ##'
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##'
-##' z <- disparity_betadiv(tamiasEPM, radius = 150000)
+##' z <- betadiv_disparity(tamiasEPM, radius = 150000)
 ##' 
 ##' plot(z)
 ##' 
@@ -41,15 +42,18 @@
 ##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2 <- addTraits(tamiasEPM2, tamiasTraits)
-##' z2 <- disparity_betadiv(tamiasEPM2, radius = 150000)
+##' z2 <- betadiv_disparity(tamiasEPM2, radius = 150000)
 ##'
-##' terra::plot(z2, col = sf::sf.colors(100), range = c(0,1))
+##' terra::plot(z2, col = sf::sf.colors(100))
 ##' 
 ##' }
 ##' @export
 
 
-disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
+betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
+	# x <- tamiasEPM
+	# x <- addTraits(x, tamiasTraits)
+	# radius = 150000; slow = FALSE; nThreads = 1
 	# radius is in map units
 		
 	if (!inherits(x, 'epmGrid')) {
@@ -92,10 +96,13 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 		
 	
 	# ----------------------------------------------------------
-	# Here, total disparity = disparity of species in focal cell + neighboring cells.
-	# For each cell, calculate the summed partial disparity of the species in neighboring cells (excluding the focal cell)
-	# take ratio of summed neighbor partial disparities to total disparity
-
+	# Calculate partial disparity of all species in dataset
+	partialDisp <- getSpPartialDisparities(x[['data']])
+	
+	# Here, total disparity = sum(partialDisp)
+	
+	# for each cell neighborhood, we will calculate the proportion of the full disparity contained in those grid cells, and then take the standard deviation. This way, the returned value reflects how much relative disparity changes across a moving window.
+	
 	if (inherits(x[[1]], 'sf')) {
 		
 		# Generate list of neighborhoods
@@ -120,10 +127,10 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 			}
 		}	
 				
-		cellVals <- pbapply::pblapply(1:nrow(x[[1]]), function(i) {
+		cellVals <- pbapply::pblapply(1:nrow(x[[1]]), function(k) {
 			
-			focalCell <- i
-			nbCells <- nb[[i]]
+			focalCell <- k
+			nbCells <- nb[[k]]
 			
 			# # visual verification of focal cell + neighborhood
 			# plot(st_buffer(st_centroid(st_geometry(x[[1]][focalCell,])), dist = radius * 1.5), border = 'white')
@@ -136,18 +143,10 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 			focalCell <- x[['cellCommInd']][focalCell]
 			nbCells <- x[['cellCommInd']][nbCells]
 					
-			# get species
-			focalSp <- x[['speciesList']][[focalCell]]
-			nbSp <- unique(unlist(x[['speciesList']][nbCells]))
-			
-			pd <- getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])
-			# sum(getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])) - sum(diag(cov(x[['data']][union(focalSp, nbSp), ])))
-			
-			if (all(is.nan(pd))) {
-				return(0)
-			} else {
-				return(abs((sum(pd[nbSp]) / sum(pd)) - (sum(pd[focalSp]) / sum(pd))))
-			}
+			# get species communities
+			sites <- x[['speciesList']][c(focalCell, nbCells)]
+						
+			return(sd(sapply(sites, function(y) sum(partialDisp[y])) / sum(partialDisp)))
 		}, cl = cl)
 		
 	} else if (inherits(x[[1]], 'SpatRaster')) {
@@ -175,11 +174,12 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 				}
 			}			
 
-			cellVals <- pbapply::pblapply(1:nrow(gridCentroids), function(i) {
+			cellVals <- rep(NA, terra::ncell(x[[1]]))
+			cellVals[datCells] <- pbapply::pblapply(1:nrow(gridCentroids), function(k) {
 				
-				focalCell <- datCells[i]
-				nbCells <- nb[[i]]
-				nbCells <- sf::st_drop_geometry(gridCentroids[nbCells, 'cellInd'])[,1]
+				nbCells <- sf::st_drop_geometry(gridCentroids[c(k, nb[[k]]), 'cellInd'])[,1]
+				nbCells <- x[['cellCommInd']][nbCells]
+				sites <- x[['speciesList']][nbCells]
 				
 				# # visual verification of focal cell + neighborhood
 				# plot(gridCentroids[nb[[i]],])
@@ -187,23 +187,9 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 				
 				# plot(xyFromCell(x[[1]], nbCells))
 				# points(xyFromCell(x[[1]], focalCell), col = 'red', cex = 2, pch = 3)
-						
-				# convert to cell indices
-				focalCell <- x[['cellCommInd']][focalCell]
-				nbCells <- x[['cellCommInd']][nbCells]
-						
-				# get species
-				focalSp <- x[['speciesList']][[focalCell]]
-				nbSp <- unique(unlist(x[['speciesList']][nbCells]))
-				
-				pd <- getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])
-				# sum(getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])) - sum(diag(cov(x[['data']][union(focalSp, nbSp), ])))
-				
-				if (all(is.nan(pd))) {
-					return(0)
-				} else {
-					return(abs((sum(pd[nbSp]) / sum(pd)) - (sum(pd[focalSp]) / sum(pd))))
-				}
+												
+							
+				return(sd(sapply(sites, function(y) sum(partialDisp[y])) / sum(partialDisp)))
 			}, cl = cl)
 			
 		} else {
@@ -222,9 +208,9 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 				}
 			}			
 		
-			cellVals <- pbapply::pblapply(1:terra::ncell(x[[1]]), function(i) {
+			cellVals <- pbapply::pblapply(1:terra::ncell(x[[1]]), function(k) {
 				
-				focalCell <- i
+				focalCell <- k
 				if (!anyNA((x[['speciesList']][[x[['cellCommInd']][focalCell]]]))) {
 					
 					# get neighborhood for focal cell
@@ -244,20 +230,12 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 					focalCell <- x[['cellCommInd']][focalCell]
 					nbCells <- x[['cellCommInd']][nbCells]
 							
-					# get species
-					focalSp <- x[['speciesList']][[focalCell]]
-					nbSp <- unique(unlist(x[['speciesList']][nbCells]))
-					nbSp <- nbSp[!is.na(nbSp)]
-					
-					
-					pd <- getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])
-					# sum(getSpPartialDisparities(x[['data']][union(focalSp, nbSp), ])) - sum(diag(cov(x[['data']][union(focalSp, nbSp), ])))
-					
-					if (all(is.nan(pd))) {
-						return(0)
-					} else {
-						return(abs((sum(pd[nbSp]) / sum(pd)) - (sum(pd[focalSp]) / sum(pd))))
-					}
+					# get species communities
+					sites <- x[['speciesList']][c(focalCell, nbCells)]
+					sites <- sites[!sapply(sites, anyNA)]
+						
+					return(sd(sapply(sites, function(y) sum(partialDisp[y])) / sum(partialDisp)))
+
 				} else {
 					return(NA)
 				}
@@ -272,14 +250,6 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 	cellVals <- unlist(cellVals)
 
 	
-	# values > 0 indicate that nb taxa contribute unique aspects to disparity, 
-	# values < 0 indicate that focal taxa contribute unique aspects to disparity
-	# values = 0 indicate that contributions of nb taxa and focal taxa are the same. 
-	# absolute val version: ranges 0 to 1:
-		# 0 = same contribution to disparity in nb vs focal taxa
-		# as values get bigger, greater and greater difference in contribution to total disparity
-		# a value of 0.95 would mean that nb taxa contribute 95% of the disparity, whereas the focal taxon contributes 5%, or vice versa. 
-	
 	metricName <- paste0('disparityTurnover')
 	
 	if (inherits(x[[1]], 'sf')) {	
@@ -290,11 +260,7 @@ disparity_betadiv <- function(x, radius, slow = FALSE, nThreads = 1) {
 	} else {
 		ret <- terra::rast(x[[1]][[1]])
 		names(ret) <- metricName
-		if (slow) {
-			terra::values(ret) <- cellVals		
-		} else {
-			ret[which(terra::values(x[[1]]['spRichness']) > 0)] <- cellVals	
-		}
+		terra::values(ret) <- cellVals		
 	}
 	return(ret)
 }
