@@ -1,6 +1,6 @@
 ##' @title Plot epmGrid
 ##'
-##' @description Plot a epmGrid object. This function uses the tmap package for plotting.
+##' @description Plot a epmGrid object. This function uses the tmap package for plotting by default.
 ##'
 ##' @param x object of class \code{epmGrid}
 ##' @param log boolean; should the cell values be logged?
@@ -154,7 +154,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	}
 
 	if (missing(lwd)) {
-		lwd <- 0.25
+		lwd <- 0.15
 	}
 
 					
@@ -191,7 +191,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (basemap == 'worldmap') {
 
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
-				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.5)
+				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.25)
 			}
 			
 			if (basemap == 'none') {
@@ -214,7 +214,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 				
 			} else {
 				
-				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = 0.5, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = 0.5, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -248,22 +248,34 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			# helpful for debugging because much faster than plotting polygons
 			if (fastPoints) {
 				if (!plotSingleCells) {
-					cols <- colors[findInterval(x[[1]][[plotMetric]], breaks)]
+					cols <- colors[findInterval(x[[1]][[plotMetric]], breaks, rightmost.closed = TRUE)]
 					plot(sf::st_centroid(sf::st_geometry(x[[1]][plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5)
 				} else {
-					cols <- colors[findInterval(grid_multiSp[[plotMetric]], breaks)]
+					cols <- colors[findInterval(grid_multiSp[[plotMetric]], breaks, rightmost.closed = TRUE)]
 					plot(sf::st_centroid(sf::st_geometry(grid_singleSp[plotMetric])), pch = 20, reset = FALSE, col = singleSpCol, cex = 0.5)
 					plot(sf::st_centroid(sf::st_geometry(grid_multiSp[plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5, add = TRUE)	
 				}
 			} else {
 	
-			
+
 				if (!plotSingleCells) {
-					plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colors, border = borderColor, breaks = breaks, add = add, ...)
+					cols <- colors[findInterval(x[[1]][[plotMetric]], breaks, rightmost.closed = TRUE)]
+					plot(sf::st_geometry(x[[1]][plotMetric]), axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, col = cols, border = borderColor, add = add, ...)
 				} else {
-					plot(grid_singleSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, pal = singleSpCol, border = NA, reset = FALSE, add = add, ...)
-					plot(grid_multiSp[plotMetric], lwd = lwd, pal = colors, border = borderCol, breaks = breaks, add = TRUE, reset = FALSE)
+					cols <- colors[findInterval(grid_multiSp[[plotMetric]], breaks, rightmost.closed = TRUE)]
+					plot(sf::st_geometry(grid_singleSp[plotMetric]), axes = includeFrame, main = NULL, key.pos = NULL, col = singleSpCol, border = NA, reset = FALSE, add = add, ...)
+					plot(sf::st_geometry(grid_multiSp[plotMetric]), lwd = lwd, col = cols, border = borderCol, add = TRUE, reset = FALSE)
 				}
+			
+
+
+
+# # 				if (!plotSingleCells) {
+					# plot(x[[1]][plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, lwd = lwd, reset = FALSE, pal = colors, border = borderColor, breaks = breaks, add = add, ...)
+				# } else {
+					# plot(grid_singleSp[plotMetric], axes = includeFrame, main = NULL, key.pos = NULL, pal = singleSpCol, border = NA, reset = FALSE, add = add, ...)
+					# plot(grid_multiSp[plotMetric], lwd = lwd, pal = colors, border = borderCol, breaks = breaks, add = TRUE, reset = FALSE)
+				# }
 			}
 			
 			if (legend) {
@@ -337,7 +349,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (basemap == 'worldmap') {
 
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
-				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = datBB) + tmap::tm_borders(lwd = 0.5)
+				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = datBB) + tmap::tm_borders(lwd = 0.25)
 			}
 			
 			if (basemap == 'none') {

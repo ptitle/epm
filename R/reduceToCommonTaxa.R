@@ -60,6 +60,11 @@ reduceToCommonTaxa <- function(x) {
 	# These are the taxa shared across all components
 	commontaxa <- Reduce(intersect, list(set1, set2, set3))
 	
+	if (identical(commontaxa, Reduce(union, list(set1, set2, set3)))) {
+		# already has same set of taxa across components
+		return(x)
+	}
+	
 	# Now subset each component to these taxa
 	newEpm <- dropSpecies(x, setdiff(set1, commontaxa))
 	
