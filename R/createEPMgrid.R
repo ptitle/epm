@@ -455,48 +455,84 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	
 	# flip list from list of cells per species, to list of species per cells
 	if (inherits(gridTemplate, 'SpatRaster')) {
-		cellList <- vector('list', terra::ncell(gridTemplate))
+		nGridCells <- terra::ncell(gridTemplate)
 	} else if (inherits(gridTemplate, 'sf')) {
-		cellList <- vector('list', nrow(gridTemplate))
+		nGridCells <- nrow(gridTemplate)
 	} else {
 		stop('gridTemplate class mismatch.')
 	}
+	
+	# create site by species matrix
+	mat <- matrix(0, nrow = nGridCells, ncol = length(spGridList))
+	colnames(mat) <- names(spGridList)
 	for (i in 1:length(spGridList)) {
-		cellList[spGridList[[i]]] <- lapply(cellList[spGridList[[i]]], function(x) append(x, names(spGridList)[i]))
-	}
-	cellList <- lapply(cellList, unique)
-	
-	uniqueComm <- unique(cellList)
-	uniqueComm2 <- sapply(uniqueComm, function(y) paste(y, collapse = '|'))
-	cellList2 <- sapply(cellList, function(y) paste(y, collapse = '|'))
-
-	cellCommVec <- integer(length = length(cellList))
-	for (i in 1:length(uniqueComm)) {
-		cellCommVec[which(cellList2 == uniqueComm2[i])] <- i
+		mat[spGridList[[i]], names(spGridList)[i]] <- 1
 	}
 	
-	rm(cellList2, uniqueComm2)
+	# create condensed version that encodes species at each site
+	if (requireNamespace('data.table', quietly = TRUE)) {
+		matCondensed <- fpaste(data.table::as.data.table(mat), "-")$V1
+	} else {
+		matCondensed <- do.call(paste, c(mat, sep="-"))
+	}
+	uniqueComm <- unique(matCondensed)
+	
+	# create vector of indices that map unique communities to all communities
+	cellCommVec <- match(matCondensed, uniqueComm)
+	
+	# convert unique community codes to species names
+	uniqueComm <- strsplit(uniqueComm, split = '-')
+	uniqueComm <- lapply(uniqueComm, as.integer)
+	uniqueComm <- lapply(uniqueComm, function(x) sort(names(spGridList)[as.logical(x)]))
 	
 	# set empty cells to NA, rather than NULL
-	uniqueComm[sapply(uniqueComm, is.null)] <- NA
+	uniqueComm[lengths(uniqueComm) == 0] <- NA
+
+# # 	# flip list from list of cells per species, to list of species per cells
+	# if (inherits(gridTemplate, 'SpatRaster')) {
+		# cellList <- vector('list', terra::ncell(gridTemplate))
+	# } else if (inherits(gridTemplate, 'sf')) {
+		# cellList <- vector('list', nrow(gridTemplate))
+	# } else {
+		# stop('gridTemplate class mismatch.')
+	# }
+
+	# for (i in 1:length(spGridList)) {
+		# cellList[spGridList[[i]]] <- lapply(cellList[spGridList[[i]]], function(x) append(x, names(spGridList)[i]))
+	# }
+	# cellList <- lapply(cellList, unique)
+	
+	# uniqueComm <- unique(cellList)
+	# uniqueComm2 <- sapply(uniqueComm, function(y) paste(y, collapse = '|'))
+	# cellList2 <- sapply(cellList, function(y) paste(y, collapse = '|'))
+
+	# cellCommVec <- integer(length = length(cellList))
+	# for (i in 1:length(uniqueComm)) {
+		# cellCommVec[which(cellList2 == uniqueComm2[i])] <- i
+	# }
+	
+	# rm(cellList2, uniqueComm2)
+	
+	# # set empty cells to NA, rather than NULL
+	# uniqueComm[sapply(uniqueComm, is.null)] <- NA
 
 	# add unique community index and species richness in as attributes
 	if (inherits(gridTemplate, 'SpatRaster')) {
-		gridTemplate <- c(gridTemplate, terra::rast(gridTemplate))
-		terra::values(gridTemplate) <- cbind(cellCommVec, lengths(cellList))
+		gridTemplate <- terra::rast(gridTemplate, nlyrs = 2)
+		terra::values(gridTemplate) <- cbind(cellCommVec, rowSums(mat))
 		names(gridTemplate) <- c('uniqueComm', 'spRichness')
 		gridTemplate$spRichness[gridTemplate$spRichness == 0] <- NA
 	} else if (inherits(gridTemplate, 'sf')) {
 		gridTemplate$uniqueComm <- cellCommVec
-		gridTemplate$spRichness <- lengths(cellList)
+		gridTemplate$spRichness <- rowSums(mat)
 	} else {
 		stop('gridTemplate class mismatch.')
 	}
 	
 	# remove empty gridcells
 	if (inherits(gridTemplate, 'sf')) {
-		gridTemplate <- gridTemplate[which(lengths(cellList) > 0),]
-		cellCommVec <- cellCommVec[which(lengths(cellList) > 0)]
+		gridTemplate <- gridTemplate[which(rowSums(mat) > 0),]
+		cellCommVec <- cellCommVec[which(rowSums(mat) > 0)]
 	}
 
 	# set back to default value
@@ -529,7 +565,12 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	return(obj)	
 }
 
-
+# courtesy of https://stackoverflow.com/questions/14568662/paste-multiple-columns-together
+fpaste <- function(dt, sep = ",") {
+	x <- tempfile()
+	data.table::fwrite(dt, file = x, sep = sep, col.names = FALSE)
+	data.table::fread(x, sep = "\n", header = FALSE)
+}
 
 ## alternate version
 polyToHex <- function(poly, method, coverCutoff, extentVec, resolution, crs, nGroups, retainSmallRanges, nThreads, verbose) {
@@ -909,9 +950,8 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	# if extent was polygon, then mask cells that fall outside
 	if (inherits(extentVec, 'sf')) {
 	
-		xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
-		if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
-			goodCells <- unique(xx[, 'cell'])
+		gridmask <- terra::rasterize(terra::vect(extentVec), gridTemplate)
+		if (anyNA(terra::values(gridmask))) {
 			cellsToExclude <- TRUE
 		} else {
 			cellsToExclude <- FALSE
@@ -919,6 +959,17 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	} else {
 		cellsToExclude <- FALSE
 	}
+	
+		# xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
+		# if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
+			# goodCells <- unique(xx[, 'cell'])
+			# cellsToExclude <- TRUE
+		# } else {
+			# cellsToExclude <- FALSE
+		# }
+	# } else {
+		# cellsToExclude <- FALSE
+	# }
 	
 	# prep for parallel computing
 	if (nThreads == 1) {
@@ -935,58 +986,68 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 
 	spGridList <- pbapply::pblapply(poly, function(x) {
 	# for (i in 1:length(poly)) {
-		# x <- poly[[i]]
-		# message('\t', i)
+	# 	x <- poly[[i]]
+	# 	message('\t', i)
 	    
 	    if (all(unique(as.character(sf::st_geometry_type(x))) == 'POINT')) {
 	        
 	        presenceCells <- terra::cellFromXY(gridTemplate, sf::st_coordinates(x))
 	        if (cellsToExclude) {
-	            presenceCells <- intersect(presenceCells, goodCells)
+	        	presenceCells <- presenceCells[!is.na(unlist(gridmask[presenceCells])), ]
+				# presenceCells <- intersect(presenceCells, goodCells)
 	        }
 	        
         } else {
-		
-    		xx <- terra::cells(gridTemplate, y = terra::vect(x), weights = TRUE)
-    		
-    		if (nrow(xx) > 0) {
-    			# if polygon extends beyond grid template, cell may be NaN
-    			if (anyNA(xx[, 'cell'])) {
-    				xx <- xx[!is.na(xx[, 'cell']),]
-    			}
-    					
-    			# cells are returned regardless of how much they are covered by polygon
-    			
-    			# exclude some cells if needed
-    			if (cellsToExclude) {
-    				xx <- xx[xx[, 'cell'] %in% goodCells, ]
-    			}
-    			
-    			if (!is.matrix(xx)) {
-    				# if xx was a single row, the subsetting might cause it to become a vector
-    				xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
-    			}
-    			
-                if (nrow(xx) > 0) {
-    			    
-                    if (method == 'centroid') {
-                        centroids <- terra::xyFromCell(gridTemplate, cell = xx[, 'cell'])
-                        centroids <- sf::st_as_sf(as.data.frame(centroids), coords = 1:2, crs = sf::st_crs(x))	
-                        presenceCells <- xx[, 'cell'][unlist(sf::st_intersects(x, centroids))]
+        	
+        		if (method == 'centroid') {
+        			
+        			# rasterize polygon against grid (cells register if midpoint is within polygon)
+        			xx <- terra::rasterize(terra::vect(x), gridTemplate)
+	    		
+	    			# exclude some cells if needed
+	    			if (cellsToExclude) {
+					xx <- terra::mask(xx, gridmask)
+				}
+				
+				presenceCells <- which(!is.na(terra::values(xx)))
+				
+			} else if (method == 'areaCutoff') {	
+				
+        			gridTemplateCrop <- terra::crop(gridTemplate, terra::vect(x))
+        			xx <- terra::cells(gridTemplateCrop, y = terra::vect(x), weights = TRUE)
         		
-                    } else if (method == 'areaCutoff') {
-        		
-                        presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
-                        # terra::xyFromCell(gridTemplate, cell = presenceCells) # for testing
-        					
-                    }
-                } else {
-                    presenceCells <- numeric(0)
-                }
-    		} else {
-    		    presenceCells <- numeric(0)
-    		}
-        }
+	    			if (all(is.na(xx[, 'cell']))) {
+	    				stop('Memory requirement too high. Suggest switching to centroid method.')
+	    			}
+	    		
+	 	   		if (nrow(xx) > 0) {
+	 	   			# if polygon extends beyond grid template, cell may be NaN
+	    				if (anyNA(xx[, 'cell'])) {
+	    					xx <- xx[!is.na(xx[, 'cell']), ]
+	    				}
+	    					
+	   	 			# cells are returned regardless of how much they are covered by polygon
+	    			
+	    				# exclude some cells if needed
+	    				if (cellsToExclude) {
+						xx <- xx[!is.na(unlist(gridmask[xx[, 'cell']])), ]
+	    				}
+	    			
+	    				if (!is.matrix(xx)) {
+	    					# if xx was a single row, the subsetting might cause it to become a vector
+	    					xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
+	    				}
+	    			
+    	    		        if (nrow(xx) > 0) {
+						presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
+        				} else {
+        					presenceCells <- numeric(0)
+        				}
+     	   		} else {
+        				presenceCells <- numeric(0)
+        			}
+			}
+	    }
 	    
 	    presenceCells
 	    
@@ -1049,7 +1110,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 				}
 				
 				if (cellsToExclude) {
-					topCells <- intersect(topCells, goodCells)
+					topCells <- topCells[!is.na(unlist(gridmask[topCells]))]
 					if (length(topCells) > 0) {
 						stop()
 					}

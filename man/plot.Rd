@@ -66,7 +66,7 @@ if \code{use_tmap = FALSE}}
 Nothing is returned.
 }
 \description{
-Plot a epmGrid object. This function uses the tmap package for plotting.
+Plot a epmGrid object. This function uses the tmap package for plotting by default.
 }
 \details{
 If \code{x} is a metric as generated with \code{gridMetrics} that returns 0 

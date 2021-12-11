@@ -7,7 +7,7 @@ Author: Pascal Title
 Maintainer: Pascal Title <pascal.title@stonybrook.edu>
 Depends: R (>= 3.5)
 Imports: terra, raster, sf, spdep, ape, geomorph, viridisLite, pbapply, RcppProgress, methods, Rcpp (>= 0.12.9)
-Suggests: tmap, sp, rgdal
+Suggests: tmap, data.table, sp, rgdal
 Description: An R package that facilitates the aggregation of species'
 	geographic ranges from vector or raster spatial data, and that enables
 	the calculation of various morphological and phylogenetic community metrics across geography.
