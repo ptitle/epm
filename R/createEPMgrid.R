@@ -462,6 +462,22 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		stop('gridTemplate class mismatch.')
 	}
 	
+	# # DATA.TABLE ATTEMPT
+	# mat <- data.table::data.table('cell' = integer(), 'sp' = character())
+	# for (i in 1:length(spGridList)) {
+		# mat <- rbind(mat, data.table::data.table('cell' = spGridList[[i]], 'sp' = names(spGridList)[i]))
+	# }
+	# data.table::setkey(mat, 'cell')
+	
+	# # get set of taxa for each cell
+	# cellComms <- mat[, toString(sort(unique(sp))), by = cell]
+	
+	# # get unique communities across cells
+	# uniqueComm <- unique(cellComms$V1)
+	
+	# maybe add a cutoff value for number of cells, and switch between approaches.
+	
+	# ##################################
 	# create site by species matrix
 	mat <- matrix(0, nrow = nGridCells, ncol = length(spGridList))
 	colnames(mat) <- names(spGridList)
@@ -950,6 +966,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	# if extent was polygon, then mask cells that fall outside
 	if (inherits(extentVec, 'sf')) {
 	
+		gridext <- terra::vect(extentVec)
 		gridmask <- terra::rasterize(terra::vect(extentVec), gridTemplate)
 		if (anyNA(terra::values(gridmask))) {
 			cellsToExclude <- TRUE
@@ -957,6 +974,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 			cellsToExclude <- FALSE
 		}
 	} else {
+		gridext <- terra::ext(gridTemplate)
 		cellsToExclude <- FALSE
 	}
 	
@@ -986,8 +1004,8 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 
 	spGridList <- pbapply::pblapply(poly, function(x) {
 	# for (i in 1:length(poly)) {
-	# 	x <- poly[[i]]
-	# 	message('\t', i)
+	 	# x <- poly[[i]]
+	 	# message('\t', i)
 	    
 	    if (all(unique(as.character(sf::st_geometry_type(x))) == 'POINT')) {
 	        
@@ -999,56 +1017,61 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 	        
         } else {
         	
-        		if (method == 'centroid') {
-        			
-        			# rasterize polygon against grid (cells register if midpoint is within polygon)
-        			xx <- terra::rasterize(terra::vect(x), gridTemplate)
-	    		
-	    			# exclude some cells if needed
-	    			if (cellsToExclude) {
-					xx <- terra::mask(xx, gridmask)
+        		# do the extents overlap? If not, then skip
+        		if (terra::relate(gridext, terra::ext(terra::vect(x)), relation = 'intersects')[1,1]) {
+        	
+	        	if (method == 'centroid') {
+	        		
+	        		# rasterize polygon against grid (cells register if midpoint is within polygon)
+	        		xx <- terra::rasterize(terra::vect(x), gridTemplate)
+		    		
+		    		# exclude some cells if needed
+		    		if (cellsToExclude) {
+						xx <- terra::mask(xx, gridmask)
+					}
+					
+					presenceCells <- which(!is.na(terra::values(xx)))
+					
+				} else if (method == 'areaCutoff') {	
+								
+	        		gridTemplateCrop <- terra::crop(gridTemplate, terra::vect(x))
+	        		xx <- terra::cells(gridTemplateCrop, y = terra::vect(x), weights = TRUE)
+	        		
+		    		if (all(is.na(xx[, 'cell']))) {
+		    			stop('Memory requirement too high. Suggest switching to centroid method.')
+		    		}
+		    		
+		 	   		if (nrow(xx) > 0) {
+		 	   			# if polygon extends beyond grid template, cell may be NaN
+		    			if (anyNA(xx[, 'cell'])) {
+		    				xx <- xx[!is.na(xx[, 'cell']), ]
+		    			}
+		    							    			
+		    			if (!is.matrix(xx)) {
+		    			# if xx was a single row, the subsetting might cause it to become a vector
+		    				xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
+		    			}
+		    			
+	    	    	        if (nrow(xx) > 0) {
+	    	    	        	presenceCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateCrop, cell = xx[xx[, 'weights'] >= coverCutoff, 'cell']))
+	    	    	        	
+							# exclude some cells if needed
+		    				if (cellsToExclude) {
+								presenceCells <- presenceCells[!is.na(unlist(gridmask[presenceCells]))]
+		    				}
+
+	        			} else {
+	        				presenceCells <- integer(0)
+	        			}
+	     	   		} else {
+	        			presenceCells <- integer(0)
+	        		}
 				}
-				
-				presenceCells <- which(!is.na(terra::values(xx)))
-				
-			} else if (method == 'areaCutoff') {	
-				
-        			gridTemplateCrop <- terra::crop(gridTemplate, terra::vect(x))
-        			xx <- terra::cells(gridTemplateCrop, y = terra::vect(x), weights = TRUE)
-        		
-	    			if (all(is.na(xx[, 'cell']))) {
-	    				stop('Memory requirement too high. Suggest switching to centroid method.')
-	    			}
-	    		
-	 	   		if (nrow(xx) > 0) {
-	 	   			# if polygon extends beyond grid template, cell may be NaN
-	    				if (anyNA(xx[, 'cell'])) {
-	    					xx <- xx[!is.na(xx[, 'cell']), ]
-	    				}
-	    					
-	   	 			# cells are returned regardless of how much they are covered by polygon
-	    			
-	    				# exclude some cells if needed
-	    				if (cellsToExclude) {
-						xx <- xx[!is.na(unlist(gridmask[xx[, 'cell']])), ]
-	    				}
-	    			
-	    				if (!is.matrix(xx)) {
-	    					# if xx was a single row, the subsetting might cause it to become a vector
-	    					xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
-	    				}
-	    			
-    	    		        if (nrow(xx) > 0) {
-						presenceCells <- xx[xx[, 'weights'] >= coverCutoff, 'cell']
-        				} else {
-        					presenceCells <- numeric(0)
-        				}
-     	   		} else {
-        				presenceCells <- numeric(0)
-        			}
-			}
+			} else {
+				presenceCells <- integer(0)
+			}	
 	    }
-	    
+	   
 	    presenceCells
 	    
 	}, cl = cl)
@@ -1079,56 +1102,60 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 				
 				if (verbose) setTxtProgressBar(pb, i)
 				
-				 check <- sf::st_intersects(sf::st_cast(sf::st_geometry(poly[[smallSp[i]]]), 'POLYGON'), sf::st_cast(sf::st_geometry(poly[[smallSp[i]]]), 'POLYGON'))
-				if (any(lengths(check)) > 1) {
-					mergedPoly <- sf::st_union(poly[[smallSp[i]]])
-					mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
-				} else {
-					mergedPoly <- sf::st_cast(poly[[smallSp[i]]])
-				}
+				# do the extents overlap? If not, then skip
+        		if (terra::relate(gridext, terra::ext(terra::vect(poly[[smallSp[i]]])), relation = 'intersects')[1,1]) {
 				
-				mergedPoly <- sf::st_geometry(mergedPoly)    
-
-				# now mergedPoly should be a set of separate polygons that do not share borders
-				topCells <- integer(length(mergedPoly))
-				
-				for (j in 1:length(mergedPoly)) {
-					
-					xx <- terra::cells(gridTemplateHighRes, y = terra::vect(mergedPoly[j]), weights = TRUE)
-
-					# if polygon extends beyond grid template, cell may be NaN
-					if (anyNA(xx[, 'cell'])) {
-						xx <- xx[!is.na(xx[, 'cell']),]
+					 check <- sf::st_intersects(sf::st_cast(sf::st_geometry(poly[[smallSp[i]]]), 'POLYGON'), sf::st_cast(sf::st_geometry(poly[[smallSp[i]]]), 'POLYGON'))
+					if (any(lengths(check)) > 1) {
+						mergedPoly <- sf::st_union(poly[[smallSp[i]]])
+						mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
+					} else {
+						mergedPoly <- sf::st_cast(poly[[smallSp[i]]])
 					}
- 
-					if (nrow(xx) > 0) {
+					
+					mergedPoly <- sf::st_geometry(mergedPoly)    
+	
+					# now mergedPoly should be a set of separate polygons that do not share borders
+					topCells <- integer(length(mergedPoly))
+					
+					for (j in 1:length(mergedPoly)) {
 						
-						smallCells <- xx[which.max(xx[, 'weights']), 'cell']
-						smallCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateHighRes, cell = smallCells))
-						topCells[j] <- smallCells
+						xx <- terra::cells(gridTemplateHighRes, y = terra::vect(mergedPoly[j]), weights = TRUE)
+	
+						# if polygon extends beyond grid template, cell may be NaN
+						if (anyNA(xx[, 'cell'])) {
+							xx <- xx[!is.na(xx[, 'cell']),]
+						}
+	 
+						if (nrow(xx) > 0) {
+							
+							smallCells <- xx[which.max(xx[, 'weights']), 'cell']
+							smallCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateHighRes, cell = smallCells))
+							topCells[j] <- smallCells
+						}
 					}
-				}
-				
-				if (cellsToExclude) {
-					topCells <- topCells[!is.na(unlist(gridmask[topCells]))]
-					if (length(topCells) > 0) {
-						stop()
-					}
-				}
 					
-				spGridList[[smallSp[i]]] <- sort(unique(topCells))
-
-				# ## alternative approach using point sampling
-				# xx <- terra::cells(gridTemplateHighRes, y = terra::vect(poly[[smallSp[i]]]), weights = TRUE)
-				# if (nrow(xx) > 0) {
-					# pts <- terra::xyFromCell(gridTemplateHighRes, cell = xx[, 'cell'])
-				# } else {
-					# # if range is too small to register, sample points within the polygon
-					# pts <- sf::st_sample(poly[[smallSp[i]]], size = 100)
-					# pts <- sf::st_coordinates(pts)
-				# }
-				# smallCells <- unique(terra::cellFromXY(gridTemplate, pts))
-				# spGridList[[smallSp[i]]] <- smallCells		
+					if (cellsToExclude) {
+						topCells <- topCells[!is.na(unlist(gridmask[topCells]))]
+						# if (length(topCells) > 0) {
+							# stop()
+						# }
+					}
+						
+					spGridList[[smallSp[i]]] <- sort(unique(topCells))
+	
+					# ## alternative approach using point sampling
+					# xx <- terra::cells(gridTemplateHighRes, y = terra::vect(poly[[smallSp[i]]]), weights = TRUE)
+					# if (nrow(xx) > 0) {
+						# pts <- terra::xyFromCell(gridTemplateHighRes, cell = xx[, 'cell'])
+					# } else {
+						# # if range is too small to register, sample points within the polygon
+						# pts <- sf::st_sample(poly[[smallSp[i]]], size = 100)
+						# pts <- sf::st_coordinates(pts)
+					# }
+					# smallCells <- unique(terra::cellFromXY(gridTemplate, pts))
+					# spGridList[[smallSp[i]]] <- smallCells		
+				}
 			}
 			
 			if (verbose) cat('\n'); close(pb)
@@ -1154,7 +1181,7 @@ polyToTerra <- function(poly, method, coverCutoff, extentVec, resolution, crs, r
 }
 
 				
-				
+
 				
 # internal function for preparing occurrence input for createEPMgrid().
 ##
