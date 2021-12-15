@@ -11,7 +11,6 @@
 ##' 	data in \code{x} are multivariate, which trait should be used?
 ##' 	This can also specify which subset of columns a multivariate metric should be applied to.
 ##' 
-##' @param nreps Number of repetitions for Foote metric distribution (mean and min_NN_dist).
 ##'
 ##' @param verbose Intended primarily for debugging, prints progress to the console
 ##' 
@@ -87,7 +86,7 @@
 ##' @export
 
 
-gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
+gridMetrics <- function(x, metric, var = NULL, verbose = FALSE) {
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
@@ -334,7 +333,10 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
 		ind <- which(lengths(uniqueComm) > 1)
-		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
+		morphDists <- as.matrix(dist(x[['data']]))
+		diag(morphDists) <- NA
+		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(apply(morphDists[y, y], 1, min, na.rm = TRUE)))
+		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
 	}
 
 	if (metric == 'min_NN_dist' & metricType == 'multiVar') {
@@ -342,7 +344,10 @@ gridMetrics <- function(x, metric, var = NULL, nreps = 20, verbose = FALSE) {
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
 		ind <- which(lengths(uniqueComm) > 1)
-		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
+		morphDists <- as.matrix(dist(x[['data']]))
+		diag(morphDists) <- NA
+		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(apply(morphDists[y, y], 1, min, na.rm = TRUE)))
+		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
 	}
 	
 	if (metric == 'phylosignal' & metricType == 'multiVar') {

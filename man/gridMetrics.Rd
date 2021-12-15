@@ -4,7 +4,7 @@
 \alias{gridMetrics}
 \title{Grid Metrics}
 \usage{
-gridMetrics(x, metric, var = NULL, nreps = 20, verbose = FALSE)
+gridMetrics(x, metric, var = NULL, verbose = FALSE)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -14,8 +14,6 @@ gridMetrics(x, metric, var = NULL, nreps = 20, verbose = FALSE)
 \item{var}{If a univariate morphological metric is specified, and the 
 data in \code{x} are multivariate, which trait should be used?
 This can also specify which subset of columns a multivariate metric should be applied to.}
-
-\item{nreps}{Number of repetitions for Foote metric distribution (mean and min_NN_dist).}
 
 \item{verbose}{Intended primarily for debugging, prints progress to the console}
 }
