@@ -7,9 +7,12 @@
 \description{
 An R package that facilitates the aggregation of species'
 geographic ranges from vector or raster spatial data, and that enables
-the calculation of various morphological and phylogenetic community metics
+the calculation of various morphological and phylogenetic community metrics
 across geography.
+
+A detailed wiki for the R package can be found on the epm github page:
+\url{https://github.com/ptitle/epm/wiki#table-of-contents}
 }
 \author{
-Pascal Title, Miriam Zelditch
+Pascal O. Title, Donald L. Swiderski, Miriam L. Zelditch
 }

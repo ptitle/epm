@@ -51,10 +51,13 @@ epmToPhyloComm <- function(x, sites) {
 
 	# if sites is a string (presumably 'all'), then we will use all sites
 	} else if (is.character(sites)) {
-		sites <- 1:nrow(x[[1]])
+		if (inherits(x[[1]], 'SpatRaster')) {
+			sites <- 1:terra::ncell(x[[1]])	
+		} else if (inherits(x[[1]], 'sf')) {	
+			sites <- 1:nrow(x[[1]])
+		}
 	}
 	
-		
 	# extract relevant cells from empGrid
 	dat <- sapply(x[['cellCommInd']][sites], function(y) x[['speciesList']][[y]], simplify = FALSE)
 	uniqueSp <- sort(unique(unlist(dat)))

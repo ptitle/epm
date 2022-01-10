@@ -28,7 +28,7 @@
 
 # plot one species' geographic range, as encoded in the epmGrid object.
 
-plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', lwd = 0.5, use_tmap = TRUE, add = TRUE) {
+plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', lwd = 0.5, use_tmap = TRUE, add = FALSE) {
 	
 	if (use_tmap & !requireNamespace('tmap', quietly = TRUE)) {
 		message('\ttmap package not installed -- defaulting to sf/terra plot')
@@ -72,7 +72,7 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 				fullGrid[!is.na(fullGrid)] <- 1
 				spGrid <- terra::rast(fullGrid)
 				spGrid[cellInd] <- 1
-				map <- map + tmap::tm_shape(fullGrid, bbox = datBB) + tmap::tm_raster(col = 'spRichness', palette = gray(0.95), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(col = 'spRichness', palette = taxonColor, legend.show = FALSE)
+				map <- map + tmap::tm_shape(fullGrid, bbox = datBB) + tmap::tm_raster(pal = gray(0.95), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(pal = taxonColor, legend.show = FALSE)
 			}
 			map
 		
@@ -89,7 +89,7 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 				fullGrid[!is.na(fullGrid)] <- 1
 				spGrid <- terra::rast(fullGrid)
 				spGrid[cellInd] <- 1
-				map <- tmap::tm_shape(fullGrid) + tmap::tm_raster(col = 'spRichness', palette = gray(0.90), alpha = 0.75, legend.show = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(col = 'spRichness', palette = taxonColor, legend.show = FALSE)
+				map <- tmap::tm_shape(fullGrid) + tmap::tm_raster(pal = gray(0.95), alpha = 0.75, legend.show = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(pal = taxonColor, legend.show = FALSE)
 			}
 	
 			map

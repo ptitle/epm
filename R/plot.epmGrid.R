@@ -13,7 +13,10 @@
 ##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
 ##'	@param basemap if \code{'none'}, then only the grid is plotted. 
 ##'		If \code{'worldmap'}, then vector map is plotted.
-##' 	If \code{'interactive'}, then the \code{mapview} package is used.
+##' 	If \code{'interactive'}, then the plot is sent to the web browser.
+##' @param ignoreSingleSpCells can be TRUE, FALSE or 'auto'. Should cells containing
+##' 	only 1 taxon be grayed out? This is predetermined for all metrics in \code{\link{gridMetrics}}
+##' 	if  ignoreSingleSpCells = 'auto'.
 ##' @param singleSpCol color for single-species cells. See details.
 ##' @param lwd grid cell border width
 ##' @param borderCol color for grid cell borders
@@ -22,7 +25,8 @@
 ##' @param includeFrame boolean; include frame around plot?
 ##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead of tmap package
 ##' @param fastPoints Intended for debugging purposes. For hex grids and use_tmap = F, 
-##' 	plot points instead of polygons.
+##' 	plot points instead of polygons. Helpful for sorting out plotting details without
+##' waiting for slow polygon plotting.
 ##' @param add logical, add to existing plot?
 ##' @param ... additional arguments that can be passed to sf::plot or terra::plot 
 ##' 		if \code{use_tmap = FALSE}
@@ -59,7 +63,7 @@
 ##' map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 ##' # tmap_arrange(map1, map2)
 ##' \donttest{
-##' # use mapview for plotting
+##' # view your plot in the web-browser as a dynamic plot.
 ##' plot(tamiasEPM, basemap = 'interactive')
 ##' }
 ##'
@@ -67,9 +71,9 @@
 ##' @aliases plot.epmGrid
 ##' @export
 
-plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, add = FALSE, ...) {
+plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, ignoreSingleSpCells ='auto', singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, add = FALSE, ...) {
 	
-	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1
+	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('Object must be of class epmGrid')
@@ -84,6 +88,10 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		use_tmap <- FALSE
 	}
 	
+	if (!is.logical(ignoreSingleSpCells) & ignoreSingleSpCells != 'auto') {
+		stop('ignoreSingleSpCells must be either TRUE, FALSE or "auto".')
+	}
+		
 	if (fastPoints) {
 		use_tmap <- FALSE
 	}
@@ -99,7 +107,16 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	# if x is a epmGrid that represents a metric that only makes sense for communities with multiple species, 
 	# then single species cells have a value of zero, and we will plot those cells as gray.
 	# We must also then specify a new minimum bound for the color palette to be the min of multi-sp cells.
-	if (plotMetric %in% c('range', 'mean_NN_dist', 'min_NN_dist', 'variance', 'disparity', 'rangePCA', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'PSR')) {
+
+	if (ignoreSingleSpCells == 'auto') {
+		if (plotMetric %in% c('range', 'mean_NN_dist', 'min_NN_dist', 'variance', 'disparity', 'rangePCA', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'PSR')) {
+			ignoreSingleSpCells <- TRUE
+		} else {
+			ignoreSingleSpCells <- FALSE
+		}
+	}
+
+	if (ignoreSingleSpCells) {
 		# determine which cells have just 1 species
 		singleSpCells <- singleSpCellIndex(x)
 		

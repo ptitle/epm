@@ -7,7 +7,7 @@
 ##' 
 ##' @param metric name of metric to use, see Details. 
 ##'
-##' @param var If a univariate morphological metric is specified, and the 
+##' @param column If a univariate morphological metric is specified, and the 
 ##' 	data in \code{x} are multivariate, which trait should be used?
 ##' 	This can also specify which subset of columns a multivariate metric should be applied to.
 ##' 
@@ -50,7 +50,7 @@
 ##'			\item{minPatristicNN:} {minimum nearest neighbor in patristic distance}
 ##'			\item{phyloDisparity:} {sum of squared deviations in patristic distance}
 ##'			\item{PSV:} {Phylogenetic Species Variability}
-##'			\item{PSR:} P={Phylogenetic Species Richness}
+##'			\item{PSR:} {Phylogenetic Species Richness}
 ##'			\item{DR:} {non-parametric estimate of speciation rates}
 ##' 	}
 ##' 	Range-weighted metrics
@@ -60,19 +60,54 @@
 ##'			\item{phyloWeightedEndemism:}
 ##' 	}
 ##'
-##'		If data slot contains a pairwise matrix, \code{var} is ignored.
+##'		If data slot contains a pairwise matrix, \code{column} is ignored.
 ##'		Weighted mean options are available where, for each cell, a weighting scheme 
 ##' 	(inverse of species range sizes) is applied such that small-ranged species are 
 ##' 	up-weighted, and broadly distributed species are down-weighted. 
 ##' 	This can be a useful way to lessen the influence of broadly distributed species 
 ##' 	in the geographic mapping of trait data. 
 ##'
+##' It may be desirable to have metrics calculated for a dataset where only taxa shared
+##' across geography, traits and phylogeny are included. The function \code{\link{reduceToCommonTaxa}}
+##' does exactly that.
+##'
+##' To implement other metrics not available here, see \code{\link{customGridMetric}}.
+##'
+##'
+##' @references
+##' Blomberg's K for shape data\cr
+##' Adams, D. C., & Otárola‐Castillo, E. (2013). geomorph: an r package for the collection 
+##' and analysis of geometric morphometric shape data. Methods in Ecology and Evolution, 4(4), 
+##' 393–399. https://doi.org/10.1111/2041-210x.12035
+##'
+##' partial disparity\cr
+##' Foote, M. (1993). Contributions of individual taxa to overall morphological disparity. 
+##' Paleobiology, 19(4), 403–419. https://doi.org/10.1017/s0094837300014056
+##'
+##' PSV, RSV\cr
+##' Helmus, M. R., Bland, T. J., Williams, C. K., & Ives, A. R. (2007). Phylogenetic Measures 
+##' of Biodiversity. The American Naturalist, 169(3), E68–E83. https://doi.org/10.1086/511334
+##'
+##' DR\cr
+##' Jetz, W., Thomas, G. H., Joy, J. B., Hartmann, K., & Mooers, A. O. (2012). The global 
+##' diversity of birds in space and time. Nature, 491(7424), 444–448. 
+##' https://doi.org/10.1038/nature11631
+##'
+##' weighted endemism\cr
+##' Crisp, M. D., Laffan, S., Linder, H. P., & Monro, A. (2001). Endemism in the Australian 
+##' flora. Journal of Biogeography, 28(2), 183–198. https://doi.org/10.1046/j.1365-2699.2001.00524.x
+##'
+##' phylo weighted endemism\cr
+##' Rosauer, D., Laffan, S. W., Crisp, M. D., Donnellan, S. C., & Cook, L. G. (2009). Phylogenetic
+##' endemism: a new approach for identifying geographical concentrations of evolutionary history. 
+##' Molecular Ecology, 18(19), 4061–4072. https://doi.org/10.1111/j.1365-294x.2009.04311.x
+##'
 ##' @examples
 ##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##'
 ##' # univariate morphological example
-##' x <- gridMetrics(tamiasEPM, metric='mean', var='V2')
+##' x <- gridMetrics(tamiasEPM, metric='mean', column='V2')
 ##' plot(x) 
 ##'
 ##' # multivariate morphological
@@ -86,7 +121,7 @@
 ##' @export
 
 
-gridMetrics <- function(x, metric, var = NULL, verbose = FALSE) {
+gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
@@ -108,7 +143,7 @@ gridMetrics <- function(x, metric, var = NULL, verbose = FALSE) {
 	if (inherits(x[['data']], c('matrix', 'data.frame'))) {
 		if (identical(rownames(x[['data']]), colnames(x[['data']]))) {
 			if (verbose) message('\t...detected pairwise distance matrix...\n') 
-			var <- NULL
+			column <- NULL
 			pairwise <- TRUE
 			# make the diagonal and lower triangle NA
 			x[['data']][lower.tri(x[['data']], diag = TRUE)] <- NA
@@ -118,18 +153,18 @@ gridMetrics <- function(x, metric, var = NULL, verbose = FALSE) {
 		}
 	}
 	
-	# if var is defined but data are univariate, disable var. 
-	if (is.vector(x[['data']]) & !is.null(var)) {
-		var <- NULL
+	# if column is defined but data are univariate, disable column. 
+	if (is.vector(x[['data']]) & !is.null(column)) {
+		column <- NULL
 	}
 		
-	if (!is.null(var) & inherits(x[['data']], c('matrix', 'data.frame'))) {
-		if (is.character(var)) {
-			if (any(!var %in% colnames(x[['data']]))) {
-				stop('var not a valid column name of the data.')
+	if (!is.null(column) & inherits(x[['data']], c('matrix', 'data.frame'))) {
+		if (is.character(column)) {
+			if (any(!column %in% colnames(x[['data']]))) {
+				stop('column not a valid column name of the data.')
 			}
-		} else if (is.numeric(var)) {
-			if (any(!all(var %in% 1:ncol(x[['data']])))) {
+		} else if (is.numeric(column)) {
+			if (any(!all(column %in% 1:ncol(x[['data']])))) {
 				stop('Requested data column indices are out of range.')
 			}
 		}
@@ -138,7 +173,7 @@ gridMetrics <- function(x, metric, var = NULL, verbose = FALSE) {
 	if (inherits(x[['data']], c('matrix', 'data.frame')) | is.vector(x[['data']])) {
 		if (inherits(x[['data']], c('matrix', 'data.frame'))) {
 			metricType <- 'multiVar'
-			if (!is.null(var) & length(var) == 1) {
+			if (!is.null(column) & length(column) == 1) {
 				metricType <- 'uniVar'
 			}
 		} else {
@@ -149,17 +184,17 @@ gridMetrics <- function(x, metric, var = NULL, verbose = FALSE) {
 	}
 	
 	# if a subset of data columns are requested, subset the data table
-	if (!is.null(var) & inherits(x[['data']], c('matrix', 'data.frame'))) {
-		if (length(var) > 1) {
-			x[['data']] <- x[['data']][, var]
+	if (!is.null(column) & inherits(x[['data']], c('matrix', 'data.frame'))) {
+		if (length(column) > 1) {
+			x[['data']] <- x[['data']][, column]
 		} else {
-			x[['data']] <- setNames(x[['data']][, var], rownames(x[['data']]))
+			x[['data']] <- setNames(x[['data']][, column], rownames(x[['data']]))
 		}
-		var <- NULL
+		column <- NULL
 	}
 	
 	if (metric %in% c('mean', 'median', 'variance', 'arithmeticWeightedMean', 'geometricWeightedMean') & metricType == 'multiVar' & !pairwise) {
-		stop('If a univariate metric is requested from a multivariate dataset, a column name must be provided as var.')
+		stop('If a univariate metric is requested from a multivariate dataset, a column name must be provided as column.')
 	}
 	
 	if (metric %in% c('rangePCA', 'disparity', 'partialDisparity') & metricType == 'uniVar' & !pairwise) {

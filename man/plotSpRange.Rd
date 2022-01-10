@@ -11,7 +11,7 @@ plotSpRange(
   basemap = "worldmap",
   lwd = 0.5,
   use_tmap = TRUE,
-  add = TRUE
+  add = FALSE
 )
 }
 \arguments{

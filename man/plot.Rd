@@ -11,6 +11,7 @@
   col,
   basemap = "worldmap",
   colorRampRange = NULL,
+  ignoreSingleSpCells = "auto",
   singleSpCol = gray(0.9),
   lwd,
   borderCol = "black",
@@ -34,12 +35,16 @@ function that takes an integer (see for example \code{\link{colorRampPalette}}).
 
 \item{basemap}{if \code{'none'}, then only the grid is plotted. 
 If \code{'worldmap'}, then vector map is plotted.
-If \code{'interactive'}, then the \code{mapview} package is used.}
+If \code{'interactive'}, then the plot is sent to the web browser.}
 
 \item{colorRampRange}{numeric vector of min and max value for scaling the color
 ramp. Automatically inferred if set to \code{NULL}. This is relevant if multiple
 plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. 
     Not intended for mapview option.}
+
+\item{ignoreSingleSpCells}{can be TRUE, FALSE or 'auto'. Should cells containing
+only 1 taxon be grayed out? This is predetermined for all metrics in \code{\link{gridMetrics}}
+if  ignoreSingleSpCells = 'auto'.}
 
 \item{singleSpCol}{color for single-species cells. See details.}
 
@@ -55,7 +60,8 @@ to 1 (fully opaque)}
 \item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead of tmap package}
 
 \item{fastPoints}{Intended for debugging purposes. For hex grids and use_tmap = F, 
-plot points instead of polygons.}
+    plot points instead of polygons. Helpful for sorting out plotting details without
+waiting for slow polygon plotting.}
 
 \item{add}{logical, add to existing plot?}
 
@@ -96,7 +102,7 @@ map1 <- plot(epm1, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 # tmap_arrange(map1, map2)
 \donttest{
-# use mapview for plotting
+# view your plot in the web-browser as a dynamic plot.
 plot(tamiasEPM, basemap = 'interactive')
 }
 

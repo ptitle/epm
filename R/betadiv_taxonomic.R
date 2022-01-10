@@ -309,7 +309,7 @@ calcTaxonomicMultisiteBeta <- function(siteList, component) {
 	for (i in 1:length(siteList)) {
 		for (j in 1:length(siteList)) {
 			if (i < j) {
-				message(i, ' -- ', j)
+				# message(i, ' -- ', j)
 				diff1 <- length(setdiff(siteList[[i]], siteList[[j]]))
 				diff2 <- length(setdiff(siteList[[j]], siteList[[i]]))
 				minDiffs <- minDiffs + min(c(diff1, diff2))
