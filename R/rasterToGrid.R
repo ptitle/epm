@@ -70,13 +70,17 @@ rasterToGrid <- function(x, target, fun = 'mean', crop = TRUE) {
 		}
 			
 		# convert raster to sf grid
-		if (names(x) == '') names(x) <- 'dat'
-		d <- terra::as.data.frame(terra::as.polygons(x, dissolve = FALSE), geom = "hex")
-		d$geometry <- structure(as.list(d$geometry), class = "WKB")
-		x2 <- sf::st_as_sf(d, crs = x@ptr$get_crs("wkt"))
+		# if (names(x) == '') names(x) <- 'dat'
+		# d <- terra::as.data.frame(terra::as.polygons(x, dissolve = FALSE), geom = "hex")
+		# d$geometry <- structure(as.list(d$geometry), class = "WKB")
+		# x2 <- sf::st_as_sf(d, crs = x@ptr$get_crs("wkt"))
 		
-		# aggregate x by target's polygons, summarizing with supplied function	
-		res <- aggregate(x2, by = target, fun)
+		# # aggregate x by target's polygons, summarizing with supplied function	
+		# res <- aggregate(x2, by = target, fun)
+		
+		df <- terra::extract(x, terra::vect(target), list = FALSE)
+		newvals <- aggregate(df, by = list(df$ID), FUN = fun)
+		res <- sf::st_sf(vals = newvals[,3], geometry = sf::st_geometry(target))
 		
 	} else if (inherits(target, 'SpatRaster')) {
 		
