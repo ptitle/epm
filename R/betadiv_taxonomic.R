@@ -109,11 +109,7 @@ betadiv_taxonomic <- function(x, radius, component = 'full', focalCoord = NULL, 
 	# if focal coordinate, then we will calculate pairwise dissimilarity from the focal cell to all other cells.
 	
 	if (!is.null(focalCoord)) {
-		
-		if (length(focalCoord) != 2) {
-			stop('focalCoord must be a numeric vector with x and y coordinates.')
-		}
-		
+				
 		# convert NA communities to "empty" (easier to handle in Rcpp)
 		isNAind <- which(sapply(x[['speciesList']], anyNA) == TRUE)
 		if (length(isNAind) > 0) {

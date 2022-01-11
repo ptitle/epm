@@ -122,10 +122,6 @@ betadiv_phylogenetic <- function(x, radius, component = 'full', focalCoord = NUL
 	
 	if (!is.null(focalCoord)) {
 		
-		if (length(focalCoord) != 2) {
-			stop('focalCoord must be a numeric vector with x and y coordinates.')
-		}
-		
 		# convert NA communities to "empty" (easier to handle in Rcpp)
 		isNAind <- which(sapply(x[['speciesList']], anyNA) == TRUE)
 		if (length(isNAind) > 0) {
