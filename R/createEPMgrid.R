@@ -1106,7 +1106,7 @@ findTopCells5 <- function(x, grid, resolution) {
 		ras <- terra::rast(extent = terra::ext(terra::vect(grid[tmp,])), resolution = rep(resolution/100, 2), crs = sf::st_crs(grid)$input)
 		gridcellras <- terra::rasterize(terra::vect(grid[tmp,]), ras, field = 'grid_id')
 		polyRas <- terra::rasterize(terra::vect(x), ras, cover = TRUE)
-		clusters <- terra::patches(polyRas, directions = 8)
+		clusters <- terra::patches(polyRas, directions = 8, allowGaps = FALSE)
 
 		# and identify most occupied cell per patch
 		topCells <- integer(max(terra::minmax(clusters)))
@@ -1308,7 +1308,7 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 				if (!all(is.na(terra::minmax(xx)))) {
 				
 					# to handle potentially discontiguous ranges, identify cell clusters
-					clusters <- terra::patches(xx, directions = 8)
+					clusters <- terra::patches(xx, directions = 8, allowGaps = FALSE)
 					
 					# and identify most occupied cell per patch
 					topCells <- integer(max(terra::minmax(clusters)))
