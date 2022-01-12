@@ -27,6 +27,7 @@
 ##' @param fastPoints Intended for debugging purposes. For hex grids and use_tmap = F, 
 ##' 	plot points instead of polygons. Helpful for sorting out plotting details without
 ##' waiting for slow polygon plotting.
+##' 	@param title text to add to the plot
 ##' @param add logical, add to existing plot?
 ##' @param ... additional arguments that can be passed to sf::plot or terra::plot 
 ##' 		if \code{use_tmap = FALSE}
@@ -71,9 +72,9 @@
 ##' @aliases plot.epmGrid
 ##' @export
 
-plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, ignoreSingleSpCells ='auto', singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, add = FALSE, ...) {
+plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, ignoreSingleSpCells ='auto', singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, title = NA, add = FALSE, ...) {
 	
-	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE
+	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE; ignoreSingleSpCells = 'auto'; title = NA
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('Object must be of class epmGrid')
@@ -223,11 +224,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 			if (!plotSingleCells) {
 				
-				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 								
 			} else {
 				
-				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -262,10 +263,10 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (fastPoints) {
 				if (!plotSingleCells) {
 					cols <- colors[findInterval(x[[1]][[plotMetric]], breaks, rightmost.closed = TRUE)]
-					plot(sf::st_centroid(sf::st_geometry(x[[1]][plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5)
+					plot(sf::st_centroid(sf::st_geometry(x[[1]][plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5, add = add)
 				} else {
 					cols <- colors[findInterval(grid_multiSp[[plotMetric]], breaks, rightmost.closed = TRUE)]
-					plot(sf::st_centroid(sf::st_geometry(grid_singleSp[plotMetric])), pch = 20, reset = FALSE, col = singleSpCol, cex = 0.5)
+					plot(sf::st_centroid(sf::st_geometry(grid_singleSp[plotMetric])), pch = 20, reset = FALSE, col = singleSpCol, cex = 0.5, add = add)
 					plot(sf::st_centroid(sf::st_geometry(grid_multiSp[plotMetric])), pch = 20, reset = FALSE, col = cols, cex = 0.5, add = TRUE)	
 				}
 			} else {
@@ -303,8 +304,10 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					} else {
 						nTicks <- 3
 					}
+					
+					minmax <- colorRampRange
 
-					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
 
 				} else {
 
@@ -317,8 +320,14 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					} else {
 						nTicks <- 3
 					}
+					
+					if (is.null(colorRampRange)) {
+						minmax <- range(sf::st_drop_geometry(grid_multiSp[plotMetric]))
+					} else {
+						minmax <- colorRampRange
+					}
 
-					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = range(sf::st_drop_geometry(grid_multiSp[plotMetric])))
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
 				}
 			}
 	
@@ -414,7 +423,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 				valRange <- colorRampRange
 			}
 			
-		
+
 			if (!plotSingleCells) {
 				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
 				
@@ -437,8 +446,10 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					} else {
 						nTicks <- 3
 					}
+					
+					minmax <- colorRampRange
 
-					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
 
 				} else {
 
@@ -451,8 +462,14 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					} else {
 						nTicks <- 3
 					}
+					
+					if (is.null(colorRampRange)) {
+						minmax <- range(terra::minmax(grid_multiSp[plotMetric]))
+					} else {
+						minmax <- colorRampRange
+					}
 
-					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks)
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
 				}
 			}
 			

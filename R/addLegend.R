@@ -155,11 +155,12 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 3, adj = 
 	}
 	
 	if (missing(ramp)) {
-		ramp <- grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))
+		ramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
 	}
 	
 	if(!methods::hasArg('ramp')) {
-		pal <- rev(grDevices::terrain.colors(ncolors))
+		ramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
+		pal <- ramp(ncolors)
 	} else {
 		if (class(ramp) == 'function') {
 			pal <- ramp(ncolors)

@@ -19,6 +19,7 @@
   includeFrame = FALSE,
   use_tmap = TRUE,
   fastPoints = FALSE,
+  title = NA,
   add = FALSE,
   ...
 )
@@ -61,7 +62,8 @@ to 1 (fully opaque)}
 
 \item{fastPoints}{Intended for debugging purposes. For hex grids and use_tmap = F, 
     plot points instead of polygons. Helpful for sorting out plotting details without
-waiting for slow polygon plotting.}
+waiting for slow polygon plotting.
+    @param title text to add to the plot}
 
 \item{add}{logical, add to existing plot?}
 
