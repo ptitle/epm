@@ -96,7 +96,7 @@ tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 epm1 <- gridMetrics(tamiasEPM, metric='weightedEndemism')
 epm2 <- gridMetrics(tamiasEPM, metric='phyloWeightedEndemism')
 # get global min and max values
-minmax <- getMultiMapRamp(list(epm1, epm2))
+minmax <- getMultiMapRamp(epm1, epm2)
 
 map1 <- plot(epm1, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)

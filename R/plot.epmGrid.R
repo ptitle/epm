@@ -57,7 +57,7 @@
 ##' epm1 <- gridMetrics(tamiasEPM, metric='weightedEndemism')
 ##' epm2 <- gridMetrics(tamiasEPM, metric='phyloWeightedEndemism')
 ##' # get global min and max values
-##' minmax <- getMultiMapRamp(list(epm1, epm2))
+##' minmax <- getMultiMapRamp(epm1, epm2)
 ##' 
 ##' map1 <- plot(epm1, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 ##' map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
@@ -140,7 +140,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	}	
 	
 	
-	ncol <- 1000
+	ncol <- 100
 	isInt <- FALSE
 	if (inherits(x[[1]], 'sf')) {
 		if (is.integer(sf::st_drop_geometry(x[[1]])[, plotMetric]) & max(x[[1]][[plotMetric]]) <= 10) {
@@ -173,21 +173,14 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	if (missing(lwd)) {
 		lwd <- 0.15
 	}
-
-					
-	if (is.null(colorRampRange)) {
-		breaks <- NULL
-	} else {
-		breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncol + 1)
-	}
-			
-		
+	
 	metricName <- plotMetric
-		
+	
+	####################################3
+	## HEXAGONAL GRIDS
+	
 	if (inherits(x[[1]], 'sf')) {
 	
-	
-				
 		if (log) {
 			x[[1]]$loggedMetric <- log(x[[1]][[plotMetric]])
 			metricName <- paste0('log ', plotMetric)
@@ -195,10 +188,12 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			plotMetric <- 'loggedMetric'
 		}
 		
-		# if (!is.null(breaks)) {
-			# x[[1]]$color <- colramp(ncol)[findInterval(unlist(sf::st_drop_geometry(x[[1]][, plotMetric])), breaks, all.inside = TRUE)]
-		# }
-		
+		if (is.null(colorRampRange)) {
+			breaks <- NULL
+		} else {
+			breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = 5)
+		}
+					
 		if (use_tmap) {
 		    
 		    if (basemap != 'interactive' & getOption("tmap.mode") == 'view') {
@@ -227,11 +222,12 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			}
 			
 			if (!plotSingleCells) {
-				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 				
+				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+								
 			} else {
 				
-				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -358,7 +354,13 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		}
 		
 		if (use_tmap) {
-		    
+			
+			if (is.null(colorRampRange)) {
+				breaks <- NULL
+			} else {
+				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = 5)
+			}
+			    
 		    if (basemap != 'interactive' & getOption("tmap.mode") == 'view') {
 		        tmap::tmap_mode('plot')
 		    }
@@ -385,11 +387,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 #			}
 			
 			if (!plotSingleCells) {
-				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 				
 			} else {
 				
-				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(ncol), legend.show = legend, title = metricName, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = singleSpCol, legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		

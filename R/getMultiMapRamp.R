@@ -3,7 +3,7 @@
 ##' @description Extracts the range of values across a list of input
 ##' 	objects for use in plotting
 ##'
-##' @param x list of objects of class \code{epmGrid}, \code{RasterLayer}
+##' @param ... objects of class \code{epmGrid}, \code{RasterLayer}
 ##' 	\code{SpatRaster} or \code{sf} objects.
 ##'
 ##' @details If the user would like to plot multiple epmGrid objects
@@ -23,16 +23,14 @@
 ##' ras <- rast()
 ##' values(ras) <- runif(ncell(ras), min = 0, max = 40)
 ##' 
-##' getMultiMapRamp(list(tamiasEPM, ras))
+##' getMultiMapRamp(tamiasEPM, ras)
 ##'  
 ##' @export
 
 
-getMultiMapRamp <- function(x) {
+getMultiMapRamp <- function(...) {
 	
-	if (!inherits(x, 'list')) {
-		x <- list(x)
-	}
+	x <- list(...)
 	
 	if (!all(unique(sapply(x, class)) %in% c('RasterLayer', 'SpatRaster', 'epmGrid', 'sf', 'SpatialPointsDataFrame', 'SpatialPolygonsDataFrame'))) {
 		stop('Input cannot be handled.')

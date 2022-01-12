@@ -4,10 +4,10 @@
 \alias{getMultiMapRamp}
 \title{Extract min and max for multiple epmGrids}
 \usage{
-getMultiMapRamp(x)
+getMultiMapRamp(...)
 }
 \arguments{
-\item{x}{list of objects of class \code{epmGrid}, \code{RasterLayer}
+\item{...}{objects of class \code{epmGrid}, \code{RasterLayer}
 \code{SpatRaster} or \code{sf} objects.}
 }
 \value{
@@ -31,7 +31,7 @@ tamiasEPM
 ras <- rast()
 values(ras) <- runif(ncell(ras), min = 0, max = 40)
 
-getMultiMapRamp(list(tamiasEPM, ras))
+getMultiMapRamp(tamiasEPM, ras)
  
 }
 \author{
