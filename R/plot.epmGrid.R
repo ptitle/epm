@@ -24,10 +24,10 @@
 ##' 		to 1 (fully opaque)
 ##' @param includeFrame boolean; include frame around plot?
 ##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead of tmap package
-##' @param fastPoints Intended for debugging purposes. For hex grids and use_tmap = F, 
-##' 	plot points instead of polygons. Helpful for sorting out plotting details without
-##' waiting for slow polygon plotting.
-##' 	@param title text to add to the plot
+##' @param fastPoints Intended for debugging purposes. For hex grids and \code{use_tmap = F}, 
+##' 		plot points instead of polygons. Helpful for sorting out plotting details without
+##' 		waiting for slow polygon plotting.
+##'	@param title text to add to the plot
 ##' @param add logical, add to existing plot?
 ##' @param ... additional arguments that can be passed to sf::plot or terra::plot 
 ##' 		if \code{use_tmap = FALSE}

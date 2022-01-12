@@ -60,10 +60,11 @@ to 1 (fully opaque)}
 
 \item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead of tmap package}
 
-\item{fastPoints}{Intended for debugging purposes. For hex grids and use_tmap = F, 
-    plot points instead of polygons. Helpful for sorting out plotting details without
-waiting for slow polygon plotting.
-    @param title text to add to the plot}
+\item{fastPoints}{Intended for debugging purposes. For hex grids and \code{use_tmap = F}, 
+plot points instead of polygons. Helpful for sorting out plotting details without
+waiting for slow polygon plotting.}
+
+\item{title}{text to add to the plot}
 
 \item{add}{logical, add to existing plot?}
 
