@@ -5,9 +5,9 @@
 
 The following R package dependencies are required:
 
-`terra, sf, rgdal, spdep, ape, geomorph, pbapply`
+`terra, sf, ape, geomorph, viridisLite, pbapply, Rcpp`
 
-Additionally, the R package `tmap` provides additional functionality.
+Additionally, the R packages `tmap`, `data.table` and `spdep` provide additional functionality or speed improvements.
 
 To install, run the following in R: `remotes::install_github('ptitle/epm')`
 
