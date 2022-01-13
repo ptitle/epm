@@ -16,6 +16,7 @@
 ##' 	those proportions across the gridcell neighborhood. This way, the returned values reflect
 ##' 	how much disparity (relative to the overall total disparity) changes across a moving window.
 ##' 
+##'		If the R package spdep is installed, this function should run more quickly.
 ##'
 ##' 
 ##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object (if square grid).
@@ -72,6 +73,12 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 		stop('Parallel processing for Windows OS is currently non-functional.')
 	}
 	
+	# There appear to be some potential numerical precision issues with defining neighbors.
+	# Therefore, if radius is a multiple of resolution, add 1/100 of the resolution. 
+	if (radius %% attributes(x)$resolution == 0) {
+		radius <- radius + attributes(x)$resolution * 0.01
+	}
+	
 	# ----------------------------------------------------------
 	# Subset appropriately depending on dataset of interest
 	
@@ -107,8 +114,16 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 		
 		# Generate list of neighborhoods
 
-		# nb <- sf::st_is_within_distance(sf::st_centroid(sf::st_geometry(x[[1]])), x[[1]], dist = radius)
-		nb <- spdep::dnearneigh(sf::st_centroid(sf::st_geometry(x[[1]])), d1 = 0, d2 = radius)
+		if (!requireNamespace('spdep', quietly = TRUE)) {
+			nb <- spdep::dnearneigh(sf::st_centroid(sf::st_geometry(x[[1]])), d1 = 0, d2 = radius)
+		} else {
+			nb <- sf::st_is_within_distance(sf::st_centroid(sf::st_geometry(x[[1]])), sf::st_centroid(sf::st_geometry(x[[1]])), dist = radius)
+			
+			# remove focal cell from set of neighbors
+			for (i in 1:length(nb)) {
+				nb[[i]] <- setdiff(nb[[i]], i)
+			}
+		}	
 
 		# average neighborhood size
 		message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)))
@@ -158,7 +173,17 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 			gridCentroids <- terra::xyFromCell(x[[1]], cell = datCells)
 			gridCentroids <- sf::st_as_sf(as.data.frame(gridCentroids), coords = 1:2, crs = attributes(x)$crs)
 			gridCentroids$cellInd <- datCells
-			nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+
+			if (!requireNamespace('spdep', quietly = TRUE)) {
+				nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+			} else {
+				nb <- sf::st_is_within_distance(gridCentroids, gridCentroids, dist = radius)
+				
+				# remove focal cell from set of neighbors
+				for (i in 1:length(nb)) {
+					nb[[i]] <- setdiff(nb[[i]], i)
+				}
+			}	
 			
 			# average neighborhood size
 			message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)), ' cells')
@@ -218,7 +243,18 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 					focalCircle <- sf::st_buffer(focalxy, dist = radius * 2)
 					nbCells <- terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell']
 					gridCentroids <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], nbCells)), coords = 1:2, crs = terra::crs(x[[1]]))
-					nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+
+					if (!requireNamespace('spdep', quietly = TRUE)) {
+						nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+					} else {
+						nb <- sf::st_is_within_distance(gridCentroids, gridCentroids, dist = radius)
+						
+						# remove focal cell from set of neighbors
+						for (i in 1:length(nb)) {
+							nb[[i]] <- setdiff(nb[[i]], i)
+						}
+					}	
+
 					nbCells <- nbCells[nb[[which(nbCells == focalCell)]]]
 					
 					# without dnearneigh step					

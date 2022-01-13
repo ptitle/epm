@@ -50,6 +50,8 @@ For each cell, multisite dissimilarity is calculated for the focal cell and its 
 		\item{nestedness}: species turnover due to differences in richness
 		\item{full}: the combined turnover due to both differences in richness and pure turnover
 	}
+
+	If the R package spdep is installed, this function should run more quickly.
 }
 \examples{
 \donttest{

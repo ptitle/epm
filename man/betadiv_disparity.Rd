@@ -28,6 +28,8 @@ For each gridcell neighborhood (defined by the radius), we calculate the proport
 	of the full disparity contained in those grid cells, and then take the standard deviation of 
 	those proportions across the gridcell neighborhood. This way, the returned values reflect
 	how much disparity (relative to the overall total disparity) changes across a moving window.
+
+	If the R package spdep is installed, this function should run more quickly.
 }
 \examples{
 \donttest{

@@ -27,7 +27,7 @@
 ##'			\item{full}: the combined turnover due to both differences in richness and pure turnover
 ##'		}
 ##'
-##'
+##'		If the R package spdep is installed, this function should run more quickly.
 ##'
 ##' 
 ##' 
@@ -105,6 +105,12 @@ betadiv_phylogenetic <- function(x, radius, component = 'full', focalCoord = NUL
 		stop('component must be turnover, nestedness or full.')
 	}
 	
+	# There appear to be some potential numerical precision issues with defining neighbors.
+	# Therefore, if radius is a multiple of resolution, add 1/100 of the resolution. 
+	if (radius %% attributes(x)$resolution == 0) {
+		radius <- radius + attributes(x)$resolution * 0.01
+	}
+
 	# ----------------------------------------------------------
 	# Subset appropriately depending on dataset of interest
 	
@@ -155,8 +161,17 @@ betadiv_phylogenetic <- function(x, radius, component = 'full', focalCoord = NUL
 		# Generate list of neighborhoods
 		
 		if (inherits(x[[1]], 'sf')) {
-			# nb <- sf::st_is_within_distance(sf::st_centroid(sf::st_geometry(x[[1]])), x[[1]], dist = radius)
-			nb <- spdep::dnearneigh(sf::st_centroid(sf::st_geometry(x[[1]])), d1 = 0, d2 = radius)
+
+			if (!requireNamespace('spdep', quietly = TRUE)) {
+				nb <- spdep::dnearneigh(sf::st_centroid(sf::st_geometry(x[[1]])), d1 = 0, d2 = radius)
+			} else {
+				nb <- sf::st_is_within_distance(sf::st_centroid(sf::st_geometry(x[[1]])), sf::st_centroid(sf::st_geometry(x[[1]])), dist = radius)
+				
+				# remove focal cell from set of neighbors
+				for (i in 1:length(nb)) {
+					nb[[i]] <- setdiff(nb[[i]], i)
+				}
+			}	
 			
 			# average neighborhood size
 			message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)), ' cells')
@@ -204,7 +219,18 @@ betadiv_phylogenetic <- function(x, radius, component = 'full', focalCoord = NUL
 				gridCentroids <- terra::xyFromCell(x[[1]], cell = datCells)
 				gridCentroids <- sf::st_as_sf(as.data.frame(gridCentroids), coords = 1:2, crs = attributes(x)$crs)
 				gridCentroids$cellInd <- datCells
-				nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+
+				if (!requireNamespace('spdep', quietly = TRUE)) {
+					nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+				} else {
+					nb <- sf::st_is_within_distance(gridCentroids, gridCentroids, dist = radius)
+					
+					# remove focal cell from set of neighbors
+					for (i in 1:length(nb)) {
+						nb[[i]] <- setdiff(nb[[i]], i)
+					}
+				}	
+				
 				
 				message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)), ' cells')
 				
@@ -269,7 +295,18 @@ betadiv_phylogenetic <- function(x, radius, component = 'full', focalCoord = NUL
 						focalCircle <- sf::st_buffer(focalxy, dist = radius * 2)
 						nbCells <- terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell']
 						gridCentroids <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], nbCells)), coords = 1:2, crs = terra::crs(x[[1]]))
-						nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+
+						if (!requireNamespace('spdep', quietly = TRUE)) {
+							nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+						} else {
+							nb <- sf::st_is_within_distance(gridCentroids, gridCentroids, dist = radius)
+							
+							# remove focal cell from set of neighbors
+							for (i in 1:length(nb)) {
+								nb[[i]] <- setdiff(nb[[i]], i)
+							}
+						}	
+
 						nbCells <- nbCells[nb[[which(nbCells == focalCell)]]]
 						
 						# without dnearneigh step					
