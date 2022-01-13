@@ -1,17 +1,27 @@
 ##' @title Interactively choose extent
 ##'
-##' @description Given a list of polygons, sets up an interactive plot
-##' 	to allow the user to draw the desired extent. This can be used to
-##' 	define the extent in \link{createEPMgrid}.
+##' @description Given a list of polygons or point occurrences, sets up
+##' 	an interactive plot	to allow the user to draw the desired extent. 
+##' This can be used to	define the extent in \code{\link{createEPMgrid}}.
 ##'
-##' @param polyList a list of Simple Feature polygons.
+##' @param polyList a list of Simple Feature polygons or points.
 ##'
 ##' @param cellType either \code{hexagon} or \code{square}.
 ##' 
 ##' @param bb c(xmin, xmax, ymin, ymax) to limit the extent for 
 ##' the interactive plot.
 ##'
-##' @param nThreads if > 1, then employ parallel computing. 
+##' @details This function returns both a sf polygon and the same polygon
+##' 		as a WKT string. Either can be supplied to \code{\link{createEPMgrid}}
+##' 		as the extent. A recommended strategy is to use this function to find
+##' 		your extent, and to copy/paste the WKT string into your R script so that 
+##' 		you can retain it for future use, and maintain reproducibility. See example.
+##'
+##'		What is chosen for \code{cellType} has no effect on what you might choose in 
+##'		\code{\link{createEPMgrid}}. Square cells will probably be fastest. If hexagons
+##'		are selected, grid cell points are plotted instead of polygons to speed up plotting.
+##'
+##' 	The basemap is from \url{www.naturalearthdata.com}. 
 ##'
 ##' @return A list with a polygon, and its WKT string 
 ##'
@@ -24,13 +34,49 @@
 ##' # You can use this as the extent in createEPMgrid
 ##' grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = ex$wkt)
 ##'
+##' # One way to make your code reproducible would be to copy/paste the wkt 
+##' # in your code for future use:
+##' ex <- interactiveExtent(tamiasPolyList)
+##' ex$wkt
+##' customExtent <- "POLYGON ((-2238201 3532133, -2675450 1722657, -2470677 -317634, 
+##' -1863632 -1854074, -521614.8 -2170280, -349356.8 799040.9, -2238201 3532133))"
+##'
+##' grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = customExtent)
+##'
 ##'}
 ##' @export
 
 
 
 
-interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads = 1) {
+interactiveExtent <- function(polyList, cellType = 'square', bb = NULL) {
+	
+	if (!inherits(polyList, 'Spatial') & inherits(polyList[[1]], 'Spatial')) {
+		# if class SpatialPolygons, convert to sf
+		for (i in 1:length(polyList)) {
+			polyList[[i]] <- sf::st_as_sf(polyList[[i]])
+		}
+	}
+	
+	if (inherits(polyList, 'Spatial')) {
+		polyList <- sf::st_as_sf(polyList)
+	}
+	
+	if (!inherits(polyList, 'list')) {
+		if (grepl('POINT', unique(as.character(sf::st_geometry_type(polyList))))) {
+			polyCRS <- sf::st_crs(polyList)
+			polyList <- occurrenceFormatting(polyList)
+			polyList <- lapply(polyList, function(x) sf::st_as_sf(x, coords = 2:3, crs = polyCRS))
+		}
+	}
+
+	if (!inherits(polyList, 'list')) {
+		stop('Input must be a list of sf objects.')
+	}
+
+	if (!inherits(polyList[[1]], c('sf', 'sfc'))) {
+		stop('Input must be a list of sf objects.')
+	}
 	
 	cellType <- match.arg(cellType, c('hexagon', 'square'))
 	
@@ -44,32 +90,19 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads
 		
 	# coarse template
 	# For resolution, use latitudinal and longitudinal breadth
-	xrange <- abs(getExtentOfList(polyList, format = 'sf')['xmax'] - getExtentOfList(polyList, format = 'sf')['xmin']) / 100
-	yrange <- abs(getExtentOfList(polyList, format = 'sf')['ymax'] - getExtentOfList(polyList, format = 'sf')['ymin']) / 100
+	xrange <- abs(getExtentOfList(polyList)['xmax'] - getExtentOfList(polyList)['xmin']) / 100
+	yrange <- abs(getExtentOfList(polyList)['ymax'] - getExtentOfList(polyList)['ymin']) / 100
 	quickRes <- round((xrange + yrange) / 2, 0)
 	
-	# if projected, use 100km, if not, use 2 degrees
-	# quickRes <- ifelse(sf::st_is_longlat(polyList[[1]]), 2, 100000)
-	
-	# prep for parallel computing
-	if (nThreads == 1) {
-		cl <- NULL
-	} else if (nThreads > 1) {
-		if (.Platform$OS.type != 'windows') {
-			cl <- nThreads
-		} else {
-			cl <- parallel::makeCluster(nThreads)
-			parallel::clusterExport(cl, c('method', 'gridTemplate', 'coverCutoff'))
-		}
-	}	
-	
+	polyCRS <- sf::st_crs(polyList[[1]])
+			
 	if (cellType == 'hexagon') {
 	    
 	    #get overall extent
-	    masterExtent <- sf::st_as_sfc(getExtentOfList(polyList, format = 'sf'))
+	    masterExtent <- sf::st_as_sfc(getExtentOfList(polyList))
 	    
 	    if (!is.null(bb)) {
-	        masterExtent <- getExtentOfList(polyList, format = 'sf')
+	        masterExtent <- getExtentOfList(polyList)
 	        masterExtent['xmin'] <- bb[1]
 	        masterExtent['xmax'] <- bb[2]
 	        masterExtent['ymin'] <- bb[3]
@@ -85,14 +118,17 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads
 		polyList <- lapply(polyList, function(x) sf::st_combine(sf::st_geometry(x)))
 		polyList <- do.call(c, polyList)
 		
-		quick <- sf::st_intersects(polyList, quickCentroids, sparse = FALSE)
-		quick <- apply(quick, 1, function(x) which(x == TRUE))
+		if (unique(as.character(sf::st_geometry_type(polyList[[1]]))) == 'MULTIPOLYGON') {
+			quick <- sf::st_intersects(polyList, quickCentroids)
+		} else {
+			quick <- sf::st_intersects(polyList, quickTemplate)
+		}
 		names(quick) <- taxonNames
 					
 	} else {
 		
 	    #get overall extent
-	    masterExtent <- getExtentOfList(polyList, format = 'sf')
+	    masterExtent <- getExtentOfList(polyList)
 	    
 	    if (!is.null(bb)) {
 	        masterExtent['xmin'] <- bb[1]
@@ -104,74 +140,74 @@ interactiveExtent <- function(polyList, cellType = 'square', bb = NULL, nThreads
 		quickTemplate <- terra::rast(xmin = masterExtent['xmin'], xmax = masterExtent['xmax'], ymin = masterExtent['ymin'], ymax = masterExtent['ymax'], resolution = c(quickRes, quickRes), crs = ifelse(sf::st_is_longlat(polyList[[1]]), '', sf::st_crs(polyList[[1]])$input))
 		
 		quick <- pbapply::pblapply(polyList, function(x) {
-		# for (i in 1:length(polyList)) {
-		#     x <- polyList[[i]]
-		#     message(i)
-		    
-			xx <- terra::cells(quickTemplate, y = terra::vect(x), weights = TRUE)
+		
+			if (all(unique(as.character(sf::st_geometry_type(x))) == 'POINT')) {
 			
-			if (nrow(xx) > 0 & !all(is.na(xx[, 'cell']))) {
-    			# if polygon extends beyond grid template, cell may be NaN
-    			if (anyNA(xx[, 'cell'])) {
-    				xx <- xx[!is.na(xx[, 'cell']),]
-    			}
-    					
-    			# cells are returned regardless of how much they are covered by polygon
-    			# using centroid method
-    			quickCentroids <- terra::xyFromCell(quickTemplate, cell = xx[, 'cell'])
-    			quickCentroids <- sf::st_as_sf(as.data.frame(quickCentroids), coords = 1:2, crs = sf::st_crs(x))	
-    			
-    			if ((all(unique(as.character(sf::st_geometry_type(x))) == 'POINT'))) {
-    				xx[, 'cell']
-    			} else {
-					xx[, 'cell'][unlist(sf::st_intersects(x, quickCentroids))]
-				}
+				terra::cellFromXY(quickTemplate, sf::st_coordinates(x))
+
+			} else {
+				
+				# rasterize polygon against grid (cells register if midpoint is within polygon)
+				xx <- terra::rasterize(terra::vect(x), quickTemplate)
+
+				which(!is.na(terra::values(xx)))
 			}
-    	}, cl = cl)
+		})
 	}
 	
-	if (nThreads > 1 & .Platform$OS.type == 'windows') parallel::stopCluster(cl)
-	
-	# flip list from list of cells per species, to list of species per cells
 	if (inherits(quickTemplate, 'SpatRaster')) {
-		cellList <- vector('list', terra::ncell(quickTemplate))
+		nGridCells <- terra::ncell(quickTemplate)
 	} else if (inherits(quickTemplate, 'sf')) {
-		cellList <- vector('list', nrow(quickTemplate))
+		nGridCells <- nrow(quickTemplate)
 	}
-	
+
+	# create site by species matrix
+	mat <- matrix(0, nrow = nGridCells, ncol = length(quick))
+	colnames(mat) <- names(quick)
 	for (i in 1:length(quick)) {
-		cellList[quick[[i]]] <- lapply(cellList[quick[[i]]], function(x) append(x, names(quick)[i]))
+		mat[quick[[i]], names(quick)[i]] <- 1
 	}
-	cellList <- lapply(cellList, unique)
-
-	# add species richness in as attribute
-	if (inherits(quickTemplate, 'SpatRaster')) {
-		terra::values(quickTemplate) <- lengths(cellList)
-		quickTemplate[quickTemplate == 0] <- NA
-	} else if (inherits(quickTemplate, 'sf')) {
-		quickTemplate$spRichness <- lengths(cellList)
-		quickTemplate <- quickTemplate[which(lengths(cellList) > 0),]
-	} 
 	
-
-	
-	# add map for context
-	if (!sf::st_is_longlat(polyList[[1]])) {
-		wrld <- sf::st_transform(worldmap, crs = sf::st_crs(polyList[[1]]))
+	# remove empty cells if hexagonal grid, and record cell richness
+	if (inherits(quickTemplate, 'sf')) {
+		quickTemplate <- quickTemplate[which(rowSums(mat) > 0),]
+		quickTemplate$spRichness <- rowSums(mat)[which(rowSums(mat) > 0)]
 	} else {
-		wrld <- worldmap
-	}
+		terra::values(quickTemplate) <- rowSums(mat)
+		quickTemplate[quickTemplate == 0] <- NA
+	}	
 	
 	message('\n\tAn interactive coarse-grain map has been displayed.\n')
 	message('\n\tPlease wait until plot is completed......', appendLF = FALSE)
 	
-	if (inherits(quickTemplate, 'sf')) {
-		plot(quickTemplate['spRichness'], border = NA, key.pos = NULL, main = NULL, reset = FALSE)
+	colramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
+	
+	# add map for context
+	if (!sf::st_is_longlat(polyCRS)) {
+		wrld <- sf::st_transform(worldmap, crs = polyCRS)
 	} else {
-		terra::plot(quickTemplate, legend = FALSE, axes = FALSE, col = grDevices::colorRampPalette(c('blue', 'cyan', 'yellow', 'red'))(100))
+		wrld <- worldmap
 	}
 
-	graphics::plot(wrld, add = TRUE, lwd = 1, border = gray(0.5))
+	wrld <- sf::st_cast(wrld, 'MULTILINESTRING')
+	
+	if (inherits(quickTemplate, 'sf')) {
+		# plot centroid points rather than all hexagonal cells to speed up process
+		centroids <- sf::st_centroid(sf::st_geometry(quickTemplate))
+		centroids <- sf::st_sf(spRichness = quickTemplate[['spRichness']], geometry = centroids)
+		plot(centroids['spRichness'], pch = 20, cex = 1, pal = colramp, key.pos = NULL, main = NULL, reset = FALSE)
+		# plot(quickTemplate['spRichness'], pal = colramp, border = NA, key.pos = NULL, main = NULL, reset = FALSE)
+	} else {
+		terra::plot(quickTemplate, legend = FALSE, axes = FALSE, col = colramp(100))
+	}
+	
+	grXY <- graphics::par("usr")
+	clip <- sf::st_make_grid(sf::st_as_sf(rbind.data.frame(grXY[c(1,3)], grXY[c(2,4)]), coords = 1:2, crs = polyCRS), n = 1)
+	wrld <- sf::st_intersection(wrld, clip)
+	wrld <- sf::st_combine(wrld)				
+	# graphics::clip(grXY[1], grXY[2], grXY[3], grXY[4]) # this ensures that world map is constrained to plot region
+
+	graphics::plot(wrld, add = TRUE, lwd = 1, col = gray(0.5))
 	
 	#ggplot(quickTemplate) + geom_sf(aes(fill = spRichness), lwd = 0.5, show.legend = FALSE) + scale_fill_gradientn(colours = sf::sf.colors()) + geom_sf(data = wrld, fill = NA)
 	

@@ -4,25 +4,36 @@
 \alias{interactiveExtent}
 \title{Interactively choose extent}
 \usage{
-interactiveExtent(polyList, cellType = "square", bb = NULL, nThreads = 1)
+interactiveExtent(polyList, cellType = "square", bb = NULL)
 }
 \arguments{
-\item{polyList}{a list of Simple Feature polygons.}
+\item{polyList}{a list of Simple Feature polygons or points.}
 
 \item{cellType}{either \code{hexagon} or \code{square}.}
 
 \item{bb}{c(xmin, xmax, ymin, ymax) to limit the extent for 
 the interactive plot.}
-
-\item{nThreads}{if > 1, then employ parallel computing.}
 }
 \value{
 A list with a polygon, and its WKT string
 }
 \description{
-Given a list of polygons, sets up an interactive plot
-	to allow the user to draw the desired extent. This can be used to
-	define the extent in \link{createEPMgrid}.
+Given a list of polygons or point occurrences, sets up
+	an interactive plot	to allow the user to draw the desired extent. 
+This can be used to	define the extent in \code{\link{createEPMgrid}}.
+}
+\details{
+This function returns both a sf polygon and the same polygon
+		as a WKT string. Either can be supplied to \code{\link{createEPMgrid}}
+		as the extent. A recommended strategy is to use this function to find
+		your extent, and to copy/paste the WKT string into your R script so that 
+		you can retain it for future use, and maintain reproducibility. See example.
+
+	What is chosen for \code{cellType} has no effect on what you might choose in 
+	\code{\link{createEPMgrid}}. Square cells will probably be fastest. If hexagons
+	are selected, grid cell points are plotted instead of polygons to speed up plotting.
+
+	The basemap is from \url{www.naturalearthdata.com}.
 }
 \examples{
 \dontrun{
@@ -30,6 +41,15 @@ ex <- interactiveExtent(tamiasPolyList)
 
 # You can use this as the extent in createEPMgrid
 grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = ex$wkt)
+
+# One way to make your code reproducible would be to copy/paste the wkt 
+# in your code for future use:
+ex <- interactiveExtent(tamiasPolyList)
+ex$wkt
+customExtent <- "POLYGON ((-2238201 3532133, -2675450 1722657, -2470677 -317634, 
+-1863632 -1854074, -521614.8 -2170280, -349356.8 799040.9, -2238201 3532133))"
+
+grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = customExtent)
 
 }
 }

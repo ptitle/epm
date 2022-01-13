@@ -72,7 +72,7 @@
 ##' @aliases plot.epmGrid
 ##' @export
 
-plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, ignoreSingleSpCells ='auto', singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, title = NA, add = FALSE, ...) {
+plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, ignoreSingleSpCells ='auto', singleSpCol = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, title = '', add = FALSE, ...) {
 	
 	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; singleSpCol = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE; ignoreSingleSpCells = 'auto'; title = NA
 	
@@ -334,8 +334,12 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (basemap == 'worldmap') {
 				# add map for context
 				wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
+				wrld <- sf::st_cast(wrld, 'MULTILINESTRING')
 				grXY <- graphics::par("usr")
-				graphics::clip(grXY[1], grXY[2], grXY[3], grXY[4]) # this ensures that world map is constrained to plot region
+				clip <- sf::st_make_grid(sf::st_as_sf(rbind.data.frame(grXY[c(1,3)], grXY[c(2,4)]), coords = 1:2, crs = sf::st_crs(x[[1]])), n = 1)
+				wrld <- sf::st_intersection(wrld, clip)
+				wrld <- sf::st_combine(wrld)				
+				# graphics::clip(grXY[1], grXY[2], grXY[3], grXY[4]) # this ensures that world map is constrained to plot region
 				graphics::plot(wrld, add = TRUE, lwd = lwd)
 			}
 		}
@@ -477,9 +481,14 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (basemap == 'worldmap') {
 				# add map for context
 				wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
+				wrld <- sf::st_cast(wrld, 'MULTILINESTRING')
 				grXY <- graphics::par("usr")
-				graphics::clip(grXY[1], grXY[2], grXY[3], grXY[4]) # this ensures that world map is constrained to plot region
+				clip <- sf::st_make_grid(sf::st_as_sf(rbind.data.frame(grXY[c(1,3)], grXY[c(2,4)]), coords = 1:2, crs = sf::st_crs(x[[1]])), n = 1)
+				wrld <- sf::st_intersection(wrld, clip)
+				wrld <- sf::st_combine(wrld)				
+				# graphics::clip(grXY[1], grXY[2], grXY[3], grXY[4]) # this ensures that world map is constrained to plot region
 				graphics::plot(wrld, add = TRUE, lwd = lwd)
+
 			}
 		}
 	}

@@ -21,8 +21,7 @@
 ##' 	If not 'auto', can be a SpatialPolygon, sf object, or raster, in which case the resulting epmGrid
 ##'		will be cropped and masked with respect to the polygon; or a spatial coordinates object, 
 ##' 	from which an extent object will be generated; or a numeric vector of length 4 
-##' 	with minLong, maxLong, minLat, maxLat. If 'interactive', then an interactive plot
-##'		will appear in which the user can draw the desired polygon extent. That extent will then be returned instead of an epmGrid object.
+##' 	with minLong, maxLong, minLat, maxLat. See \code{\link{interactiveExtent}} to draw your own extent.
 ##'
 ##' @param percentWithin The percentage of a species range that must be within the defined extent in order
 ##' 	for that species to be included. This filter can be used to exclude species whose range barely enters
@@ -81,7 +80,7 @@
 ##'		the same resolution. Grids do not need to have the same extent. 
 ##'
 ##'		Any SpatialPolygon or SpatialPoints objects are converted to objects of class \code{sf}.
-##' 
+##'
 ##' 
 ##'		If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf package.
 ##' 		If \code{cellType = 'square'}, then the grid is a raster generated via the terra package.
@@ -105,23 +104,12 @@
 ##'		If \code{retainSmallRanges = TRUE}, and an extent is provided, then species may still 
 ##' 		be dropped if they fall outside of that extent.
 ##'
-##'		In interactive mode for defining the extent, the user can draw a bounding polygon on a 
-##'		map. The drawn polygon will then be printed to the console so that the user can provide 
-##'		that bounding polygon in future calls as the extent.
-##'		
-##'	
-##'	 	For \code{extent = 'interactive'}, you can additionally specify some bounding coordinates.
-##'	 	This can be helpful if the interactive map is too broad in extent, making it difficult to draw
-##'	 	the extent that you want. Instead, specify \code{extent = list('interactive', c(xmin, xmax,
-##'		ymin, ymax))}.
-##' 		In interactive mode, the basemap is from \url{www.naturalearthdata.com}. 
-##'
 ##'		For very large datasets, this function will make a determination as to whether or not 
 ##' 		there is sufficient memory. If there is not, an alternative approach that uses the 
 ##' 		data.table package will be employed. Please install this R package to take advantage 
 ##' 		of this feature.
 ##' 
-##' @return an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.
+##' @return an object of class \code{epmGrid}.
 ##' 
 ##' @author Pascal Title
 ##'
@@ -454,16 +442,16 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		}
 	}
 
-	if (inherits(extent, 'character') | 'interactive' %in% unlist(extent)) {
+	if (inherits(extent, 'character')) {
 		
-		if (!any(extent %in% c('auto', 'interactive'))) {
-			stop("If extent is a character vector, it can only be 'auto' or 'interactive'.")
+		if (all(extent != 'auto')) {
+			stop("If extent is a character vector, it must be 'auto'.")
 		}
 		
 		if (all(extent == 'auto')) {
 		
 			#get overall extent
-			masterExtent <- getExtentOfList(spDat, format = 'sf')
+			masterExtent <- getExtentOfList(spDat)
 			percentWithin <- 0
 		}
 	} else if (is.numeric(extent) & length(extent) == 4) {
@@ -507,28 +495,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	} else {
 		stop("extent must be 'auto', a spatial object or a vector with minLong, maxLong, minLat, maxLat.")
 	}
-	
-	# interactive extent: if this option is selected, a coarse richness grid
-	# will be plotted, so that the user can designate an extent polygon
-	wkt <- NULL
-	if (inherits(extent, 'character') | 'interactive' %in% unlist(extent)) {
-		if (!all(extent == 'auto')) {
-			if (all(extent == 'interactive')) {
-				interactive <- interactiveExtent(spDat, nThreads = nThreads)
-			} else if ('interactive' %in% unlist(extent)) {
-				bb <- extent[[which(sapply(extent, function(x) !all(x == 'interactive')) == TRUE)]]
-				if (length(bb) != 4 | !inherits(bb, 'numeric')) {
-					stop("If you are trying to provide bounding coordinates for the interactive extent, then something is wrong.\n You should specify extent = list('interactive', c(xmin, xmax, ymin, ymax))")
-				}
-				interactive <- interactiveExtent(spDat, bb = bb, nThreads = nThreads)
-			}
-			extent <- interactive$poly
-			wkt <- interactive$wkt
-				
-			return(wkt)
-		}
-	}
-	
+		
 	# percentWithin: Implement a filter based on the percentage that each species' range overlaps the extent.
 	## This allows us to provide some threshold for species inclusion. For instance, 5% would imply that a 
 	## species must have at least 5% of its range within the extent to be considered. 
@@ -1137,7 +1104,7 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 	# Generate template
 	if (is.null(template)) {
 		if (inherits(extentVec, 'sf')) {
-			bb <- getExtentOfList(extentVec, format = 'sf')
+			bb <- getExtentOfList(extentVec)
 		} else {
 			bb <- extentVec
 		}

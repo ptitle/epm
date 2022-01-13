@@ -19,7 +19,7 @@
   includeFrame = FALSE,
   use_tmap = TRUE,
   fastPoints = FALSE,
-  title = NA,
+  title = "",
   add = FALSE,
   ...
 )

@@ -40,8 +40,7 @@ See details.}
 If not 'auto', can be a SpatialPolygon, sf object, or raster, in which case the resulting epmGrid
 will be cropped and masked with respect to the polygon; or a spatial coordinates object, 
 from which an extent object will be generated; or a numeric vector of length 4 
-with minLong, maxLong, minLat, maxLat. If 'interactive', then an interactive plot
-will appear in which the user can draw the desired polygon extent. That extent will then be returned instead of an epmGrid object.}
+with minLong, maxLong, minLat, maxLat. See \code{\link{interactiveExtent}} to draw your own extent.}
 
 \item{percentWithin}{The percentage of a species range that must be within the defined extent in order
 for that species to be included. This filter can be used to exclude species whose range barely enters
@@ -66,7 +65,7 @@ reference grid.}
 for debugging.}
 }
 \value{
-an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.
+an object of class \code{epmGrid}.
 }
 \description{
 Creates an epmGrid object from a range of species-specific inputs.
@@ -128,17 +127,6 @@ Types of accepted inputs for argument \code{spDat}:
 
 	If \code{retainSmallRanges = TRUE}, and an extent is provided, then species may still 
 		be dropped if they fall outside of that extent.
-
-	In interactive mode for defining the extent, the user can draw a bounding polygon on a 
-	map. The drawn polygon will then be printed to the console so that the user can provide 
-	that bounding polygon in future calls as the extent.
-	
-
- 	For \code{extent = 'interactive'}, you can additionally specify some bounding coordinates.
- 	This can be helpful if the interactive map is too broad in extent, making it difficult to draw
- 	the extent that you want. Instead, specify \code{extent = list('interactive', c(xmin, xmax,
-	ymin, ymax))}.
-		In interactive mode, the basemap is from \url{www.naturalearthdata.com}. 
 
 	For very large datasets, this function will make a determination as to whether or not 
 		there is sufficient memory. If there is not, an alternative approach that uses the 

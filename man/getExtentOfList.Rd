@@ -4,16 +4,13 @@
 \alias{getExtentOfList}
 \title{Get extent of list}
 \usage{
-getExtentOfList(shapes, format = "raster")
+getExtentOfList(shapes)
 }
 \arguments{
 \item{shapes}{a list of SpatialPolygons or simple features}
-
-\item{format}{if \code{raster}, then returns a raster extent object,
-otherwise, returns a sf formatted bbox object.}
 }
 \value{
-An object of class \code{extent} or \code{bbox}.
+An object of class \code{bbox}.
 }
 \description{
 Given a list of SpatialPolygons, return an extent
