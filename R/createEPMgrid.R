@@ -348,9 +348,14 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	
 	
 	cellType <- match.arg(cellType, c('hexagon', 'square'))
+	method <- match.arg(method, c('centroid', 'percentOverlap'))
 	
 	if (!cellType %in% c('hexagon', 'square')) {
 		stop('cellType must be either hexagon or square.')
+	}
+
+	if (!method %in% c('centroid', 'percentOverlap')) {
+		stop('method must be either centroid or percentOverlap.')
 	}
 
 	if (is.list(spDat) & is.null(names(spDat))) {
