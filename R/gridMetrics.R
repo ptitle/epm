@@ -30,7 +30,6 @@
 ##'    \item{variance}
 ##'    \item{arithmeticWeightedMean} (see below) 
 ##'    \item{geometricWeightedMean} (see below) 
-##'    \item{phylosignal:} {Blomberg's K for phylogenetic signal} 
 ##'}
 ##'Multivariate trait metrics 
 ##'\itemize{ 
@@ -42,8 +41,6 @@
 ##'    \item{rangePCA} 
 ##'    \item{mean_NN_dist:} {mean nearest neighbor distance} 
 ##'    \item{min_NN_dist:} {minimum nearest neighbor distance}
-##'    \item{phylosignal:} {Blomberg's K for phylogenetic signal, as implemented
-##'     in geomorph::physignal} 
 ##' } 
 ##' Phylogenetic metrics 
 ##' \itemize{ 
@@ -79,11 +76,7 @@
 ##'\code{\link{customGridMetric}}.
 ##'
 ##'
-##'@references Blomberg's K for shape data\cr Adams, D. C., & Otárola‐Castillo,
-##'E. (2013). geomorph: an r package for the collection and analysis of
-##'geometric morphometric shape data. Methods in Ecology and Evolution, 4(4),
-##'393–399. https://doi.org/10.1111/2041-210x.12035
-##'
+##'@references 
 ##'partial disparity\cr Foote, M. (1993). Contributions of individual taxa to
 ##'overall morphological disparity. Paleobiology, 19(4), 403–419.
 ##'https://doi.org/10.1017/s0094837300014056
@@ -139,7 +132,7 @@ gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
 		stop('You can only specify one metric.')
 	}
 	
-	metric <- match.arg(metric, choices = c('mean', 'median', 'range', 'variance', 'arithmeticWeightedMean', 'geometricWeightedMean', 'rangePCA', 'disparity', 'mean_NN_dist', 'min_NN_dist', 'pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'PSR', 'DR', 'weightedEndemism', 'correctedWeightedEndemism', 'phyloWeightedEndemism', 'phylosignal', 'partialDisparity'))
+	metric <- match.arg(metric, choices = c('mean', 'median', 'range', 'variance', 'arithmeticWeightedMean', 'geometricWeightedMean', 'rangePCA', 'disparity', 'mean_NN_dist', 'min_NN_dist', 'pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV', 'PSR', 'DR', 'weightedEndemism', 'correctedWeightedEndemism', 'phyloWeightedEndemism', 'partialDisparity'))
 	
 	pairwise <- FALSE
 	
@@ -318,12 +311,12 @@ gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
 		}
 	}
 	
-	if (metric == 'phylosignal' & metricType == 'uniVar') {
-		if (verbose & metricType == 'uniVar') message('\t...calculating univariate metric: ', metric, '...\n')
-		resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		ind <- which(lengths(uniqueComm) > 2)
-		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(x[['data']][y]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
-	}
+	# if (metric == 'phylosignal' & metricType == 'uniVar') {
+		# if (verbose & metricType == 'uniVar') message('\t...calculating univariate metric: ', metric, '...\n')
+		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
+		# ind <- which(lengths(uniqueComm) > 2)
+		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(x[['data']][y]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
+	# }
 
 	## MULTIVARIATE
 	
@@ -389,12 +382,12 @@ gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
 		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(nnDist(x[['data']][y, ], Nrep = nreps)$mean_dist))
 	}
 	
-	if (metric == 'phylosignal' & metricType == 'multiVar') {
-		if (verbose & metricType == 'multiVar') message('\t...calculating multivariate metric: ', metric, '...\n')
-		resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		ind <- which(lengths(uniqueComm) > 2)
-		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(x[['data']][y, ]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
-	}
+	# if (metric == 'phylosignal' & metricType == 'multiVar') {
+		# if (verbose & metricType == 'multiVar') message('\t...calculating multivariate metric: ', metric, '...\n')
+		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
+		# ind <- which(lengths(uniqueComm) > 2)
+		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(x[['data']][y, ]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
+	# }
 	
 	## ----------------------------------
 	## PHYLOGENY-RELATED METRICS

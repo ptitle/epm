@@ -91,9 +91,8 @@ to plotting with \code{sf::plot}.
 \examples{
 plot(tamiasEPM)
 
-plot(tamiasEPM, legend = FALSE, use_tmap = FALSE)
-addLegend(tamiasEPM, location = 'top', 
-ramp=c('blue','yellow','red'))
+plot(tamiasEPM, legend = FALSE, use_tmap = FALSE, col = viridisLite::inferno)
+addLegend(tamiasEPM, location = 'top', ramp = viridisLite::inferno)
 
 # Example for how to plot multiple epmGrids on the same color scale
 # for illustration purposes, we will compare weighted endemism to

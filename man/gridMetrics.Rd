@@ -39,7 +39,6 @@ Univariate trait metrics
    \item{variance}
    \item{arithmeticWeightedMean} (see below) 
    \item{geometricWeightedMean} (see below) 
-   \item{phylosignal:} {Blomberg's K for phylogenetic signal} 
 }
 Multivariate trait metrics 
 \itemize{ 
@@ -51,8 +50,6 @@ Multivariate trait metrics
    \item{rangePCA} 
    \item{mean_NN_dist:} {mean nearest neighbor distance} 
    \item{min_NN_dist:} {minimum nearest neighbor distance}
-   \item{phylosignal:} {Blomberg's K for phylogenetic signal, as implemented
-    in geomorph::physignal} 
 } 
 Phylogenetic metrics 
 \itemize{ 
@@ -105,11 +102,6 @@ plot(x)
 
 }
 \references{
-Blomberg's K for shape data\cr Adams, D. C., & Otárola‐Castillo,
-E. (2013). geomorph: an r package for the collection and analysis of
-geometric morphometric shape data. Methods in Ecology and Evolution, 4(4),
-393–399. https://doi.org/10.1111/2041-210x.12035
-
 partial disparity\cr Foote, M. (1993). Contributions of individual taxa to
 overall morphological disparity. Paleobiology, 19(4), 403–419.
 https://doi.org/10.1017/s0094837300014056

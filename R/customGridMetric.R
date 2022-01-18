@@ -29,11 +29,9 @@
 ##'@author Pascal Title
 ##'
 ##' @examples
-##' tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000,
-##' 		cellType = 'hexagon', method = 'centroid')
+##' tamiasEPM
 ##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
-##' tamiasEPM
 ##'
 ##' # In the following examples, notice that any mention of the trait data or 
 ##' ## phylogeny that are already attached to the epmGrid object are referred 
@@ -42,26 +40,28 @@
 ##' # example: calculate morphological disparity 
 ##' ## (already implemented in gridMetrics)
 ##' f <- function(cells) {
-##' 	sum(diag(cov(dat[cells,])))
+##' 		sum(diag(cov(dat[cells,])))
 ##' }
 ##'
 ##' # to calculate disparity, we need at least 2 taxa
 ##'
-##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, metricName = 'disparity')
+##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, 
+##' metricName = 'disparity')
 ##'
 ##' # In the example above, gridcells with 1 species are left as NA. 
 ##' ## But if we wanted those gridcells to have a value of 0 rather than NA, 
 ##' ## we could do the following:
 ##' f <- function(sp) {
-##' 	if (length(sp) == 1) {
-##' 		0
-##' 	} else {
-##' 		sum(diag(cov(dat[sp,])))
-##' 	}
+##' 		if (length(sp) == 1) {
+##' 			0
+##' 		} else {
+##' 			sum(diag(cov(dat[sp,])))
+##' 		}
 ##' }
 ##'
 ##' # and change minTaxCount to 1
-##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, metricName = 'disparity')
+##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, 
+##' metricName = 'disparity')
 ##'
 ##'
 ##' # phylogenetic example: mean patristic distance
@@ -70,20 +70,54 @@
 ##' patdist <- cophenetic(tamiasEPM[['phylo']])
 ##' patdist[upper.tri(patdist, diag = TRUE)] <- NA
 ##' f <- function(cells) {
-##' 	mean(patdist[cells, cells], na.rm = TRUE)
+##' 		mean(patdist[cells, cells], na.rm = TRUE)
 ##' }
 ##'
-##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, metricName = 'mean patristic')
+##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, 
+##' metricName = 'mean patristic')
 ##'
 ##' # an example that involves both morphological and phylogenetic data
 ##' ## nonsensical, but for illustrative purposes:
 ##' ## ratio of Faith's phylogenetic diversity to morphological range
 ##' f <- function(cells) {
-##' 	faithPD(phylo, cells) / max(dist(dat[cells, ]))
+##' 		faithPD(phylo, cells) / max(dist(dat[cells, ]))
 ##' }
 ##'
-##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, metricName = 'PD_range_ratio')
+##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, 
+##' metricName = 'PD_range_ratio')
 ##'
+##' 
+##' \dontrun{
+##' # multivariate phylogenetic signal: Blomberg's K for multivariate shape
+##' ## as implemented in the geomorph R package, function physignal.
+##' 
+##' f <- function(cells) {
+##' 		geomorph::physignal(as.matrix(dat[cells,]), 
+##' 		phy = ape::keep.tip(phylo, cells), iter = 999, 
+##' 		print.progress = FALSE)$phy.signal
+##' }
+##' 
+##' xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 3, 
+##' metricName = 'phylosignal')
+##' 
+##' 
+##' # univariate phylogenetic signal: Blomberg's K for single traits
+##' ## as implemented in the phytools R package, function phylosig
+##' f <- function(cells) {
+##' 		as.numeric(phytools::phylosig(ape::keep.tip(phylo, cells), dat[cells], 
+##' 		method = 'K'))
+##' }
+##' 
+##' # create an epmGrid object with a univariate trait. Here, we'll just pull 
+##' ## one of the columns from the multivariate dataset 
+##' ## (for demonstration purposes only)
+##' tamiasEPM2 <- addTraits(tamiasEPM, data = setNames(tamiasTraits[,1], 
+##' rownames(tamiasTraits)), replace = TRUE)
+##' 
+##' xx <- customGridMetric(tamiasEPM2, fun = f, minTaxCount = 3, 
+##' metricName = 'phylosignal')
+##' }
+##' 
 ##'
 ##'@export
 
