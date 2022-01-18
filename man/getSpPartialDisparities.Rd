@@ -9,19 +9,19 @@ getSpPartialDisparities(dat, groupMean = NULL)
 \arguments{
 \item{dat}{matrix of multivariate morphological data}
 
-\item{groupMean}{if \code{NULL}, claculated from \code{dat}, otherwise
-can be provided as a vector of mean values}
+\item{groupMean}{if \code{NULL}, calculated from \code{dat}, otherwise can
+be provided as a vector of mean values}
 }
 \value{
 numeric vector
 }
 \description{
 Calculate species-specific partial disparity, relative to some
-	group mean.
+  group mean.
 }
 \details{
-Calculates partial disparities, as in Foote 1993. 
-By default, the group mean is calculated from the full input data.
+Calculates partial disparities, as in Foote 1993. By default, the
+  group mean is calculated from the full input data.
 }
 \examples{
 tamiasTraits[1:5, 1:5]

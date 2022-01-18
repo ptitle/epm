@@ -1,48 +1,54 @@
-##' @title Data table from epmGrid
+##'@title Data table from epmGrid
 ##'
-##' @description Given one or several epmGrid objects, sf objects, rasterLayers, SpatRasters, create a table of 
-##' 	values and associated coordinate data.
+##'@description Given one or several epmGrid objects, sf objects, rasterLayers,
+##'  SpatRasters, create a table of values and associated coordinate data.
 ##'
-##' @param ... objects of class \code{epmGrid}, \code{sf}, \code{sp}, \code{SpatRaster}, 
-##' 	\code{RasterLayer} or \code{RasterStack}. All should have the same projection.
-##' @param n number of cells to randomly subsample, no subsampling if \code{NULL}
-##'	@param dropSingleSpCells logical; should cells with single species be excluded?
-##' @param coords if NULL, then points are sampled as needed, otherwise, data will be extracted at these 
-##' 	specified coordinates.
+##'@param ... objects of class \code{epmGrid}, \code{sf}, \code{sp},
+##'  \code{SpatRaster}, \code{RasterLayer} or \code{RasterStack}. All should
+##'  have the same projection.
+##'@param n number of cells to randomly subsample, no subsampling if \code{NULL}
+##'@param dropSingleSpCells logical; should cells with single species be
+##'  excluded?
+##'@param coords if NULL, then points are sampled as needed, otherwise, data
+##'  will be extracted at these specified coordinates.
 ##'
-##' @details A set of cells are identified in the input objects. If \code{n=NULL},
-##'		then all cells are used, otherwise cells are randomly subsampled. Values at those
-##' 	cells are then returned. This table construction can be particularly useful for 
-##' 	subsequent statistical analyses.
+##'@details A set of cells are identified in the input objects. If
+##'  \code{n=NULL}, then all cells are used, otherwise cells are randomly
+##'  subsampled. Values at those cells are then returned. This table
+##'  construction can be particularly useful for subsequent statistical
+##'  analyses.
 ##'
-##'		Only cells with data in all inputs are returned. If n is greater than the number
-##' 	of cells with data, then fewer than n cells will be returned. 
-##' 	
-##' 	The first element provided should be a \code{epmGrid} object, and that will be the one
-##' 	used as a template for the sampled grid system.
-##' 
-##' 	If \code{coords} is provided, then data are extracted at those coordinates, and no subsetting of 
-##' 	those points is done. 
+##'  Only cells with data in all inputs are returned. If n is greater than the
+##'  number of cells with data, then fewer than n cells will be returned.
 ##'
-##' @return data.frame with input variables, as well as \code{"x"} and \code{"y"}.
+##'  The first element provided should be a \code{epmGrid} object, and that will
+##'  be the one used as a template for the sampled grid system.
 ##'
-##' @author Pascal Title
+##'  If \code{coords} is provided, then data are extracted at those coordinates,
+##'  and no subsetting of those points is done.
+##'
+##'@return data.frame with input variables, as well as \code{"x"} and
+##'  \code{"y"}.
+##'
+##'@author Pascal Title
 ##'
 ##' @examples
-##' 
+##'
 ##' tamiasEPM
 ##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##' morphoDisp <- gridMetrics(tamiasEPM, metric='disparity')
 ##' meanPat <- gridMetrics(tamiasEPM, metric='meanPatristic')
-##' 
-##' tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, dropSingleSpCells = TRUE)
-##' 
+##'
+##' tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
+##' dropSingleSpCells = TRUE)
+##'
 ##' # from predetermined set of coordinates
 ##' pts <- sf::st_sample(tamiasEPM[[1]], size = 10)
-##' tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, dropSingleSpCells = FALSE, coords = pts)
-##' 
-##' @export
+##' tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
+##' dropSingleSpCells = FALSE, coords = pts)
+##'
+##'@export
 
 tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = NULL) {
     

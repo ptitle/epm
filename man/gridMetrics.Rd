@@ -11,75 +11,81 @@ gridMetrics(x, metric, column = NULL, verbose = FALSE)
 
 \item{metric}{name of metric to use, see Details.}
 
-\item{column}{If a univariate morphological metric is specified, and the 
-data in \code{x} are multivariate, which trait should be used?
-This can also specify which subset of columns a multivariate metric should be applied to.}
+\item{column}{If a univariate morphological metric is specified, and the data
+in \code{x} are multivariate, which trait should be used? This can also
+specify which subset of columns a multivariate metric should be applied to.}
 
-\item{verbose}{Intended primarily for debugging, prints progress to the console}
+\item{verbose}{Intended primarily for debugging, prints progress to the
+console}
 }
 \value{
-object of class \code{epmGrid} where the grid represents
-	calculations of the metric at every cell. The species identities per grid cell are those 
-that had data for the calculation of the metric. If taxa were dropped from the initial 
-	epmGrid object, then they have been removed from this epmGrid.
+object of class \code{epmGrid} where the grid represents calculations
+ of the metric at every cell. The species identities per grid cell are those
+ that had data for the calculation of the metric. If taxa were dropped from
+ the initial epmGrid object, then they have been removed from this epmGrid.
 }
 \description{
 Calculate various morphological and phylogenetic community
-metrics for every cell in a \code{epmGrid} object.
+ metrics for every cell in a \code{epmGrid} object.
 }
 \details{
-Univariate trait metrics
-	\itemize{
-		\item{mean}
-		\item{median}
-		\item{range}
-		\item{mean_NN_dist:} {mean nearest neighbor distance}
-		\item{min_NN_dist:} {minimum nearest neighbor distance}
-		\item{variance}
-		\item{arithmeticWeightedMean} (see below)
-		\item{geometricWeightedMean} (see below)
-		\item{phylosignal:} {Blomberg's K for phylogenetic signal}
-	}
-	Multivariate trait metrics
-	\itemize{
-		\item{disparity} 
-		\item{partialDisparity:} {contribution of species in each gridcell to overall disparity, returned as the ratio of summed partial disparities to total disparity.}
-		\item{range}
-		\item{rangePCA}
-		\item{mean_NN_dist:} {mean nearest neighbor distance}
-		\item{min_NN_dist:} {minimum nearest neighbor distance}
-		\item{phylosignal:} {Blomberg's K for phylogenetic signal, as implemented in geomorph::physignal}
-	}
-	Phylogenetic metrics
-	\itemize{
-		\item{pd:} {Faith's phylogenetic diversity, including the root}
-		\item{meanPatristic}
-		\item{meanPatristicNN:} {mean nearest neighbor in patristic distance}
-		\item{minPatristicNN:} {minimum nearest neighbor in patristic distance}
-		\item{phyloDisparity:} {sum of squared deviations in patristic distance}
-		\item{PSV:} {Phylogenetic Species Variability}
-		\item{PSR:} {Phylogenetic Species Richness}
-		\item{DR:} {non-parametric estimate of speciation rates}
-	}
-	Range-weighted metrics
-	\itemize{
-		\item{weightedEndemism}
-		\item{correctedWeightedEndemism:} {Weighted endemism standardized by species richness}
-		\item{phyloWeightedEndemism:}
-	}
+Univariate trait metrics 
+\itemize{ 
+   \item{mean} 
+   \item{median}
+   \item{range} 
+   \item{mean_NN_dist:} {mean nearest neighbor distance}
+   \item{min_NN_dist:} {minimum nearest neighbor distance} 
+   \item{variance}
+   \item{arithmeticWeightedMean} (see below) 
+   \item{geometricWeightedMean} (see below) 
+   \item{phylosignal:} {Blomberg's K for phylogenetic signal} 
+}
+Multivariate trait metrics 
+\itemize{ 
+   \item{disparity}
+   \item{partialDisparity:} {contribution of species in each gridcell to 
+   overall disparity, returned as the ratio of summed partial disparities
+   to total disparity.} 
+   \item{range} 
+   \item{rangePCA} 
+   \item{mean_NN_dist:} {mean nearest neighbor distance} 
+   \item{min_NN_dist:} {minimum nearest neighbor distance}
+   \item{phylosignal:} {Blomberg's K for phylogenetic signal, as implemented
+    in geomorph::physignal} 
+} 
+Phylogenetic metrics 
+\itemize{ 
+    \item{pd:} {Faith's phylogenetic diversity, including the root} 
+    \item{meanPatristic}
+    \item{meanPatristicNN:} {mean nearest neighbor in patristic distance}
+    \item{minPatristicNN:} {minimum nearest neighbor in patristic distance}
+    \item{phyloDisparity:} {sum of squared deviations in patristic distance}
+    \item{PSV:} {Phylogenetic Species Variability} 
+    \item{PSR:} {Phylogenetic Species Richness} 
+    \item{DR:} {non-parametric estimate of speciation rates} 
+}
+Range-weighted metrics 
+\itemize{ 
+    \item{weightedEndemism}
+    \item{correctedWeightedEndemism:} {Weighted endemism standardized by 
+    species richness} 
+    \item{phyloWeightedEndemism:} 
+}
 
-	If data slot contains a pairwise matrix, \code{column} is ignored.
-	Weighted mean options are available where, for each cell, a weighting scheme 
-	(inverse of species range sizes) is applied such that small-ranged species are 
-	up-weighted, and broadly distributed species are down-weighted. 
-	This can be a useful way to lessen the influence of broadly distributed species 
-	in the geographic mapping of trait data. 
+If data slot contains a pairwise matrix, \code{column} is ignored. Weighted
+mean options are available where, for each cell, a weighting scheme (inverse
+of species range sizes) is applied such that small-ranged species are
+up-weighted, and broadly distributed species are down-weighted. This can be a
+useful way to lessen the influence of broadly distributed species in the
+geographic mapping of trait data.
 
-It may be desirable to have metrics calculated for a dataset where only taxa shared
-across geography, traits and phylogeny are included. The function \code{\link{reduceToCommonTaxa}}
-does exactly that.
+It may be desirable to have metrics calculated for a dataset where only taxa
+shared across geography, traits and phylogeny are included. The function
+\code{\link{reduceToCommonTaxa}} does exactly that.
 
-To implement other metrics not available here, see \code{\link{customGridMetric}}.
+To implement other metrics not available here, see
+\code{\link{customGridMetric}}.
 }
 \examples{
 tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
@@ -87,7 +93,7 @@ tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 
 # univariate morphological example
 x <- gridMetrics(tamiasEPM, metric='mean', column='V2')
-plot(x) 
+plot(x)
 
 # multivariate morphological
 x <- gridMetrics(tamiasEPM, metric='disparity')
@@ -99,30 +105,30 @@ plot(x)
 
 }
 \references{
-Blomberg's K for shape data\cr
-Adams, D. C., & Otárola‐Castillo, E. (2013). geomorph: an r package for the collection 
-and analysis of geometric morphometric shape data. Methods in Ecology and Evolution, 4(4), 
+Blomberg's K for shape data\cr Adams, D. C., & Otárola‐Castillo,
+E. (2013). geomorph: an r package for the collection and analysis of
+geometric morphometric shape data. Methods in Ecology and Evolution, 4(4),
 393–399. https://doi.org/10.1111/2041-210x.12035
 
-partial disparity\cr
-Foote, M. (1993). Contributions of individual taxa to overall morphological disparity. 
-Paleobiology, 19(4), 403–419. https://doi.org/10.1017/s0094837300014056
+partial disparity\cr Foote, M. (1993). Contributions of individual taxa to
+overall morphological disparity. Paleobiology, 19(4), 403–419.
+https://doi.org/10.1017/s0094837300014056
 
-PSV, RSV\cr
-Helmus, M. R., Bland, T. J., Williams, C. K., & Ives, A. R. (2007). Phylogenetic Measures 
-of Biodiversity. The American Naturalist, 169(3), E68–E83. https://doi.org/10.1086/511334
+PSV, RSV\cr Helmus, M. R., Bland, T. J., Williams, C. K., & Ives, A. R.
+(2007). Phylogenetic Measures of Biodiversity. The American Naturalist,
+169(3), E68–E83. https://doi.org/10.1086/511334
 
-DR\cr
-Jetz, W., Thomas, G. H., Joy, J. B., Hartmann, K., & Mooers, A. O. (2012). The global 
-diversity of birds in space and time. Nature, 491(7424), 444–448. 
-https://doi.org/10.1038/nature11631
+DR\cr Jetz, W., Thomas, G. H., Joy, J. B., Hartmann, K., & Mooers, A. O.
+(2012). The global diversity of birds in space and time. Nature, 491(7424),
+444–448. https://doi.org/10.1038/nature11631
 
-weighted endemism\cr
-Crisp, M. D., Laffan, S., Linder, H. P., & Monro, A. (2001). Endemism in the Australian 
-flora. Journal of Biogeography, 28(2), 183–198. https://doi.org/10.1046/j.1365-2699.2001.00524.x
+weighted endemism\cr Crisp, M. D., Laffan, S., Linder, H. P., & Monro, A.
+(2001). Endemism in the Australian flora. Journal of Biogeography, 28(2),
+183–198. https://doi.org/10.1046/j.1365-2699.2001.00524.x
 
-phylo weighted endemism\cr
-Rosauer, D., Laffan, S. W., Crisp, M. D., Donnellan, S. C., & Cook, L. G. (2009). Phylogenetic
-endemism: a new approach for identifying geographical concentrations of evolutionary history. 
-Molecular Ecology, 18(19), 4061–4072. https://doi.org/10.1111/j.1365-294x.2009.04311.x
+phylo weighted endemism\cr Rosauer, D., Laffan, S. W., Crisp, M. D.,
+Donnellan, S. C., & Cook, L. G. (2009). Phylogenetic endemism: a new approach
+for identifying geographical concentrations of evolutionary history.
+Molecular Ecology, 18(19), 4061–4072.
+https://doi.org/10.1111/j.1365-294x.2009.04311.x
 }

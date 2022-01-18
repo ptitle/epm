@@ -19,8 +19,8 @@ rasterToGrid(x, target, fun = "mean", crop = TRUE)
 sf polygons object
 }
 \description{
-Convert a raster to sf polygons object, matching the attributes of the
-	target object.
+Convert a raster to sf polygons object, matching the attributes
+ of the target object.
 }
 \details{
 By default, raster cells that overlap with target grid cell polygons

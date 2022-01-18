@@ -1,7 +1,7 @@
 ##' @title EcoPhyloMapper (epm)
 ##' @description An R package that facilitates the aggregation of species'
 ##' geographic ranges from vector or raster spatial data, and that enables
-##' the calculation of various morphological and phylogenetic community metrics
+##' the calculation of various morphological and phylogenetic metacommunity metrics
 ##' across geography.
 ##'
 ##' A detailed wiki for the R package can be found on the epm github page:

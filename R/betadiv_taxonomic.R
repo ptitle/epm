@@ -1,91 +1,96 @@
-##' @title Map turnover in species communities
+##'@title Map turnover in species communities
 ##'
-##' @description Multisite taxonomic community dissimilarity is 
-##' 	calculated for each cell within a circular moving window of neighboring cells. 
-##' 
-##' @param x object of class \code{epmGrid}.
-##' @param radius Radius of the moving window in map units.
-##' @param component which component of beta diversity to use, can be \code{"turnover"}, 
-##' 	\code{"nestedness"} or \code{"full"}
-##' @param focalCoord vector of x and y coordinate, see details 
-##' @param slow if TRUE, use an alternate implementation that has a smaller memory footprint 
-##' 	but that is likely to be much slower. Most useful for high spatial resolution.
-##' @param nThreads number of threads for parallelization
+##'@description Multisite taxonomic community dissimilarity is calculated for
+##'  each cell within a circular moving window of neighboring cells.
 ##'
-##' @details
-##' 	For each cell, multisite dissimilarity is calculated from the focal cell and its neighbors.
-##' 	If \code{focalCoord} is specified, then instead of multisite dissimilarity within a moving 
-##' 	window of gridcells, pairwise dissimilarity is calculated from the cell at the focal 
-##'		coordinates, to all other cells. 
-##' 
-##' 	All metrics are based on Sorensen dissimilarity and range from 0 to 1.
-##'		For each metric, the following components can be specified. These components are additive,
-##' 	such that the full metric = turnover + nestedness. 
-##' 	\itemize{
-##'			\item{turnover}: species turnover without the influence of richness differences
-##'			\item{nestedness}: species turnover due to differences in richness
-##'			\item{full}: the combined turnover due to both differences in richness and pure turnover
-##'		}
+##'@param x object of class \code{epmGrid}.
+##'@param radius Radius of the moving window in map units.
+##'@param component which component of beta diversity to use, can be
+##'  \code{"turnover"}, \code{"nestedness"} or \code{"full"}
+##'@param focalCoord vector of x and y coordinate, see details
+##'@param slow if TRUE, use an alternate implementation that has a smaller
+##'  memory footprint but that is likely to be much slower. Most useful for high
+##'  spatial resolution.
+##'@param nThreads number of threads for parallelization
 ##'
-##' 	If the R package spdep is installed, this function should run more quickly.
+##'@details For each cell, multisite dissimilarity is calculated from the focal
+##'cell and its neighbors. If \code{focalCoord} is specified, then instead of
+##'multisite dissimilarity within a moving window of gridcells, pairwise
+##'dissimilarity is calculated from the cell at the focal coordinates, to all
+##'other cells.
 ##'
-##' 
-##' 
-##' @return Returns a grid with multi-site community dissimilarity for each cell.
-##' 
-##' @author Pascal Title
+##'All metrics are based on Sorensen dissimilarity and range from 0 to 1. \cr
+##'For each metric, the following components can be specified. These components
+##'are additive, such that the full metric = turnover + nestedness. 
+##'\itemize{
+##'    \item{turnover}: species turnover without the influence of richness
+##'differences 
+##'    \item{nestedness}: species turnover due to differences in
+##'richness 
+##     \item{full}: the combined turnover due to both differences in
+##'richness and pure turnover 
+##'}
 ##'
-##' @references
-##' 
-##' Baselga, A. The relationship between species replacement, dissimilarity derived from nestedness, 
-##' and nestedness. Global Ecology and Biogeography 21 (2012): 1223–1232.
+##'If the R package spdep is installed, this function should run more quickly.
 ##'
-##' 
+##'
+##'
+##'@return Returns a grid with multi-site community dissimilarity for each cell.
+##'
+##'@author Pascal Title
+##'
+##'@references
+##'
+##'Baselga, A. The relationship between species replacement, dissimilarity
+##'derived from nestedness, and nestedness. Global Ecology and Biogeography 21
+##'(2012): 1223–1232.
+##'
+##'
 ##' @examples
 ##' \donttest{
 ##' tamiasEPM
 ##'
 ##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
-##' 
+##'
 ##' # taxonomic turnover
-##' beta_taxonomic_turnover <- betadiv_taxonomic(tamiasEPM, radius = 70000, 
+##' beta_taxonomic_turnover <- betadiv_taxonomic(tamiasEPM, radius = 70000,
 ##' 		component = 'turnover')
-##' beta_taxonomic_nestedness <- betadiv_taxonomic(tamiasEPM, radius = 70000, 
+##' beta_taxonomic_nestedness <- betadiv_taxonomic(tamiasEPM, radius = 70000,
 ##'			component = 'nestedness')
-##' beta_taxonomic_full <- betadiv_taxonomic(tamiasEPM, radius = 70000, 
+##' beta_taxonomic_full <- betadiv_taxonomic(tamiasEPM, radius = 70000,
 ##'			component = 'full')
 ##'
-##' 
-##' 
+##'
+##'
 ##' par(mfrow=c(1,3))
 ##' plot(beta_taxonomic_turnover, reset = FALSE, key.pos = NULL)
 ##' plot(beta_taxonomic_nestedness, reset = FALSE, key.pos = NULL)
 ##' plot(beta_taxonomic_full, reset = FALSE, key.pos = NULL)
-##' 
+##'
 ##'
 ##'
 ##' # using square grid epmGrid
-##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 ##' 	cellType = 'square', method = 'centroid')
-##' 
-##' beta_taxonomic_full <- betadiv_taxonomic(tamiasEPM2, radius = 70000, 
+##'
+##' beta_taxonomic_full <- betadiv_taxonomic(tamiasEPM2, radius = 70000,
 ##' 		component = 'full')
-##' beta_taxonomic_full_slow <- betadiv_taxonomic(tamiasEPM2, radius = 70000, 
+##' beta_taxonomic_full_slow <- betadiv_taxonomic(tamiasEPM2, radius = 70000,
 ##' 		component = 'full', slow = TRUE)
 ##'
 ##' par(mfrow=c(1,2))
 ##' terra::plot(beta_taxonomic_full, col = sf::sf.colors(100))
 ##' terra::plot(beta_taxonomic_full_slow, col = sf::sf.colors(100))
-##' 
+##'
 ##' # dissimilarity from a focal cell
-##' focalBeta <- betadiv_taxonomic(tamiasEPM, radius = 70000, 
+##' focalBeta <- betadiv_taxonomic(tamiasEPM, radius = 70000,
 ##'			component = 'full', focalCoord = c(-1413764, 573610.8))
 ##' plot(focalBeta, reset = FALSE)
 ##' points(-1413764, 573610.8, pch = 3, col = 'white')
 ##'
 ##' }
-##' @export
+##'@export
 
 
 betadiv_taxonomic <- function(x, radius, component = 'full', focalCoord = NULL, slow = FALSE, nThreads = 1) {

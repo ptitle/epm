@@ -3,29 +3,30 @@
 ##' @description Add univariate or multivariate trait data to an epmGrid object.
 ##'
 ##' @param x object of class \code{epmGrid}
-##' @param data named numeric vector, matrix or dataframe with rownames corresponding to species in \code{x}
-##' 	or pairwise matrix with row and column names corresponding to species in \code{x}. If pairwise matrix,
-##' 	the upper triangle of the matrix will be used for calculations.
-##' @param replace boolean; if data is already a part of \code{x},
-##' should it be replaced?
-##' @param verbose if TRUE, list out all species that are 
-##' dropped/excluded, rather than counts.
+##' @param data named numeric vector, matrix or dataframe with rownames
+##'   corresponding to species in \code{x} or pairwise matrix with row and
+##'   column names corresponding to species in \code{x}. If pairwise matrix, the
+##'   upper triangle of the matrix will be used for calculations.
+##' @param replace boolean; if data is already a part of \code{x}, should it be
+##'   replaced?
+##' @param verbose if TRUE, list out all species that are dropped/excluded,
+##'   rather than counts.
 ##'
 ##' @details If any species in \code{data} are not found in the epmGrid
-##' geographical data, then those species will be dropped from \code{data}, and
-##' a warning will be issued. 
+##'   geographical data, then those species will be dropped from \code{data},
+##'   and a warning will be issued.
 ##'
-##' @return object of class \code{epmGrid}, with trait data
-##' as the list element named \code{data}. 
+##' @return object of class \code{epmGrid}, with trait data as the list element
+##'   named \code{data}.
 ##'
 ##' @author Pascal Title
-##' 
+##'
 ##' @examples
 ##' tamiasEPM
 ##' tamiasTraits
 ##'
 ##' addTraits(tamiasEPM, tamiasTraits)
-##' 
+##'
 ##' @export
 
 

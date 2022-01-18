@@ -27,13 +27,14 @@ This function returns both a sf polygon and the same polygon
 		as a WKT string. Either can be supplied to \code{\link{createEPMgrid}}
 		as the extent. A recommended strategy is to use this function to find
 		your extent, and to copy/paste the WKT string into your R script so that 
-		you can retain it for future use, and maintain reproducibility. See example.
+		you can retain it for future use, and maintain reproducibility. 
+		See example.
 
 	What is chosen for \code{cellType} has no effect on what you might choose in 
 	\code{\link{createEPMgrid}}. Square cells will probably be fastest. If hexagons
 	are selected, grid cell points are plotted instead of polygons to speed up plotting.
 
-	The basemap is from \url{www.naturalearthdata.com}.
+	The basemap is from \url{https://www.naturalearthdata.com/}.
 }
 \examples{
 \dontrun{

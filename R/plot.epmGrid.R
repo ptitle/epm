@@ -1,43 +1,47 @@
 ##' @title Plot epmGrid
 ##'
-##' @description Plot a epmGrid object. This function uses the tmap package for plotting by default.
+##' @description Plot a epmGrid object. This function uses the tmap package 
+##' for plotting by default.
 ##'
 ##' @param x object of class \code{epmGrid}
 ##' @param log boolean; should the cell values be logged?
-##' @param colorRampRange numeric vector of min and max value for scaling the color
-##' 	ramp. Automatically inferred if set to \code{NULL}. This is relevant if multiple
-##' 	plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. 
-##' 		Not intended for mapview option.
+##' @param colorRampRange numeric vector of min and max value for scaling the 
+##' color ramp. Automatically inferred if set to \code{NULL}. 
+##' This is relevant if multiple plots are desired on the same scale. 
+##' See \code{\link{getMultiMapRamp}}. 
 ##' @param legend boolean; should legend be included?
-##' @param col either a vector of color names that will be interpolated, or a color ramp
-##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
+##' @param col either a vector of color names that will be interpolated, 
+##' or a color ramp function that takes an integer 
+##' (see for example \code{\link{colorRampPalette}}).
 ##'	@param basemap if \code{'none'}, then only the grid is plotted. 
 ##'		If \code{'worldmap'}, then vector map is plotted.
 ##' 	If \code{'interactive'}, then the plot is sent to the web browser.
-##' @param ignoreSingleSpCells can be TRUE, FALSE or 'auto'. Should cells containing
-##' 	only 1 taxon be grayed out? This is predetermined for all metrics in \code{\link{gridMetrics}}
-##' 	if  ignoreSingleSpCells = 'auto'.
+##' @param ignoreSingleSpCells can be TRUE, FALSE or 'auto'. Should cells 
+##' containing only 1 taxon be grayed out? This is predetermined for all 
+##' metrics in \code{\link{gridMetrics}} if  ignoreSingleSpCells = 'auto'.
 ##' @param singleSpCol color for single-species cells. See details.
 ##' @param lwd grid cell border width
 ##' @param borderCol color for grid cell borders
-##' @param alpha opacity of all colors and borders, ranging from 0 (fully transparent) 
-##' 		to 1 (fully opaque)
+##' @param alpha opacity of all colors and borders, ranging from 0 
+##' (fully transparent) to 1 (fully opaque)
 ##' @param includeFrame boolean; include frame around plot?
-##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead of tmap package
-##' @param fastPoints Intended for debugging purposes. For hex grids and \code{use_tmap = F}, 
-##' 		plot points instead of polygons. Helpful for sorting out plotting details without
-##' 		waiting for slow polygon plotting.
+##' @param use_tmap boolean; if FALSE, plotting will be done via sf 
+##' instead of tmap package
+##' @param fastPoints Intended for debugging purposes. For hex grids and \code{use_tmap = F}, plot points instead of polygons. Helpful for sorting out plotting 
+##' details without waiting for slow polygon plotting.
 ##'	@param title text to add to the plot
 ##' @param add logical, add to existing plot?
 ##' @param ... additional arguments that can be passed to sf::plot or terra::plot 
 ##' 		if \code{use_tmap = FALSE}
 ##'
 ##'
-##' @details If \code{x} is a metric as generated with \code{gridMetrics} that returns 0 
-##' 	for single-species cells, then those cells (that have a value of 0) will be plotted in gray (or any color
-##' 	as specified with \code{singleSpCol}).
+##' @details If \code{x} is a metric as generated with \code{gridMetrics} 
+##' that returns 0 for single-species cells, then those cells 
+##' (that have a value of 0) will be plotted in gray (or any color as specified 
+##' with \code{singleSpCol}).
 ##'
-##'		If the tmap package is not installed, then this function will default to plotting with \code{sf::plot}.
+##'	If the tmap package is not installed, then this function will default 
+##'	to plotting with \code{sf::plot}.
 ##' 
 ##' @return Nothing is returned. 
 ##'
@@ -47,7 +51,8 @@
 ##' plot(tamiasEPM)
 ##' 
 ##' plot(tamiasEPM, legend = FALSE)
-##' # addLegend(tamiasEPM['spRichness'], location = 'top', ramp=c('blue','yellow','red'))
+##' # addLegend(tamiasEPM['spRichness'], location = 'top', 
+##' ramp=c('blue','yellow','red'))
 ##' 
 ##' # Example for how to plot multiple epmGrids on the same color scale
 ##' # for illustration purposes, we will compare weighted endemism to

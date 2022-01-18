@@ -1,15 +1,15 @@
 ##' @title Partial Disparity
 ##'
 ##' @description Calculate species-specific partial disparity, relative to some
-##' 	group mean.
+##'   group mean.
 ##'
 ##' @param dat matrix of multivariate morphological data
-##' @param groupMean if \code{NULL}, claculated from \code{dat}, otherwise
-##' 	can be provided as a vector of mean values 
+##' @param groupMean if \code{NULL}, calculated from \code{dat}, otherwise can
+##'   be provided as a vector of mean values
 ##'
-##' @details Calculates partial disparities, as in Foote 1993. 
-##' By default, the group mean is calculated from the full input data.
-##' 	
+##' @details Calculates partial disparities, as in Foote 1993. By default, the
+##'   group mean is calculated from the full input data.
+##'
 ##'
 ##' @return numeric vector
 ##'
@@ -19,7 +19,7 @@
 ##' tamiasTraits[1:5, 1:5]
 ##' getSpPartialDisparities(tamiasTraits)
 ##'
-##' 
+##'
 ##' @export
 
 

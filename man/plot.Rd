@@ -31,21 +31,22 @@
 
 \item{legend}{boolean; should legend be included?}
 
-\item{col}{either a vector of color names that will be interpolated, or a color ramp
-function that takes an integer (see for example \code{\link{colorRampPalette}}).}
+\item{col}{either a vector of color names that will be interpolated, 
+or a color ramp function that takes an integer 
+(see for example \code{\link{colorRampPalette}}).}
 
 \item{basemap}{if \code{'none'}, then only the grid is plotted. 
 If \code{'worldmap'}, then vector map is plotted.
 If \code{'interactive'}, then the plot is sent to the web browser.}
 
-\item{colorRampRange}{numeric vector of min and max value for scaling the color
-ramp. Automatically inferred if set to \code{NULL}. This is relevant if multiple
-plots are desired on the same scale. See \code{\link{getMultiMapRamp}}. 
-    Not intended for mapview option.}
+\item{colorRampRange}{numeric vector of min and max value for scaling the 
+color ramp. Automatically inferred if set to \code{NULL}. 
+This is relevant if multiple plots are desired on the same scale. 
+See \code{\link{getMultiMapRamp}}.}
 
-\item{ignoreSingleSpCells}{can be TRUE, FALSE or 'auto'. Should cells containing
-only 1 taxon be grayed out? This is predetermined for all metrics in \code{\link{gridMetrics}}
-if  ignoreSingleSpCells = 'auto'.}
+\item{ignoreSingleSpCells}{can be TRUE, FALSE or 'auto'. Should cells 
+containing only 1 taxon be grayed out? This is predetermined for all 
+metrics in \code{\link{gridMetrics}} if  ignoreSingleSpCells = 'auto'.}
 
 \item{singleSpCol}{color for single-species cells. See details.}
 
@@ -53,16 +54,16 @@ if  ignoreSingleSpCells = 'auto'.}
 
 \item{borderCol}{color for grid cell borders}
 
-\item{alpha}{opacity of all colors and borders, ranging from 0 (fully transparent) 
-to 1 (fully opaque)}
+\item{alpha}{opacity of all colors and borders, ranging from 0 
+(fully transparent) to 1 (fully opaque)}
 
 \item{includeFrame}{boolean; include frame around plot?}
 
-\item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead of tmap package}
+\item{use_tmap}{boolean; if FALSE, plotting will be done via sf 
+instead of tmap package}
 
-\item{fastPoints}{Intended for debugging purposes. For hex grids and \code{use_tmap = F}, 
-plot points instead of polygons. Helpful for sorting out plotting details without
-waiting for slow polygon plotting.}
+\item{fastPoints}{Intended for debugging purposes. For hex grids and \code{use_tmap = F}, plot points instead of polygons. Helpful for sorting out plotting 
+details without waiting for slow polygon plotting.}
 
 \item{title}{text to add to the plot}
 
@@ -75,20 +76,24 @@ if \code{use_tmap = FALSE}}
 Nothing is returned.
 }
 \description{
-Plot a epmGrid object. This function uses the tmap package for plotting by default.
+Plot a epmGrid object. This function uses the tmap package 
+for plotting by default.
 }
 \details{
-If \code{x} is a metric as generated with \code{gridMetrics} that returns 0 
-	for single-species cells, then those cells (that have a value of 0) will be plotted in gray (or any color
-	as specified with \code{singleSpCol}).
+If \code{x} is a metric as generated with \code{gridMetrics} 
+that returns 0 for single-species cells, then those cells 
+(that have a value of 0) will be plotted in gray (or any color as specified 
+with \code{singleSpCol}).
 
-	If the tmap package is not installed, then this function will default to plotting with \code{sf::plot}.
+If the tmap package is not installed, then this function will default 
+to plotting with \code{sf::plot}.
 }
 \examples{
 plot(tamiasEPM)
 
 plot(tamiasEPM, legend = FALSE)
-# addLegend(tamiasEPM['spRichness'], location = 'top', ramp=c('blue','yellow','red'))
+# addLegend(tamiasEPM['spRichness'], location = 'top', 
+ramp=c('blue','yellow','red'))
 
 # Example for how to plot multiple epmGrids on the same color scale
 # for illustration purposes, we will compare weighted endemism to

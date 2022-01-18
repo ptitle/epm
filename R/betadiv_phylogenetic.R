@@ -1,51 +1,53 @@
-##' @title Map phylogenetic turnover in species communities
+##'@title Map phylogenetic turnover in species communities
 ##'
-##' @description Multisite phylogenetic community dissimilarity is 
-##' 	calculated for each cell within a circular moving window of neighboring cells. 
-##' 
-##' @param x object of class \code{epmGrid}.
-##' @param radius Radius of the moving window in map units.
-##' @param component which component of beta diversity to use, can be \code{"turnover"}, 
-##' 	\code{"nestedness"} or \code{"full"}
-##' @param focalCoord vector of x and y coordinate, see details 
-##' @param slow if TRUE, use an alternate implementation that has a smaller memory footprint 
-##' 	but that is likely to be much slower. Most useful for high spatial resolution.
-##' @param nThreads number of threads for parallelization
+##'@description Multisite phylogenetic community dissimilarity is calculated for
+##'  each cell within a circular moving window of neighboring cells.
 ##'
-##' @details
-##' 	For each cell, multisite dissimilarity is calculated for the focal cell and its neighbors.
-##' 	If \code{focalCoord} is specified, then instead of multisite dissimilarity within a moving 
-##' 	window of gridcells, pairwise dissimilarity is calculated from the cell at the focal 
-##'		coordinates, to all other cells. 
-##' 
-##' 	All metrics are based on Sorensen dissimilarity and range from 0 to 1:
-##'		For each metric, the following components can be specified. These components are additive,
-##' 	such that the full metric = turnover + nestedness. 
-##' 	\itemize{
-##'			\item{turnover}: species turnover without the influence of richness differences
-##'			\item{nestedness}: species turnover due to differences in richness
-##'			\item{full}: the combined turnover due to both differences in richness and pure turnover
-##'		}
+##'@param x object of class \code{epmGrid}.
+##'@param radius Radius of the moving window in map units.
+##'@param component which component of beta diversity to use, can be
+##'  \code{"turnover"}, \code{"nestedness"} or \code{"full"}
+##'@param focalCoord vector of x and y coordinate, see details
+##'@param slow if TRUE, use an alternate implementation that has a smaller
+##'  memory footprint but that is likely to be much slower. Most useful for high
+##'  spatial resolution.
+##'@param nThreads number of threads for parallelization
 ##'
-##'		If the R package spdep is installed, this function should run more quickly.
+##'@details For each cell, multisite dissimilarity is calculated for the focal
+##'  cell and its neighbors. If \code{focalCoord} is specified, then instead of
+##'  multisite dissimilarity within a moving window of gridcells, pairwise
+##'  dissimilarity is calculated from the cell at the focal coordinates, to all
+##'  other cells.
 ##'
-##' 
-##' 
-##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object (if square grid) 
-##' with multiste community dissimilarity for each grid cell.
-##' 
-##' @author Pascal Title
+##'  All metrics are based on Sorensen dissimilarity and range from 0 to 1: For
+##'  each metric, the following components can be specified. These components
+##'  are additive, such that the full metric = turnover + nestedness. \itemize{
+##'  \item{turnover}: species turnover without the influence of richness
+##'  differences \item{nestedness}: species turnover due to differences in
+##'  richness \item{full}: the combined turnover due to both differences in
+##'  richness and pure turnover }
 ##'
-##' @references
-##' 
-##' Baselga, A. The relationship between species replacement, dissimilarity derived from nestedness, 
-##' and nestedness. Global Ecology and Biogeography 21 (2012): 1223–1232.
-##' 
-##' Leprieur, F, Albouy, C, De Bortoli, J, Cowman, PF, Bellwood, DR & Mouillot, D. Quantifying 
-##' Phylogenetic Beta Diversity: Distinguishing between "True" Turnover of Lineages and Phylogenetic 
-##' Diversity Gradients. PLoS ONE 7 (2012): e42760–12.
+##'  If the R package spdep is installed, this function should run more quickly.
 ##'
-##' 
+##'
+##'
+##'@return Returns a sf polygons object (if hex grid) or a SpatRaster object (if
+##'  square grid) with multisite community dissimilarity for each grid cell.
+##'
+##'@author Pascal Title
+##'
+##'@references
+##'
+##'Baselga, A. The relationship between species replacement, dissimilarity
+##'derived from nestedness, and nestedness. Global Ecology and Biogeography 21
+##'(2012): 1223–1232.
+##'
+##'Leprieur, F, Albouy, C, De Bortoli, J, Cowman, PF, Bellwood, DR & Mouillot,
+##'D. Quantifying Phylogenetic Beta Diversity: Distinguishing between "True"
+##'Turnover of Lineages and Phylogenetic Diversity Gradients. PLoS ONE 7 (2012):
+##'e42760–12.
+##'
+##'
 ##' @examples
 ##' \donttest{
 ##' tamiasEPM
@@ -53,41 +55,41 @@
 ##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##'
 ##' # phylogenetic turnover
-##' beta_phylo_turnover <- betadiv_phylogenetic(tamiasEPM, radius = 70000, 
+##' beta_phylo_turnover <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 ##' 		component = 'turnover')
-##' beta_phylo_nestedness <- betadiv_phylogenetic(tamiasEPM, radius = 70000, 
+##' beta_phylo_nestedness <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 ##' 		component = 'nestedness')
-##' beta_phylo_full <- betadiv_phylogenetic(tamiasEPM, radius = 70000, 
+##' beta_phylo_full <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 ##' 		component = 'full')
-##' 
+##'
 ##' par(mfrow=c(1,3))
 ##' plot(beta_phylo_turnover, reset = FALSE, key.pos = NULL)
 ##' plot(beta_phylo_nestedness, reset = FALSE, key.pos = NULL)
 ##' plot(beta_phylo_full, reset = FALSE, key.pos = NULL)
 ##'
 ##' # using square grid epmGrid
-##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2 <- addPhylo(tamiasEPM2, tamiasTree)
-##' 
-##' beta_phylo_full <- betadiv_phylogenetic(tamiasEPM2, radius = 70000, 
+##'
+##' beta_phylo_full <- betadiv_phylogenetic(tamiasEPM2, radius = 70000,
 ##' 		component = 'full')
-##' beta_phylo_full_slow <- betadiv_phylogenetic(tamiasEPM2, radius = 70000, 
+##' beta_phylo_full_slow <- betadiv_phylogenetic(tamiasEPM2, radius = 70000,
 ##' 		component = 'full', slow = TRUE)
 ##'
 ##' par(mfrow=c(1,2))
 ##' terra::plot(beta_phylo_full, col = sf::sf.colors(100))
 ##' terra::plot(beta_phylo_full_slow, col = sf::sf.colors(100))
-##' 
+##'
 ##' # dissimilarity from a focal cell
-##' focalBeta <- betadiv_phylogenetic(tamiasEPM, radius = 70000, 
+##' focalBeta <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 ##'			component = 'full', focalCoord = c(-1413764, 573610.8))
 ##' plot(focalBeta, reset = FALSE)
 ##' points(-1413764, 573610.8, pch = 3, col = 'white')
 ##'
-##' 
+##'
 ##' }
-##' @export
+##'@export
 
 betadiv_phylogenetic <- function(x, radius, component = 'full', focalCoord = NULL, slow = FALSE, nThreads = 1) {
 	# radius is in map units
@@ -367,10 +369,10 @@ getEdgeIndices <- function(spEdges, taxa, tree) {
 	
 calcPhyloMultiSite <- function(siteList, tree, spEdges, component) {
 	# total branch lengths across sites
-	sumSi = sum(tree$edge.length[unlist(lapply(siteList, function(y) getEdgeIndices(spEdges, y, tree)))])
+	sumSi <- sum(tree$edge.length[unlist(lapply(siteList, function(y) getEdgeIndices(spEdges, y, tree)))])
 	
 	# common branch length across sites
-	St = sum(tree$edge.length[getEdgeIndices(spEdges, Reduce(union, siteList), tree)])
+	St <- sum(tree$edge.length[getEdgeIndices(spEdges, Reduce(union, siteList), tree)])
 	
 	minDiffs <- 0
 	maxDiffs <- 0

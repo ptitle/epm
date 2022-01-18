@@ -28,7 +28,8 @@ faithPD(tamiasTree, c('Tamias_minimus', 'Tamias_speciosus'))
 
 }
 \references{
-Faith D.P. (1992) Conservation evaluation and phylogenetic diversity. Biological Conservation, 61, 1-10.
+Faith D.P. (1992) Conservation evaluation and phylogenetic diversity. 
+Biological Conservation, 61, 1-10.
 }
 \author{
 Pascal Title

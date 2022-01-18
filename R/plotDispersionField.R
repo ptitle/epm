@@ -1,36 +1,39 @@
 ##' @title Plot dispersion fields
 ##'
-##' @description For a set of specified coordinates, plot a richness map for the species
-##' 	that are found at those coordinates. 
+##' @description For a set of specified coordinates, plot a richness map for 
+##' the species that are found at those coordinates. 
 ##'
 ##' @param x object of class \code{epmGrid}
 ##' @param coords coordinates as either a spatial points object (sp or sf), 
 ##' 	a matrix/dataframe with two columns or a numeric vector of c(long, lat).
 ##' @param plotCoords boolean; should the coordinates be plotted as well?
 ##' @param legend boolean; should legend be included?
-##' @param col either a vector of color names that will be interpolated, or a color ramp
-##' 	function that takes an integer (see for example \code{\link{colorRampPalette}}).
+##' @param col either a vector of color names that will be interpolated, 
+##' or a color ramp function that takes an integer 
+##' (see for example \code{\link{colorRampPalette}}).
 ##'	@param basemap if \code{'none'}, then only the grid is plotted. 
 ##'		If \code{'worldmap'}, then vector map is plotted.
 ##' 	If \code{'interactive'}, then the \code{mapview} package is used.
 ##' @param lwd grid cell border width
 ##' @param borderCol color for grid cell borders
-##' @param alpha opacity of all colors and borders, ranging from 0 (fully transparent) 
-##' 		to 1 (fully opaque)
+##' @param alpha opacity of all colors and borders, ranging from 0 
+##' (fully transparent) to 1 (fully opaque)
 ##' @param includeFrame boolean; include frame around plot?
-##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead of tmap package
+##' @param use_tmap boolean; if FALSE, plotting will be done via sf instead 
+##' of tmap package
 ##' @param add logical, add to existing plot?
 ##'
 ##' @return Nothing is returned.
 ##'
-##' @details Assemblage dispersion fields represent an overlapping of geographic ranges
-##' 	for the taxa that occur in the focal grid cells. 
+##' @details Assemblage dispersion fields represent an overlapping of 
+##' geographic ranges for the taxa that occur in the focal grid cells. 
 ##' 
 ##' @author Pascal Title
 ##'
 ##' @references
-##' Graves, G. R., & Rahbek, C. (2005). Source pool geometry and the assembly of continental avifaunas. 
-##' Proceedings of the National Academy of Sciences, 102(22), 7871–7876.
+##' Graves, G. R., & Rahbek, C. (2005). Source pool geometry and the assembly 
+##' of continental avifaunas. Proceedings of the National Academy of Sciences, 
+##' 102(22), 7871–7876.
 ##' 
 ##' @examples
 ##' plotDispersionField(tamiasEPM, c(-1944951, 69588.74))

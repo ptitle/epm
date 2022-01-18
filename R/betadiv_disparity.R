@@ -1,34 +1,37 @@
 ##' @title Map change in morphological disparity
 ##'
-##' @description Change in morphological disparity is calculating across a moving window
-##' of neighboring grid cells. 
-##' 
+##' @description Change in morphological disparity is calculating across a
+##'   moving window of neighboring grid cells.
+##'
 ##' @param x object of class \code{epmGrid}.
 ##' @param radius Radius of the moving window in map units.
-##' @param slow if TRUE, use an alternate implementation that has a smaller memory footprint 
-##' 	but that is likely to be much slower. Most useful for high spatial resolution.
+##' @param slow if TRUE, use an alternate implementation that has a smaller
+##'   memory footprint but that is likely to be much slower. Most useful for
+##'   high spatial resolution.
 ##' @param nThreads number of threads for parallelization
 
 ##'
-##' @details
-##' 	For each gridcell neighborhood (defined by the radius), we calculate the proportion 
-##' 	of the full disparity contained in those grid cells, and then take the standard deviation of 
-##' 	those proportions across the gridcell neighborhood. This way, the returned values reflect
-##' 	how much disparity (relative to the overall total disparity) changes across a moving window.
-##' 
-##'		If the R package spdep is installed, this function should run more quickly.
+##' @details For each gridcell neighborhood (defined by the radius), we
+##' calculate the proportion of the full disparity contained in those grid
+##' cells, and then take the standard deviation of those proportions across the
+##' gridcell neighborhood. This way, the returned values reflect how much
+##' disparity (relative to the overall total disparity) changes across a moving
+##' window.
 ##'
-##' 
-##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object (if square grid).
-##' 
+##' If the R package spdep is installed, this function should run more quickly.
+##'
+##'
+##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object
+##'   (if square grid).
+##'
 ##' @author Pascal Title
 ##'
 ##' @references
-##' 
-##' Foote M. 1993. Contributions of individual taxa to overall morphological disparity. 
-##' Paleobiology. 19:403–419.
-##' 
-##' 
+##'
+##' Foote M. 1993. Contributions of individual taxa to overall morphological
+##' disparity. Paleobiology. 19:403–419.
+##'
+##'
 ##' @examples
 ##' \donttest{
 ##' tamiasEPM
@@ -36,17 +39,17 @@
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##'
 ##' z <- betadiv_disparity(tamiasEPM, radius = 150000)
-##' 
+##'
 ##' plot(z)
-##' 
+##'
 ##' # using square grid epmGrid
-##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2 <- addTraits(tamiasEPM2, tamiasTraits)
 ##' z2 <- betadiv_disparity(tamiasEPM2, radius = 150000)
 ##'
 ##' terra::plot(z2, col = sf::sf.colors(100))
-##' 
+##'
 ##' }
 ##' @export
 

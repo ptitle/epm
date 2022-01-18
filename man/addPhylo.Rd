@@ -11,22 +11,23 @@ addPhylo(x, tree, replace = FALSE, verbose = FALSE)
 
 \item{tree}{a phylogeny of class \code{phylo}}
 
-\item{replace}{boolean; if a tree is already a part of \code{x},
-should it be replaced?}
+\item{replace}{boolean; if a tree is already a part of \code{x}, should it
+be replaced?}
 
-\item{verbose}{if TRUE, list out all species that are 
-dropped/excluded, rather than counts.}
+\item{verbose}{if TRUE, list out all species that are dropped/excluded,
+rather than counts.}
 }
 \value{
-object of class \code{epmGrid}, with a \code{phylo}
-object as the list element named \code{phylo}.
+object of class \code{epmGrid}, with a \code{phylo} object as the
+  list element named \code{phylo}.
 }
 \description{
 Add a phylogeny to epmGrid object.
 }
 \details{
 If any species in the phylogeny are not found in the epmGrid
-geographical data, then those species will be dropped from the phylogeny, ##' and a warning will be issued.
+  geographical data, then those species will be dropped from the phylogeny,
+  ##' and a warning will be issued.
 }
 \examples{
 tamiasEPM
