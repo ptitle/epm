@@ -1,3 +1,6 @@
+  <!-- badges: start -->
+  [![R-CMD-check](https://github.com/ptitle/epm/workflows/R-CMD-check/badge.svg)](https://github.com/ptitle/epm/actions)
+  <!-- badges: end -->
 # epm
 ## EcoPhyloMapper R package
 
@@ -12,3 +15,4 @@ Additionally, the R packages `tmap`, `data.table` and `spdep` provide additional
 To install, run the following in R: `remotes::install_github('ptitle/epm')`
 
 [Check out the wiki for explanations and discussions of the available options.](https://github.com/ptitle/epm/wiki)
+
