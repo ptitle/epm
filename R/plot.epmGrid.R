@@ -50,8 +50,8 @@
 ##' @examples
 ##' plot(tamiasEPM)
 ##' 
-##' plot(tamiasEPM, legend = FALSE)
-##' # addLegend(tamiasEPM['spRichness'], location = 'top', 
+##' plot(tamiasEPM, legend = FALSE, use_tmap = FALSE)
+##' addLegend(tamiasEPM, location = 'top', 
 ##' ramp=c('blue','yellow','red'))
 ##' 
 ##' # Example for how to plot multiple epmGrids on the same color scale
