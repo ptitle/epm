@@ -8,7 +8,7 @@
 
 The following R package dependencies are required:
 
-`terra, sf, ape, geomorph, viridisLite, pbapply, Rcpp`
+`terra, sf, ape, viridisLite, pbapply, Rcpp`
 
 Additionally, the R packages `tmap`, `data.table` and `spdep` provide additional functionality or speed improvements.
 
