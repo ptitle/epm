@@ -5,6 +5,9 @@
 
 ##'	@param r the epmGrid, rasterLayer, SpatRaster or sf object that has been plotted
 
+##' @param params If an epmGrid plot was saved to a variable, provide that here.
+##' Contents will override other arguments.
+
 ##'	@param direction direction of color ramp. If omitted, then direction is
 ##'	  automatically inferred, otherwise can be specified as \code{horizontal} or
 ##'	  \code{vertical}.
@@ -78,6 +81,12 @@
 ##'   0.8} will place the legend 80\% of the distance from the top of the
 ##'   figure, horizontally centered.
 ##'
+##' 	  If an epmGrid object was plotted with \code{\link{plot.epmGrid}}, and if
+##' 	  \code{use_tmap = FALSE} was specified, and if that plot was assigned to
+##' 	  a variable, then you can supply that variable here to the \code{params}
+##'   argument, and a number of options will be automatically handed over to 
+##'   this function.
+##'
 ##'   See examples.
 
 ##' @return Invisibly returns a list with the following components.
@@ -98,36 +107,52 @@
 ##' addLegend(r, location = 'right')
 ##' addLegend(r, location = 'top')
 ##' 
-##' #fine-tune placement
+##' # fine-tune placement
 ##' plot(r, legend = FALSE)
 ##' addLegend(r, location=c(181000, 181100, 330500, 331500), side = 4)
+##'
+##' # Using the params option
+##' xx <- plot(tamiasEPM, use_tmap = FALSE, legend = FALSE, 
+##' col = viridisLite::magma)
+##' addLegend(tamiasEPM, params = xx, location = 'top')
 ##'  
 ##' @export
 
-addLegend <- function(r, direction, side, location = 'right', nTicks = 3, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp, isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
+addLegend <- function(r, params = NULL, direction, side, location = 'right', nTicks = 3, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp, isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
 	
 	# for testing
 	# r = tamiasEPM; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
-		
+	
+	if (!is.null(params)) {
+		log <- params$log
+		minmax <- params$minmax
+		minTaxCount <- params$minTaxCount
+		ramp <- params$colramp
+		alpha <- params$alpha
+		isInteger <- params$isInteger
+	} else {
+		alpha <- 1
+	}
+	
 	if (inherits(r, 'epmGrid')) {
 		
-		# if r is a epmGrid object that represents a metric that only makes sense for communities with multiple species, then we will ignore single-species grid cells when identifying the range of values for the legend. 
 		plotMetric <- attributes(r)$metric
-	
-		if (plotMetric %in% c('range', 'mean_NN_dist', 'min_NN_dist', 'variance', 'disparity', 'rangePCA', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloDisparity', 'PSV')) {
-			# determine which cells have just 1 species
-			singleSpCells <- singleSpCellIndex(r)
 		
+		if (minTaxCount > 1) {
+			# determine which cells have too few species
+			## we do minTaxCount - 1 because we want to identify the cells to exclude.
+			tooFewInd <- spCountIndex(r, 1:(minTaxCount - 1))
+
 			if (inherits(r[[1]], 'sf')) {
-				grid_multiSp <- r[[1]][- singleSpCells,]
+				grid_multiSp <- r[[1]][- tooFewInd,]
 			} else {
 				grid_multiSp <- r[[1]][plotMetric]
-				grid_multiSp[singleSpCells] <- NA
+				grid_multiSp[tooFewInd] <- NA
 			}
 			r[[1]] <- grid_multiSp					
-		}	
-			
-		r <- r[[1]][attributes(r)$metric]
+		} else {		
+			r <- r[[1]][attributes(r)$metric]
+		}
 	}
 	
 	if (inherits(r, 'RasterLayer')) {
@@ -174,6 +199,16 @@ addLegend <- function(r, direction, side, location = 'right', nTicks = 3, adj = 
 		} else {
 			pal <- grDevices::colorRampPalette(ramp)(ncolors)
 		}
+	}
+	
+	if (alpha != 1) {
+		pal <- adjustcolor(pal, alpha.f = alpha)
+	}
+
+	if (log) {
+		r$loggedMetric <- log(r[[plotMetric]])
+		plotMetric <- 'loggedMetric'
+		isInt <- FALSE
 	}
 	
 	# #if minmax provided, use to generate linear color breaks

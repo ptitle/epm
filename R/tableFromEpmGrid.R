@@ -7,8 +7,7 @@
 ##'  \code{SpatRaster}, \code{RasterLayer} or \code{RasterStack}. All should
 ##'  have the same projection.
 ##'@param n number of cells to randomly subsample, no subsampling if \code{NULL}
-##'@param dropSingleSpCells logical; should cells with single species be
-##'  excluded?
+##'@param minTaxCount integer; cells with at least this many taxa will be included. 
 ##'@param coords if NULL, then points are sampled as needed, otherwise, data
 ##'  will be extracted at these specified coordinates.
 ##'
@@ -41,18 +40,18 @@
 ##' meanPat <- gridMetrics(tamiasEPM, metric='meanPatristic')
 ##'
 ##' tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
-##' dropSingleSpCells = TRUE)
+##' minTaxCount = 2)
 ##'
 ##' # from predetermined set of coordinates
 ##' pts <- sf::st_sample(tamiasEPM[[1]], size = 10)
 ##' tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
-##' dropSingleSpCells = FALSE, coords = pts)
+##' minTaxCount = 1, coords = pts)
 ##'
 ##'@export
 
-tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = NULL) {
+tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL) {
     
-    # x <- list(tamiasEPM, morphoDisp, meanPat); n = 100; dropSingleSpCells = TRUE; coords = NULL
+    # x <- list(tamiasEPM, morphoDisp, meanPat); n = 100; minTaxCount = 2; coords = NULL
 
 	x <- list(...)
 	
@@ -83,15 +82,15 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 	if (is.null(coords)) {
 		# first item will be used as a template
 		if (inherits(x[[1]], 'epmGrid')) {
-			if (dropSingleSpCells) {
-				singleSpCells <- singleSpCellIndex(x[[1]])
+			if (minTaxCount > 1) {
+				tooFewInd <- spCountIndex(x[[1]], count = 1:(minTaxCount - 1))
 				if (inherits(x[[1]][[1]], 'sf')) {
-					grid_multiSp <- x[[1]][[1]][- singleSpCells,]
+					grid_multiSp <- x[[1]][[1]][- tooFewInd,]
 				} else {
 					grid_multiSp <- x[[1]][[1]][attributes(x[[1]])$metric]
-					grid_multiSp[singleSpCells] <- NA
+					grid_multiSp[tooFewInd] <- NA
 				}
-				rm(singleSpCells)
+				rm(tooFewInd)
 			} else {
 				if (inherits(x[[1]][[1]], 'sf')) {
 					grid_multiSp <- x[[1]][[1]]
@@ -122,15 +121,15 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 		for (i in 2:length(x)) {
 			
 			if (inherits(x[[i]], 'epmGrid')) {
-				if (dropSingleSpCells) {				
-					singleSpCells <- singleSpCellIndex(x[[i]])
+				if (minTaxCount > 1) {				
+				    tooFewInd <- spCountIndex(x[[i]], count = 1:(minTaxCount - 1))
 					if (inherits(x[[i]][[1]], 'sf')) {
-						grid_multiSp <- x[[i]][[1]][- singleSpCells,]
+						grid_multiSp <- x[[i]][[1]][- tooFewInd,]
 					} else {
 						grid_multiSp <- x[[i]][[1]][attributes(x[[i]])$metric]
-						grid_multiSp[singleSpCells] <- NA
+						grid_multiSp[tooFewInd] <- NA
 					}
-					rm(singleSpCells)
+					rm(tooFewInd)
 				} else {
 					if (inherits(x[[i]][[1]], 'sf')) {
 						grid_multiSp <- x[[i]][[1]]
@@ -212,16 +211,16 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 	for (i in 1:length(x)) {
 
 		if (inherits(x[[i]], 'epmGrid')) {
-			if (dropSingleSpCells) {				
-				singleSpCells <- singleSpCellIndex(x[[i]])
+			if (minTaxCount > 1) {				
+			    tooFewInd <- spCountIndex(x[[i]], count = 1:(minTaxCount - 1))
 				if (inherits(x[[i]][[1]], 'sf')) {
-					grid_multiSp <- x[[i]][[1]][- singleSpCells,]
+					grid_multiSp <- x[[i]][[1]][- tooFewInd,]
 					grid_multiSp <- grid_multiSp[attributes(x[[i]])$metric]
 				} else {
 					grid_multiSp <- x[[i]][[1]][attributes(x[[i]])$metric]
-					grid_multiSp[singleSpCells] <- NA
+					grid_multiSp[tooFewInd] <- NA
 				}
-				rm(singleSpCells)
+				rm(tooFewInd)
 			} else {
 				if (inherits(x[[i]][[1]], 'sf')) {
 					grid_multiSp <- x[[i]][[1]][attributes(x[[i]])$metric]
@@ -284,154 +283,6 @@ tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = N
 }
 
 
-# # alternative approach: Rather than store all points that exist in template item (which could be huge),
-# # build a SpatRaster such that each cell is a count of the layers that have data in those cells.
-
-# tableFromEpmGrid <- function(..., n = NULL, dropSingleSpCells = TRUE, coords = NULL) {
-
-	# x <- list(...)
-	
-	# if (!all(sapply(x, inherits, c('epmGrid', 'sf', 'SpatialPolygonsDataFrame', 'RasterLayer', 'RasterStack', 'SpatRaster')))) {
-		# stop('Not all inputs are of an acceptable class.')
-	# }
-	
-	# # coerce any RasterLayer or RasterStack objects to SpatRaster
-	# for (i in 1:length(x)) {
-		# if (class(x[[i]]) %in% c('RasterStack', 'RasterLayer'))) {
-			# x[[i]] <- as(x[[i]], 'SpatRaster')
-		# }
-	# }
-		
-	# # check projections
-	# xproj <- vector('list', length(x))
-	# for (i in 1:length(x)) {
-		# if (inherits(x[[i]], 'epmGrid')) {
-			# xproj[[i]] <- attributes(x[[i]])$crs
-		# } else {
-			# xproj[[i]] <- sf::st_crs(x[[i]])$input
-		# }
-	# }
-	# if (length(unique(xproj)) > 1) {
-		# stop('Not all inputs have the same projection.')
-	# }
-
-	# if (is.null(coords)) {
-		
-		# # create reference grid from first item
-		# if (inherits(x[[1]], 'epmGrid')) {
-			# if (dropSingleSpCells) {
-				# singleSpCells <- singleSpCellIndex(x[[1]])
-				# if (inherits(x[[1]][[1]], 'sf')) {
-					# grid_multiSp <- x[[1]][[1]][- singleSpCells,]
-					# grid_multiSp <- grid_multiSp[attributes(x[[1]])$metric]
-				# } else {
-					# grid_multiSp <- x[[1]][[1]][attributes(x[[1]])$metric]
-					# grid_multiSp[singleSpCells] <- NA
-				# }
-				# rm(singleSpCells)
-			# } else {
-				# if (inherits(x[[1]][[1]], 'sf')) {
-					# grid_multiSp <- x[[1]][[1]]
-				# } else {
-					# grid_multiSp <- x[[1]][[1]][attributes(x[[1]])$metric]
-				# }
-			# }
-			
-			# if (inherits(grid_multiSp, 'sf')) {
-				# templateGrid <- terra::rast(terra::vect(grid_multiSp))
-				# templateGrid <- terra::rasterize(terra::vect(grid_multiSp), templateGrid)
-			# } else {
-				# templateGrid <- grid_multiSp
-			# }
-			# rm(grid_multiSp)
-
-		# } else if (inherits(x[[1]], 'sf')) {
-			# templateGrid <- terra::rast(terra::vect(sf::st_geometry(x[[1]])))
-			# templateGrid <- terra::rasterize(terra::vect(grid_multiSp), templateGrid)
-			
-		# } else if (inherits(x[[1]], 'SpatRaster')) {
-			# templateGrid <- terra::app(x[[1]], fun = anyNA) + 1
-			# templateGrid[templateGrid == 2] <- NA
-			
-		# } else if (inherits(x[[1]], 'SpatialPolygonsDataFrame')) {
-			# tmp <- sf::st_as_sfc(x[[1]], crs = sf::st_crs(x[[1]]))
-			# templateGrid <- terra::rast(terra::vect(tmp))
-			# templateGrid <- terra::rasterize(terra::vect(grid_multiSp), templateGrid)
-			# rm(tmp)
-		# }
-
-		# templateGrid[!is.na(templateGrid)] <- 1
-		
-
-		# # for each other item, determine which cells intersect with template, and which of those have data
-		# resList <- vector('list', length(x))
-	
-		# for (i in 2:length(x)) {
-			
-			# if (inherits(x[[i]], 'epmGrid')) {
-				# if (dropSingleSpCells) {				
-					# singleSpCells <- singleSpCellIndex(x[[i]])
-					# if (inherits(x[[i]][[1]], 'sf')) {
-						# grid_multiSp <- x[[i]][[1]][- singleSpCells,]
-						# grid_multiSp <- grid_multiSp[attributes(x[[i]])$metric]
-					# } else {
-						# grid_multiSp <- x[[i]][[1]][attributes(x[[i]])$metric]
-						# grid_multiSp[singleSpCells] <- NA
-					# }
-					# rm(singleSpCells)
-				# } else {
-					# if (inherits(x[[i]][[1]], 'sf')) {
-						# grid_multiSp <- x[[i]][[1]]
-					# } else {
-						# grid_multiSp <- x[[i]][[1]][attributes(x[[i]])$metric]
-					# }
-				# }
-				
-				# # get the points that intersect with templateCentroids and that have data
-				# if (inherits(grid_multiSp, 'sf')) {
-					# tmp <- terra::rasterize(terra::vect(grid_multiSp), templateGrid)
-				# } else {
-					# tmp <- terra::extract() ??????
-				# }	
-				
-				# ## stopped here for now
-			
-			# } else if (inherits(x[[i]], 'sf')) {
-				# datCol <- setdiff(colnames(x[[i]]), attributes(x[[i]])$sf_column)
-				# if (length(datCol) > 1) {
-					# stop(paste('List item', i, 'contains more than one attribute.'))
-				# }
-				# tmp <- sf::st_join(sf::st_as_sf(templateCentroids), x[[i]], join = sf::st_within)
-				# resList[[i]] <- which(!is.na(tmp[[datCol]]))
-	
-			# } else if (inherits(x[[i]], 'SpatRaster')) {
-				# rasterSum <- terra::app(x[[i]], fun = sum)
-				# tmp <- terra::extract(rasterSum, sf::st_coordinates(templateCentroids))
-				# resList[[i]] <- which(!is.na(tmp))
-				
-			# # } else if (inherits(x[[i]], 'RasterLayer')) {
-				# # tmp <- raster::extract(x[[i]], sf::st_coordinates(templateCentroids))
-				# # resList[[i]] <- which(!is.na(tmp))
-			
-			# # } else if (inherits(x[[i]], 'RasterStack')) {
-				# # rasterSum <- raster::calc(x[[i]], fun = sum)
-				# # tmp <- raster::extract(rasterSum, sf::st_coordinates(templateCentroids))
-				# # resList[[i]] <- which(!is.na(tmp))
-		
-			# } else if (inherits(x[[i]], 'SpatialPolygonsDataFrame')) {
-				# if (ncol(x[[i]]@data) > 1) {
-					# stop(paste('List item', i, 'contains more than one attribute.'))
-				# }
-				# tmp <- sf::st_as_sfc(x[[i]], crs = sf::st_crs(x[[i]]))
-				# datCol <- setdiff(colnames(tmp), attributes(tmp)$sf_column)
-				# tmp <- sf::st_join(sf::st_as_sf(templateCentroids), tmp, join = sf::st_within)
-				# resList[[i]] <- which(!is.na(tmp[[datCol]]))
-	
-			# } else {
-				# stop(paste('Class of item', i, 'not expected.'))
-			# }
-		# }
-		
 
 
 

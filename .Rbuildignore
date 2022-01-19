@@ -6,3 +6,4 @@
 ^spatialAutocorrTesting\.R$
 ^tester\.R$
 ^\.github$
+^testingScript\.R$

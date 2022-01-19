@@ -6,6 +6,7 @@
 \usage{
 addLegend(
   r,
+  params = NULL,
   direction,
   side,
   location = "right",
@@ -29,6 +30,9 @@ addLegend(
 }
 \arguments{
 \item{r}{the epmGrid, rasterLayer, SpatRaster or sf object that has been plotted}
+
+\item{params}{If an epmGrid plot was saved to a variable, provide that here.
+Contents will override other arguments.}
 
 \item{direction}{direction of color ramp. If omitted, then direction is
 automatically inferred, otherwise can be specified as \code{horizontal} or
@@ -115,6 +119,12 @@ A number of predefined locations exist in this function to make it
   0.8} will place the legend 80\% of the distance from the top of the
   figure, horizontally centered.
 
+	  If an epmGrid object was plotted with \code{\link{plot.epmGrid}}, and if
+	  \code{use_tmap = FALSE} was specified, and if that plot was assigned to
+	  a variable, then you can supply that variable here to the \code{params}
+  argument, and a number of options will be automatically handed over to 
+  this function.
+
   See examples.
 }
 \examples{
@@ -125,9 +135,14 @@ plot(r, legend = FALSE)
 addLegend(r, location = 'right')
 addLegend(r, location = 'top')
 
-#fine-tune placement
+# fine-tune placement
 plot(r, legend = FALSE)
 addLegend(r, location=c(181000, 181100, 330500, 331500), side = 4)
+
+# Using the params option
+xx <- plot(tamiasEPM, use_tmap = FALSE, legend = FALSE, 
+col = viridisLite::magma)
+addLegend(tamiasEPM, params = xx, location = 'top')
  
 }
 \author{

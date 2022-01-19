@@ -4,7 +4,7 @@
 \alias{tableFromEpmGrid}
 \title{Data table from epmGrid}
 \usage{
-tableFromEpmGrid(..., n = NULL, dropSingleSpCells = TRUE, coords = NULL)
+tableFromEpmGrid(..., n = NULL, minTaxCount = 1, coords = NULL)
 }
 \arguments{
 \item{...}{objects of class \code{epmGrid}, \code{sf}, \code{sp},
@@ -13,8 +13,7 @@ have the same projection.}
 
 \item{n}{number of cells to randomly subsample, no subsampling if \code{NULL}}
 
-\item{dropSingleSpCells}{logical; should cells with single species be
-excluded?}
+\item{minTaxCount}{integer; cells with at least this many taxa will be included.}
 
 \item{coords}{if NULL, then points are sampled as needed, otherwise, data
 will be extracted at these specified coordinates.}
@@ -52,12 +51,12 @@ morphoDisp <- gridMetrics(tamiasEPM, metric='disparity')
 meanPat <- gridMetrics(tamiasEPM, metric='meanPatristic')
 
 tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
-dropSingleSpCells = TRUE)
+minTaxCount = 2)
 
 # from predetermined set of coordinates
 pts <- sf::st_sample(tamiasEPM[[1]], size = 10)
 tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
-dropSingleSpCells = FALSE, coords = pts)
+minTaxCount = 1, coords = pts)
 
 }
 \author{

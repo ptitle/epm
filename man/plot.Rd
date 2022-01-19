@@ -11,8 +11,8 @@
   col,
   basemap = "worldmap",
   colorRampRange = NULL,
-  ignoreSingleSpCells = "auto",
-  singleSpCol = gray(0.9),
+  minTaxCount = "auto",
+  ignoredColor = gray(0.9),
   lwd,
   borderCol = "black",
   alpha = 1,
@@ -44,11 +44,13 @@ color ramp. Automatically inferred if set to \code{NULL}.
 This is relevant if multiple plots are desired on the same scale. 
 See \code{\link{getMultiMapRamp}}.}
 
-\item{ignoreSingleSpCells}{can be TRUE, FALSE or 'auto'. Should cells 
-containing only 1 taxon be grayed out? This is predetermined for all 
-metrics in \code{\link{gridMetrics}} if  ignoreSingleSpCells = 'auto'.}
+\item{minTaxCount}{an integer, or 'auto'. Should cells 
+containing certain numbers of taxa be grayed out? For example, 
+should single-taxon cells be ignored because the metric only makes sense 
+for multi-taxon cells? This is predetermined for all metrics in
+ \code{\link{gridMetrics}} if  minTaxCount = 'auto'.}
 
-\item{singleSpCol}{color for single-species cells. See details.}
+\item{ignoredColor}{color for ignored cells. See details.}
 
 \item{lwd}{grid cell border width}
 
@@ -73,7 +75,10 @@ details without waiting for slow polygon plotting.}
 if \code{use_tmap = FALSE}}
 }
 \value{
-Nothing is returned.
+Nothing is returned if plotting with tmap (the default). 
+If plotting with \code{use_tmap = FALSE}, and if the plot is directed to 
+a variable, then this variable will contain relevant information to be passed
+on to the function \code{\link{addLegend}}:
 }
 \description{
 Plot a epmGrid object. This function uses the tmap package 
@@ -83,10 +88,19 @@ for plotting by default.
 If \code{x} is a metric as generated with \code{gridMetrics} 
 that returns 0 for single-species cells, then those cells 
 (that have a value of 0) will be plotted in gray (or any color as specified 
-with \code{singleSpCol}).
+with \code{ignoredColor}) if \code{minTaxCount = 'auto'}. You can specify
+other values as well. For instance, if you use the function
+\code{\link{customGridMetric}} to calculate phylogenetic signal, which is 
+a metric that only makes sense for cells with 3 or more taxa, then you could 
+then specify \code{minTaxCount = 3}. Setting \code{minTaxCount = 1} shows all
+cels with data.
 
 If the tmap package is not installed, then this function will default 
 to plotting with \code{sf::plot}.
+
+If you would like more control over the legend, then plot with 
+\code{tmap = FALSE} and \code{legend = FALSE}, and then call the function
+\code{\link{addLegend}}.
 }
 \examples{
 plot(tamiasEPM)
@@ -112,6 +126,11 @@ map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 # view your plot in the web-browser as a dynamic plot.
 plot(tamiasEPM, basemap = 'interactive')
 }
+
+# Adding a custom legend, and passing along arguments via params
+xx <- plot(tamiasEPM, use_tmap = FALSE, legend = FALSE, 
+col = viridisLite::magma)
+addLegend(tamiasEPM, params = xx, location = 'bottom')
 
 }
 \author{
