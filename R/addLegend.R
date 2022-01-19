@@ -132,6 +132,8 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 		isInteger <- params$isInteger
 	} else {
 		alpha <- 1
+		log <- FALSE
+		minTaxCount <- 1
 	}
 	
 	if (inherits(r, 'epmGrid')) {
@@ -202,7 +204,7 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 	}
 	
 	if (alpha != 1) {
-		pal <- adjustcolor(pal, alpha.f = alpha)
+		pal <- grDevices::adjustcolor(pal, alpha.f = alpha)
 	}
 
 	if (log) {
