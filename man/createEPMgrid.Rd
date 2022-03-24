@@ -18,7 +18,7 @@ createEPMgrid(
   nThreads = 1,
   template = NULL,
   verbose = FALSE,
-  force.data.table = FALSE
+  use.data.table = "auto"
 )
 }
 \arguments{
@@ -71,7 +71,7 @@ that can be used to get extent and resolution. If \code{cellType =
 \item{verbose}{if TRUE, list out all species that are dropped/excluded,
 rather than counts.}
 
-\item{force.data.table}{if FALSE, this is determined by the size of the
+\item{use.data.table}{if \code{'auto'}, this is determined by the size of the
 dataset. Primarily intended for debugging.}
 }
 \value{

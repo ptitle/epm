@@ -53,7 +53,7 @@
 ##'@param verbose if TRUE, list out all species that are dropped/excluded,
 ##'  rather than counts.
 ##'
-##'@param force.data.table if FALSE, this is determined by the size of the
+##'@param use.data.table if \code{'auto'}, this is determined by the size of the
 ##'  dataset. Primarily intended for debugging.
 ##'
 ##'
@@ -215,9 +215,9 @@
 ##'
 ##'@export
 
-createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', percentThreshold = 0.25, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, verbose = FALSE, force.data.table = FALSE) {
+createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', percentThreshold = 0.25, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, verbose = FALSE, use.data.table = 'auto') {
 	
-	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; percentThreshold = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; verbose = TRUE; force.data.table = FALSE
+	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; percentThreshold = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; verbose = TRUE; use.data.table = 'auto';
 	
 	# test with occurrences
 	# spOccList <- lapply(tamiasPolyList, function(x) sf::st_sample(x, size = 10, type= 'random'))
@@ -605,11 +605,11 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		stop('gridTemplate class mismatch.')
 	}
 	
-	if (inherits(try(matrix(0, nrow = nGridCells, ncol = length(spGridList))), 'try-error') | force.data.table) {
+	if (inherits(try(matrix(0, nrow = nGridCells, ncol = length(spGridList))), 'try-error') | use.data.table == TRUE) {
 		# too much memory required. Use data.table approach
 		
 		if (!requireNamespace('data.table', quietly = TRUE)) {
-			stop('Not enough memory available. Please install the data.table package to switch to an alternative approach')
+			stop('Not enough memory available. Please install the data.table package to switch to an alternative approach.')
 		}
 
 		mat <- data.table::data.table('cell' = integer(), 'sp' = character(), key = 'cell')
@@ -655,10 +655,11 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		}
 		
 		# create condensed version that encodes species at each site
-		if (requireNamespace('data.table', quietly = TRUE)) {
+		# This creates a character vector, concatenating each row in mat with -
+		if (requireNamespace('data.table', quietly = TRUE) & (use.data.table == TRUE | use.data.table == 'auto')) {
 			matCondensed <- fpaste(data.table::as.data.table(mat), "-")$V1
 		} else {
-			matCondensed <- do.call(paste, c(mat, sep="-"))
+			matCondensed <- do.call(paste, c(as.data.frame(mat), sep="-"))
 		}
 		uniqueComm <- unique(matCondensed)
 		
@@ -1591,7 +1592,7 @@ processSiteBySpeciesMatrix <- function(mat, gridTemplate) {
 	if (requireNamespace('data.table', quietly = TRUE)) {
 		matCondensed <- fpaste(data.table::as.data.table(mat), "-")$V1
 	} else {
-		matCondensed <- do.call(paste, c(mat, sep="-"))
+		matCondensed <- do.call(paste, c(as.data.frame(mat), sep="-"))
 	}
 	uniqueComm <- unique(matCondensed)
 	
