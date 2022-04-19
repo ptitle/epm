@@ -19,16 +19,18 @@
 ##' @rdname identify
 ##' @aliases identify.epmGrid
 ##' @export
+##' @export identify.epmGrid
 
 identify.epmGrid <- function(x, returnCell = FALSE, ...) {
 	
+	colramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
 	
 	if (inherits(x, 'epmGrid')) {
 		plotMetric <- attributes(x)$metric
 		
 		if (inherits(x[[1]], 'sf')) {
 			
-			plot(x[[1]][plotMetric], lwd = 0.5, reset = FALSE, ...)
+			plot(x[[1]][plotMetric], lwd = 0.5, reset = FALSE, pal = colramp, ...)
 			cell <- identify(sf::st_coordinates(sf::st_centroid(sf::st_geometry(x[[1]]))), n = 1, labels = '')
 			
 			plot(sf::st_centroid(sf::st_geometry(x[[1]])[cell]), col = 'orange', add = TRUE, pch = 3)

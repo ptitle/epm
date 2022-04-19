@@ -13,7 +13,7 @@ reduceToCommonTaxa(x)
 new \code{epmGrid} object.
 }
 \description{
-An EpmGrid object may contain more taxa with morphological
+An epmGrid object may contain more taxa with morphological
 	data than taxa with phylogenetic information, or vice versa. This 
 	function subsets all epmGrid components to the set of taxa shared 
 	across geographic, phenotypic and phylogenetic datasets. This might

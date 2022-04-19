@@ -29,8 +29,9 @@ a matrix/dataframe with two columns or a numeric vector of c(long, lat).}
 
 \item{legend}{boolean; should legend be included?}
 
-\item{col}{either a vector of color names that will be interpolated, or a color ramp
-function that takes an integer (see for example \code{\link{colorRampPalette}}).}
+\item{col}{either a vector of color names that will be interpolated, 
+or a color ramp function that takes an integer 
+(see for example \code{\link{colorRampPalette}}).}
 
 \item{lwd}{grid cell border width}
 
@@ -40,12 +41,13 @@ If \code{'interactive'}, then the \code{mapview} package is used.}
 
 \item{borderCol}{color for grid cell borders}
 
-\item{alpha}{opacity of all colors and borders, ranging from 0 (fully transparent) 
-to 1 (fully opaque)}
+\item{alpha}{opacity of all colors and borders, ranging from 0 
+(fully transparent) to 1 (fully opaque)}
 
 \item{includeFrame}{boolean; include frame around plot?}
 
-\item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead of tmap package}
+\item{use_tmap}{boolean; if FALSE, plotting will be done via sf instead 
+of tmap package}
 
 \item{add}{logical, add to existing plot?}
 }
@@ -53,12 +55,12 @@ to 1 (fully opaque)}
 Nothing is returned.
 }
 \description{
-For a set of specified coordinates, plot a richness map for the species
-	that are found at those coordinates.
+For a set of specified coordinates, plot a richness map for 
+the species that are found at those coordinates.
 }
 \details{
-Assemblage dispersion fields represent an overlapping of geographic ranges
-	for the taxa that occur in the focal grid cells.
+Assemblage dispersion fields represent an overlapping of 
+geographic ranges for the taxa that occur in the focal grid cells.
 }
 \examples{
 plotDispersionField(tamiasEPM, c(-1944951, 69588.74))
@@ -66,8 +68,9 @@ plotDispersionField(tamiasEPM, c(-1944951, 69588.74), use_tmap = FALSE)
 
 }
 \references{
-Graves, G. R., & Rahbek, C. (2005). Source pool geometry and the assembly of continental avifaunas. 
-Proceedings of the National Academy of Sciences, 102(22), 7871–7876.
+Graves, G. R., & Rahbek, C. (2005). Source pool geometry and the assembly 
+of continental avifaunas. Proceedings of the National Academy of Sciences, 
+102(22), 7871–7876.
 }
 \author{
 Pascal Title

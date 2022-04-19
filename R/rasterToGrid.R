@@ -1,7 +1,7 @@
 ##' @title Convert raster to sf grid
 ##'
-##' @description Convert a raster to sf polygons object, matching the attributes of the
-##' 	target object. 
+##' @description Convert a raster to sf polygons object, matching the attributes
+##'  of the target object. 
 ##'
 ##' @param x rasterLayer or rasterStack or SpatRaster
 ##' @param target epmGrid or sf object

@@ -9,9 +9,11 @@ writeEpmSpatial(x, filename, ...)
 \arguments{
 \item{x}{object of class \code{epmGrid}}
 
-\item{filename}{filename to be written to, with the appropriate file extension}
+\item{filename}{filename to be written to, with the appropriate file
+extension}
 
-\item{...}{additional arguments to be passed to \code{\link[sf]{st_write}} or \code{\link[terra]{writeRaster}}.}
+\item{...}{additional arguments to be passed to \code{\link[sf]{st_write}} or
+\code{\link[terra]{writeRaster}}.}
 }
 \value{
 the object is written to disk, nothing is returned.
@@ -20,16 +22,18 @@ the object is written to disk, nothing is returned.
 Writes the grid to disk for use in other GIS applications.
 }
 \details{
-For hexagonal grid systems, appending .shp to the filename will result in a shapefile,
-whereas appending .gpkg results in a geopackage file. See \code{\link[sf]{st_write}} for 
-additional options. For square grid cells, appending .tif will result in a GeoTiff file being written
-to disk. If no extensions are included with the filename, then this function will default to 
-geopackage files for hexagonal grids and GeoTiffs for square grids.
+For hexagonal grid systems, appending .shp to the filename will
+ result in a shapefile, whereas appending .gpkg results in a geopackage
+ file. See \code{\link[sf]{st_write}} for additional options. For square
+ grid cells, appending .tif will result in a GeoTiff file being written to
+ disk. If no extensions are included with the filename, then this function
+ will default to geopackage files for hexagonal grids and GeoTiffs for
+ square grids.
 }
 \examples{
 \dontrun{
 tamiasEPM
-tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 cellType = 'square', method = 'centroid')
 writeEpmSpatial(tamiasEPM, filename = 'tamiasGrid.shp')
 writeEpmSpatial(tamiasEPM, filename = 'tamiasGrid.gpkg')

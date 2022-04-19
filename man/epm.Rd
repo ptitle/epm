@@ -7,11 +7,40 @@
 \description{
 An R package that facilitates the aggregation of species'
 geographic ranges from vector or raster spatial data, and that enables
-the calculation of various morphological and phylogenetic community metrics
+the calculation of various morphological and phylogenetic metacommunity metrics
 across geography.
 
 A detailed wiki for the R package can be found on the epm github page:
 \url{https://github.com/ptitle/epm/wiki#table-of-contents}
+}
+\details{
+\strong{Creating and enhancing an epmGrid object} \cr
+Use \code{\link{createEPMgrid}} to create an epmGrid object from species spatial data. \cr
+Optionally, you can draw the spatial extent that you would like to use with \code{\link{interactiveExtent}}.  \cr
+Add in species attributes with \code{\link{addTraits}}, and/or a phylogeny with \code{\link{addPhylo}}. \cr
+Use the function \code{\link{reduceToCommonTaxa}} to reduce the epmGrid object to species that are present for all data types. \cr
+ \cr
+\strong{Calculating diversity metrics} \cr
+Calculate various diversity metrics with \code{\link{gridMetrics}}, or define your own, using \code{\link{customGridMetric}}. \cr
+Calculate moving window turnover metrics with \code{\link{betadiv_taxonomic}}, \code{\link{betadiv_phylogenetic}}, \code{\link{betadiv_disparity}}. You can also define your own beta diversity metric with \code{\link{customBetaDiv}}. \cr
+If you have a posterior set of trees, summarize phylogenetic uncertainty with \code{\link{summarizeEpmGridList}}. \cr
+\cr
+\strong{Plotting epmGrid objects} \cr
+Plot epmGrid object with \code{\link{plot.epmGrid}}. \cr
+You get finer control over the legend with \code{\link{addLegend}}. \cr
+The function \code{\link{getMultiMapRamp}} will be helpful if you are trying to plot multiple epmGrid objects on the same color scale.  \cr
+Use \code{\link{plotDispersionField}} to plot the assemblage dispersion field for a given site. \cr
+ \cr
+\strong{Getting derived data from epmGrid objects} \cr
+Use \code{\link{calcMeanShape}} to get mean morphological shape per grid cell. \cr
+Use \code{\link{coordsFromEpmGrid}} to get the spatial coordinates of specific grid cells. \cr
+Use \code{\link{extractFromEpmGrid}} to get the species that are found at certain coordinates or within a defined polygon. \cr
+Use \code{\link{generateOccurrenceMatrix}} to produce a species-by-site presence/absence matrix. \cr
+Use \code{\link{tableFromEpmGrid}} to pull data from epmGrids and rasters from a set of random points for statistical analysis.  \cr
+ \cr
+\strong{Writing to disk} \cr
+You can save an epmGrid with \code{\link{write.epmGrid}}, and read it back in with \code{\link{read.epmGrid}}.  \cr
+You can also write an epmGrid object to a spatial file format for use in GIS software with \code{\link{writeEpmSpatial}}. \cr
 }
 \author{
 Pascal O. Title, Donald L. Swiderski, Miriam L. Zelditch

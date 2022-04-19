@@ -9,27 +9,28 @@ addTraits(x, data, replace = FALSE, verbose = FALSE)
 \arguments{
 \item{x}{object of class \code{epmGrid}}
 
-\item{data}{named numeric vector, matrix or dataframe with rownames corresponding to species in \code{x}
-or pairwise matrix with row and column names corresponding to species in \code{x}. If pairwise matrix,
-the upper triangle of the matrix will be used for calculations.}
+\item{data}{named numeric vector, matrix or dataframe with rownames
+corresponding to species in \code{x} or pairwise matrix with row and
+column names corresponding to species in \code{x}. If pairwise matrix, the
+upper triangle of the matrix will be used for calculations.}
 
-\item{replace}{boolean; if data is already a part of \code{x},
-should it be replaced?}
+\item{replace}{boolean; if data is already a part of \code{x}, should it be
+replaced?}
 
-\item{verbose}{if TRUE, list out all species that are 
-dropped/excluded, rather than counts.}
+\item{verbose}{if TRUE, list out all species that are dropped/excluded,
+rather than counts.}
 }
 \value{
-object of class \code{epmGrid}, with trait data
-as the list element named \code{data}.
+object of class \code{epmGrid}, with trait data as the list element
+  named \code{data}.
 }
 \description{
 Add univariate or multivariate trait data to an epmGrid object.
 }
 \details{
 If any species in \code{data} are not found in the epmGrid
-geographical data, then those species will be dropped from \code{data}, and
-a warning will be issued.
+  geographical data, then those species will be dropped from \code{data},
+  and a warning will be issued.
 }
 \examples{
 tamiasEPM

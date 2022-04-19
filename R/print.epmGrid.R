@@ -19,9 +19,16 @@ print.epmGrid <- function(x, ...) {
 	
 	# if phylogeny present in object, then report info
 	if (inherits(x[['phylo']], 'phylo')) {
-		phylo <- length(intersect(x[['geogSpecies']], x[['phylo']]$tip.label))
+		x[['phylo']] <- list(x[['phylo']])
+		class(x[['phylo']]) <- 'multiPhylo'
+	}
+	
+	if (inherits(x[['phylo']], 'multiPhylo')) {
+		phylo <- length(intersect(x[['geogSpecies']], x[['phylo']][[1]]$tip.label))
+		nTrees <- length(x[['phylo']])
 	} else {
 		phylo <- NA
+		nTrees <- 0
 	}
 	
 	metric <- attributes(x)$metric
@@ -56,7 +63,7 @@ print.epmGrid <- function(x, ...) {
 		cat('\tnumber of species shared between data and grid:', data, '\n')
 	}
 
-	cat('\tphylogeny present:', ifelse(is.na(phylo), 'No', 'Yes'), '\n')
+	cat('\tphylogeny present:', ifelse(is.na(phylo), 'No', paste0('Yes (', nTrees, ifelse(nTrees > 1, ' trees)', ' tree)'))), '\n')
 	if (!is.na(phylo)) {
 		cat('\tnumber of species shared between phylogeny and grid:', phylo)
 	}

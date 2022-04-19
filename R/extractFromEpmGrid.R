@@ -1,27 +1,27 @@
 ##' @title Extract from epmGrid
 ##'
-##' @description Return species from intersection between spatial points or polygons
-##' and a epmGrid object.
+##' @description Return species from intersection between spatial points or
+##'   polygons and a epmGrid object.
 ##'
 ##' @param x object of class \code{epmGrid}
 
-##' @param spatial coordinates as either a spatial points object (sp or sf), 
-##' 	a matrix/dataframe with two columns, a numeric vector of c(long, lat), 
-##'		or as a spatial polygon object (sp or sf).
+##' @param spatial coordinates as either a spatial points object (sp or sf), a
+##'   matrix/dataframe with two columns, a numeric vector of c(long, lat), or as
+##'   a spatial polygon object (sp or sf).
 ##'
-##' @param returnCells boolean, if \code{TRUE}, cell indices are returned rather than taxa
-
-##' @param collapse boolean; if \code{TRUE}, then a vector of unique species 
-##' 	is returned, pooled from all cells, if \code{FALSE}, then list is 
-##' 	returned with species from every cell as intersected by \code{spatial}.
+##' @param returnCells boolean, if \code{TRUE}, cell indices are returned rather
+##'   than taxa
+##' @param collapse boolean; if \code{TRUE}, then a vector of unique species is
+##'   returned, pooled from all cells, if \code{FALSE}, then list is returned
+##'   with species from every cell as intersected by \code{spatial}.
 ##'
-##' @details If \code{spatial} is a spatial object, it will be transformed to the same 
-##' 	 projection as \code{x} if needed. If \code{spatial} is not a spatial object,
-#' 		it is assumed to be in the same projection as \code{x}.
+##' @details If \code{spatial} is a spatial object, it will be transformed to
+##'   the same projection as \code{x} if needed. If \code{spatial} is not a
+##'   spatial object, it is assumed to be in the same projection as \code{x}.
 ##'
-##' @return A vector of species if \code{collapse = TRUE}, or a list of species by
-##' 	cell if \code{collapse = FALSE}. If \code{returnCells = TRUE}, a vector of cell indices
-##' 	that correspond to the rows in the epmGrid sf object.
+##' @return A vector of species if \code{collapse = TRUE}, or a list of species
+##'   by cell if \code{collapse = FALSE}. If \code{returnCells = TRUE}, a vector
+##'   of cell indices that correspond to the rows in the epmGrid sf object.
 ##'
 ##' @author Pascal Title
 ##'
@@ -37,24 +37,24 @@
 ##' colnames(pts) <- c('x', 'y')
 ##' ptsSF <- st_as_sf(pts, coords = 1:2, crs = "epsg:4326")
 ##' pts <- st_coordinates(st_transform(ptsSF, crs = proj))
-##' 
+##'
 ##' # extract with table of coordinates
 ##' extractFromEpmGrid(tamiasEPM, pts)
-##' 
+##'
 ##' # extract with spatial points object
 ##' extractFromEpmGrid(tamiasEPM, ptsSF)
 ##'
 ##' # extract with spatial polygon
 ##' hull <- st_convex_hull(st_union(ptsSF))
 ##' extractFromEpmGrid(tamiasEPM, hull)
-##' 
-##' 
+##'
+##'
 ##' # returns each cell's contents
 ##' extractFromEpmGrid(tamiasEPM, hull, collapse=FALSE)
-##' 
+##'
 ##' # collapses results to unique set of species
 ##' extractFromEpmGrid(tamiasEPM, hull, collapse=TRUE)
-##' 
+##'
 ##' @export
 
 

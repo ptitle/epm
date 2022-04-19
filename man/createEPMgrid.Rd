@@ -18,132 +18,138 @@ createEPMgrid(
   nThreads = 1,
   template = NULL,
   verbose = FALSE,
-  force.data.table = FALSE
+  use.data.table = "auto"
 )
 }
 \arguments{
-\item{spDat}{a number of possible input formats are possible. See details below.}
+\item{spDat}{a number of possible input formats are possible. See details
+below.}
 
-\item{resolution}{vertical and horizontal spacing of grid cells, in units 
-of the polygons' or points' projection.}
+\item{resolution}{vertical and horizontal spacing of grid cells, in units of
+the polygons' or points' projection.}
 
-\item{method}{approach used for gridding. Either \code{centroid} or \code{percentOverlap}. See details below.}
+\item{method}{approach used for gridding. Either \code{centroid} or
+\code{percentOverlap}. See details below.}
 
 \item{cellType}{either \code{hexagon} or \code{square}. See details below.}
 
-\item{percentThreshold}{the percent that a species range must cover a grid cell to be considered present. Specified as a proportion.}
+\item{percentThreshold}{the percent that a species range must cover a grid
+cell to be considered present. Specified as a proportion.}
 
-\item{retainSmallRanges}{boolean; should small ranged species be dropped or preserved.
-See details.}
+\item{retainSmallRanges}{boolean; should small ranged species be dropped or
+preserved. See details.}
 
-\item{extent}{if 'auto', then the maximal extent of the polygons will be used. 
-If not 'auto', can be a SpatialPolygon, sf object, or raster, in which case the resulting epmGrid
-will be cropped and masked with respect to the polygon; or a spatial coordinates object, 
-from which an extent object will be generated; or a numeric vector of length 4 
-with minLong, maxLong, minLat, maxLat. If 'interactive', then an interactive plot
-will appear in which the user can draw the desired polygon extent. That extent will then be returned instead of an epmGrid object.}
+\item{extent}{if 'auto', then the maximal extent of the polygons will be
+used. If not 'auto', can be a SpatialPolygon, sf object, or raster, in
+which case the resulting epmGrid will be cropped and masked with respect to
+the polygon; or a spatial coordinates object, from which an extent object
+will be generated; or a numeric vector of length 4 with minLong, maxLong,
+minLat, maxLat. See \code{\link{interactiveExtent}} to draw your own
+extent.}
 
-\item{percentWithin}{The percentage of a species range that must be within the defined extent in order
-for that species to be included. This filter can be used to exclude species whose range barely enters
-the area of interest. The default value of 0 will disable this filter. If \code{extent == 'auto'},
-then this filter will also have no effect, as the extent is defined by the species' ranges.}
+\item{percentWithin}{The percentage of a species range that must be within
+the defined extent in order for that species to be included. This filter
+can be used to exclude species whose range barely enters the area of
+interest. The default value of 0 will disable this filter. If \code{extent
+== 'auto'}, then this filter will also have no effect, as the extent is
+defined by the species' ranges.}
 
-\item{checkValidity}{if \code{TRUE}, then check polygon validity and repair if needed, 
-using sf::st_make_valid.}
+\item{checkValidity}{if \code{TRUE}, then check polygon validity and repair
+if needed, using sf::st_make_valid.}
 
-\item{crs}{if supplying occurrence records in a non-spatial format, then you must specify the crs.
-For unprojected long/lat data, you can simply provide \code{crs = 4326}.}
+\item{crs}{if supplying occurrence records in a non-spatial format, then you
+must specify the crs. For unprojected long/lat data, you can simply provide
+\code{crs = 4326}.}
 
-\item{nThreads}{if > 1, then employ parallel computing. This won't necessarily improve runtime.}
+\item{nThreads}{if > 1, then employ parallel computing. This won't
+necessarily improve runtime.}
 
-\item{template}{an object of class \code{SpatRaster} or \code{RasterLayer} that can be used to 
-get extent and resolution. If \code{cellType = 'square'}, then the template will be used as the 
-reference grid.}
+\item{template}{an object of class \code{SpatRaster} or \code{RasterLayer}
+that can be used to get extent and resolution. If \code{cellType =
+'square'}, then the template will be used as the reference grid.}
 
-\item{verbose}{if TRUE, list out all species that are dropped/excluded, rather than counts.}
+\item{verbose}{if TRUE, list out all species that are dropped/excluded,
+rather than counts.}
 
-\item{force.data.table}{if FALSE, this is determined by the size of the dataset. Primarily intended
-for debugging.}
+\item{use.data.table}{if \code{'auto'}, this is determined by the size of the
+dataset. Primarily intended for debugging.}
 }
 \value{
-an object of class \code{epmGrid}. If \code{extent = 'interactive'}, then a polygon is returned.
+an object of class \code{epmGrid}.
 }
 \description{
-Creates an epmGrid object from a range of species-specific inputs.
+Creates an epmGrid object from a range of species-specific
+ inputs.
 }
 \details{
-Types of accepted inputs for argument \code{spDat}:
- 	\enumerate{
-	  \item a list of polygon objects (sf or sp), named with taxon names.
-	  \item a list of SpatRaster or RasterLayer grids, named with taxon names.
-	  \item a multi-layer RasterStack or multi-layer SpatRaster.
-	  \item a set of occurrence records, multiple accepted formats, see below.
-	  \item a site-by-taxon presence/absence matrix.
-	}
+Types of accepted inputs for argument \code{spDat}: 
+\enumerate{
+\item a list of polygon objects (sf or sp), named with taxon names. 
+\item a list of SpatRaster or RasterLayer grids, named with taxon names. \item a
+multi-layer RasterStack or multi-layer SpatRaster. 
+\item a set of occurrence records, multiple accepted formats, see below. 
+\item a site-by-taxon presence/absence matrix. 
+}
 
-	If input data consist of \strong{occurrence records} rather than polygons, then a couple of formats are possible:
- 	\enumerate{
-	  \item You can provide a list of species-specific spatial point objects. 
- 	  \item You can provide a single spatial object, where points have a taxon attribute.
-	  \item You can provide a list of non-spatial species-specific dataframes.
-	  \item You can provide a single non-spatial dataframe.
-	}
-	
-	For options (1) and (3), the taxon names must be provided as the list names.
-	For options (3) and (4), the columns must be 'taxon', 'x' and 'y' (or 'long', 'lat').
-	For options (3) and (4), as these are non-spatial, you must provide a crs object to the
-	\code{crs} argument, so that the function knows what projection to use.
+If input data consist of \strong{occurrence records} rather than polygons,
+then a couple of formats are possible: 
+\enumerate{ 
+\item You can provide a list of species-specific spatial point objects. 
+\item You can provide a single spatial object, where points have a taxon attribute. 
+\item You can provide a list of non-spatial species-specific dataframes. 
+\item You can provide a single non-spatial dataframe. 
+}
 
-	It is also possible to supply a \strong{matrix with sites as rows and taxa as columns}. 
-	The contents of this matrix must be either 0 or 1. 
-	If this is the case, then a raster grid must be supplied under the template argument. This
-	will be the grid system used for converting this presence/absence matrix to an epmGrid object.
-	It is expected that the index order of the grid is the same as the row order of the matrix.
+For options (1) and (3), the taxon names must be provided as the list names.
+For options (3) and (4), the columns must be 'taxon', 'x' and 'y' (or 'long',
+'lat'). For options (3) and (4), as these are non-spatial, you must provide a
+crs object to the \code{crs} argument, so that the function knows what
+projection to use.
 
-	If input is a set of \strong{species-specific grids}, then it is expected that all grids
-	belong to the same overall grid system, i.e. that the cells align and that all grids have
-	the same resolution. Grids do not need to have the same extent. 
+It is also possible to supply a \strong{matrix with sites as rows and taxa as
+columns}. The contents of this matrix must be either 0 or 1. If this is the
+case, then a raster grid must be supplied under the template argument. This
+will be the grid system used for converting this presence/absence matrix to
+an epmGrid object. It is expected that the index order of the grid is the
+same as the row order of the matrix.
 
-	Any SpatialPolygon or SpatialPoints objects are converted to objects of class \code{sf}.
+If input is a set of \strong{species-specific grids}, then it is expected
+that all grids belong to the same overall grid system, i.e. that the cells
+align and that all grids have the same resolution. Grids do not need to have
+the same extent.
 
-
-	If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf package.
-		If \code{cellType = 'square'}, then the grid is a raster generated via the terra package.
-		Hexagonal cells have several advantages, including being able to be of different sizes
-	 	(if the grid is in unprojected long/lat), and may be able to more naturally follow
-		coastlines and non-linear features. However, the raster-based square cells will be 
-		much less memory intensive for high resolution datasets. Choice of grid type matters 
-		more for spatial resolution (total number of cells), than for number of species.
+Any SpatialPolygon or SpatialPoints objects are converted to objects of class
+\code{sf}.
 
 
-		In the polygon-to-grid conversion process, two approaches are implemented. 
-	For \code{method = 'centroid'}, a range polygon registers in a cell if the polygon 
-		overlaps with the cell centroid. 
-		For \code{method = 'percentOverlap'}, a range polygon registers in a cell if it covers that cell by 
-		at least \code{percentThreshold} fraction of the cell.
-		If \code{retainSmallRanges = FALSE}, then species whose ranges are so small that no 
-		cell registers as present will be dropped. If \code{retainSmallRanges = TRUE}, then the 
-		cell that contains the majority of the the small polygon will be considered as present, 
-		even if it's a small percent of the cell.
+If \code{cellType = 'hexagon'}, then the grid is made of polygons via the sf
+package. If \code{cellType = 'square'}, then the grid is a raster generated
+via the terra package. Hexagonal cells have several advantages, including
+being able to be of different sizes (if the grid is in unprojected long/lat),
+and may be able to more naturally follow coastlines and non-linear features.
+However, the raster-based square cells will be much less memory intensive for
+high resolution datasets. Choice of grid type matters more for spatial
+resolution (total number of cells), than for number of species.
 
-	If \code{retainSmallRanges = TRUE}, and an extent is provided, then species may still 
-		be dropped if they fall outside of that extent.
 
-	In interactive mode for defining the extent, the user can draw a bounding polygon on a 
-	map. The drawn polygon will then be printed to the console so that the user can provide 
-	that bounding polygon in future calls as the extent.
-	
+In the polygon-to-grid conversion process, two approaches are implemented.
+For \code{method = 'centroid'}, a range polygon registers in a cell if the
+polygon overlaps with the cell centroid. For \code{method =
+'percentOverlap'}, a range polygon registers in a cell if it covers that cell
+by at least \code{percentThreshold} fraction of the cell.
 
- 	For \code{extent = 'interactive'}, you can additionally specify some bounding coordinates.
- 	This can be helpful if the interactive map is too broad in extent, making it difficult to draw
- 	the extent that you want. Instead, specify \code{extent = list('interactive', c(xmin, xmax,
-	ymin, ymax))}.
-		In interactive mode, the basemap is from \url{www.naturalearthdata.com}. 
+If \code{retainSmallRanges = FALSE}, then species whose ranges are so small
+that no cell registers as present will be dropped. If \code{retainSmallRanges
+= TRUE}, then the cell that contains the majority of the the small polygon
+will be considered as present, even if it's a small percent of the cell.
 
-	For very large datasets, this function will make a determination as to whether or not 
-		there is sufficient memory. If there is not, an alternative approach that uses the 
-		data.table package will be employed. Please install this R package to take advantage 
-		of this feature.
+If \code{retainSmallRanges = TRUE}, and an extent is provided, then species
+may still be dropped if they fall outside of that extent.
+
+For very large datasets, this function will make a determination as to
+whether or not there is sufficient memory. If there is not, an alternative
+approach that uses the data.table package will be employed. Please install
+this R package to take advantage of this feature.
 }
 \examples{
 library(sf)
@@ -151,23 +157,23 @@ library(sf)
 head(tamiasPolyList)
 
 # hexagonal grid
-tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000,
 	cellType = 'hexagon', method = 'centroid')
 tamiasEPM
 
 # square grid
-tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 	cellType = 'square', method = 'centroid')
 tamiasEPM2
 
 #######
 # demonstration of site-by-species matrix as input.
-tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 	cellType = 'square', method = 'centroid')
 
-## first we will use the function epmToPhyloComm() to get 
+## first we will use the function generateOccurrenceMatrix() to get
 ## a presence/absence matrix
-pamat <- epmToPhyloComm(tamiasEPM2, sites = 'all')
+pamat <- generateOccurrenceMatrix(tamiasEPM2, sites = 'all')
 
 # here, our grid template will be tamiasEPM2[[1]]
 tamiasEPM2[[1]]
@@ -185,12 +191,12 @@ for (i in 2:length(tamiasPolyList)) {
 	fullExtent <- terra::union(fullExtent, terra::ext(terra::vect(tamiasPolyList[[i]])))
 }
 
-# create raster template 
+# create raster template
 fullGrid <- terra::rast(fullExtent, res = 50000, crs = terra::crs(terra::vect(tamiasPolyList[[1]])))
 
 # now we can convert polygons to a common grid system
 spGrids <- list()
-for (i in 1:length(tamiasPolyList)) {	
+for (i in 1:length(tamiasPolyList)) {
 	spGrids[[i]] <- terra::trim(terra::rasterize(terra::vect(tamiasPolyList[[i]]), fullGrid))
 }
 names(spGrids) <- names(tamiasPolyList)
@@ -222,7 +228,7 @@ spOccList3[, "taxon"] <- as.character(spOccList3[, "taxon"])
 tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
 
 # a single labeled spatial object
-spOccList4 <- st_as_sf(spOccList3[, c("taxon", "X", "Y")], coords = c("X","Y"), 
+spOccList4 <- st_as_sf(spOccList3[, c("taxon", "X", "Y")], coords = c("X","Y"),
 crs = st_crs(spOccList[[1]]))
 tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
 

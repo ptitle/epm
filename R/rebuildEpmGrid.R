@@ -1,19 +1,12 @@
-##' @title Rebuild epmGrid
-##'
-##' @description Given a list of species in each cell, all components of the
-##' 	epmGrid object are reindexed and regenerated.
-##'
-##' @param x object of class \code{epmGrid}
-##' @param spCellList list in which each element is a character vector of species names.
-##'
-##' @details This function is used internally by \code{\link{dropSpecies}}. 
-##'
-##' @return new \code{epmGrid} object.
-##'
-##' @author Pascal Title
-##'	
-##' 
-##' @export
+
+# Given a list of species in each cell, all components of the
+# epmGrid object are reindexed and regenerated.
+
+# x: object of class \code{epmGrid}
+# spCellList: list in which each element is a character vector of species names.
+
+# This function is used internally by \code{\link{dropSpecies}}.
+
 
 
 rebuildEpmGrid <- function(x, spCellList) {

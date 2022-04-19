@@ -1,33 +1,38 @@
 ##' @title Map change in morphological disparity
 ##'
-##' @description Change in morphological disparity is calculating across a moving window
-##' of neighboring grid cells. 
-##' 
+##' @description Change in morphological disparity is calculating across a
+##'   moving window of neighboring grid cells. To implement a custom function,
+##' 	  see \code{\link{customBetaDiv}}.
+##'
 ##' @param x object of class \code{epmGrid}.
 ##' @param radius Radius of the moving window in map units.
-##' @param slow if TRUE, use an alternate implementation that has a smaller memory footprint 
-##' 	but that is likely to be much slower. Most useful for high spatial resolution.
+##' @param slow if TRUE, use an alternate implementation that has a smaller
+##'   memory footprint but that is likely to be much slower. Most useful for
+##'   high spatial resolution.
 ##' @param nThreads number of threads for parallelization
 
 ##'
-##' @details
-##' 	For each gridcell neighborhood (defined by the radius), we calculate the proportion 
-##' 	of the full disparity contained in those grid cells, and then take the standard deviation of 
-##' 	those proportions across the gridcell neighborhood. This way, the returned values reflect
-##' 	how much disparity (relative to the overall total disparity) changes across a moving window.
-##' 
+##' @details For each gridcell neighborhood (defined by the radius), we
+##' calculate the proportion of the full disparity contained in those grid
+##' cells, and then take the standard deviation of those proportions across the
+##' gridcell neighborhood. This way, the returned values reflect how much
+##' disparity (relative to the overall total disparity) changes across a moving
+##' window.
 ##'
-##' 
-##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object (if square grid).
-##' 
+##' If the R package spdep is installed, this function should run more quickly.
+##'
+##'
+##' @return Returns a sf polygons object (if hex grid) or a SpatRaster object
+##'   (if square grid).
+##'
 ##' @author Pascal Title
 ##'
 ##' @references
-##' 
-##' Foote M. 1993. Contributions of individual taxa to overall morphological disparity. 
-##' Paleobiology. 19:403–419.
-##' 
-##' 
+##'
+##' Foote M. 1993. Contributions of individual taxa to overall morphological
+##' disparity. Paleobiology. 19:403–419.
+##'
+##'
 ##' @examples
 ##' \donttest{
 ##' tamiasEPM
@@ -35,17 +40,17 @@
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##'
 ##' z <- betadiv_disparity(tamiasEPM, radius = 150000)
-##' 
+##'
 ##' plot(z)
-##' 
+##'
 ##' # using square grid epmGrid
-##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000, 
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2 <- addTraits(tamiasEPM2, tamiasTraits)
 ##' z2 <- betadiv_disparity(tamiasEPM2, radius = 150000)
 ##'
 ##' terra::plot(z2, col = sf::sf.colors(100))
-##' 
+##'
 ##' }
 ##' @export
 
@@ -70,6 +75,12 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 	
 	if (nThreads > 1 & .Platform$OS.type == 'windows') {
 		stop('Parallel processing for Windows OS is currently non-functional.')
+	}
+	
+	# There appear to be some potential numerical precision issues with defining neighbors.
+	# Therefore, if radius is a multiple of resolution, add 1/100 of the resolution. 
+	if (radius %% attributes(x)$resolution == 0) {
+		radius <- radius + attributes(x)$resolution * 0.01
 	}
 	
 	# ----------------------------------------------------------
@@ -107,8 +118,16 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 		
 		# Generate list of neighborhoods
 
-		# nb <- sf::st_is_within_distance(sf::st_centroid(sf::st_geometry(x[[1]])), x[[1]], dist = radius)
-		nb <- spdep::dnearneigh(sf::st_centroid(sf::st_geometry(x[[1]])), d1 = 0, d2 = radius)
+		if (requireNamespace('spdep', quietly = TRUE)) {
+			nb <- spdep::dnearneigh(sf::st_centroid(sf::st_geometry(x[[1]])), d1 = 0, d2 = radius)
+		} else {
+			nb <- sf::st_is_within_distance(sf::st_centroid(sf::st_geometry(x[[1]])), sf::st_centroid(sf::st_geometry(x[[1]])), dist = radius)
+			
+			# remove focal cell from set of neighbors
+			for (i in 1:length(nb)) {
+				nb[[i]] <- setdiff(nb[[i]], i)
+			}
+		}	
 
 		# average neighborhood size
 		message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)))
@@ -158,7 +177,17 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 			gridCentroids <- terra::xyFromCell(x[[1]], cell = datCells)
 			gridCentroids <- sf::st_as_sf(as.data.frame(gridCentroids), coords = 1:2, crs = attributes(x)$crs)
 			gridCentroids$cellInd <- datCells
-			nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+
+			if (requireNamespace('spdep', quietly = TRUE)) {
+				nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+			} else {
+				nb <- sf::st_is_within_distance(gridCentroids, gridCentroids, dist = radius)
+				
+				# remove focal cell from set of neighbors
+				for (i in 1:length(nb)) {
+					nb[[i]] <- setdiff(nb[[i]], i)
+				}
+			}	
 			
 			# average neighborhood size
 			message('\tgridcell neighborhoods: median ', stats::median(lengths(nb)), ', range ', min(lengths(nb)), ' - ', max(lengths(nb)), ' cells')
@@ -218,7 +247,18 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 					focalCircle <- sf::st_buffer(focalxy, dist = radius * 2)
 					nbCells <- terra::cells(x[[1]], terra::vect(focalCircle))[, 'cell']
 					gridCentroids <- sf::st_as_sf(as.data.frame(terra::xyFromCell(x[[1]], nbCells)), coords = 1:2, crs = terra::crs(x[[1]]))
-					nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+
+					if (requireNamespace('spdep', quietly = TRUE)) {
+						nb <- spdep::dnearneigh(gridCentroids, d1 = 0, d2 = radius)
+					} else {
+						nb <- sf::st_is_within_distance(gridCentroids, gridCentroids, dist = radius)
+						
+						# remove focal cell from set of neighbors
+						for (i in 1:length(nb)) {
+							nb[[i]] <- setdiff(nb[[i]], i)
+						}
+					}	
+
 					nbCells <- nbCells[nb[[which(nbCells == focalCell)]]]
 					
 					# without dnearneigh step					
@@ -265,4 +305,9 @@ betadiv_disparity <- function(x, radius, slow = FALSE, nThreads = 1) {
 	return(ret)
 }
 
+
+
+
+
+		
 

@@ -17,52 +17,62 @@ customGridMetric(
 
 \item{fun}{a function to apply to all grid cells (see details)}
 
-\item{column}{If a univariate morphological metric is specified, and the 
-data in \code{x} are multivariate, which trait should be used?
-This can also specify which subset of columns a multivariate metric should be applied to.}
+\item{column}{If a univariate morphological metric is specified, and the data
+in \code{x} are multivariate, which trait should be used? This can also
+specify which subset of columns a multivariate metric should be applied to.}
 
-\item{minTaxCount}{the minimum number of taxa needed to apply the function. 
-For instance, should the function be applied to gridcells with just 1 taxon?}
+\item{minTaxCount}{the minimum number of taxa needed to apply the function.
+For instance, should the function be applied to gridcells with just 1
+taxon?}
 
 \item{metricName}{the name you would like to attach to the output}
 }
 \value{
-object of class \code{epmGrid}
+object of class \code{epmGrid}, or list of \code{epmGrid} objects
 }
 \description{
-Define your own function for summarizing information across grid cells.
+Define your own function for summarizing information across grid
+ cells.
 }
 \details{
-This function allows you to not be limited to the diversity metrics 
-	available via the gridMetrics() function. \cr
+This function allows you to not be limited to the diversity metrics
+ available via the \code{\link{gridMetrics}} function. \cr
 
-	The custom function should have just one input: a vector of taxon names that will
-	then be used to subset the trait or phylogenetic data. Within the function call, 
-	the trait data already attached to the epmGrid object must be referred to as dat,
-	and the phylogenetic tree already attached to the epmGrid must be referred to as phylo.\cr
-	See examples below.
+ The custom function should have just one input: a vector of taxon names
+ that will then be used to subset the trait or phylogenetic data. Within the
+ function call, the trait data already attached to the epmGrid object must
+ be referred to as dat, and the phylogenetic tree already attached to the
+ epmGrid must be referred to as phylo.\cr 
+
+ If the input epmGrid object contains a set of trees, then this function will
+	 be applied, using each tree in turn, and will return a list of results. This
+ list can then be passed to \code{\link{summarizeEpmGridList}} to be summarized.
+ 
+ See examples below.
 }
 \examples{
-tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000, 
-		cellType = 'hexagon', method = 'centroid')
+tamiasEPM
 tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
-tamiasEPM
 
-# In the following examples, notice that any mention of the trait data or phylogeny
-## that are already attached to the epmGrid object are referred to as dat and phylo.
+# In the following examples, notice that any mention of the trait data or 
+## phylogeny that are already attached to the epmGrid object are referred 
+## to as dat and phylo.
 
-# example: calculate morphological disparity (already implemented in gridMetrics)
+# example: calculate morphological disparity 
+## (already implemented in gridMetrics)
 f <- function(cells) {
 	sum(diag(cov(dat[cells,])))
 }
 
 # to calculate disparity, we need at least 2 taxa
 
-xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, metricName = 'disparity')
+xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, 
+metricName = 'disparity')
 
-# In the example above, gridcells with 1 species are left as NA. But if we wanted those 
-## gridcells to have a value of 0 rather than NA, we could do the following:
+# In the example above, gridcells with 1 species are left as NA. 
+## But if we wanted those gridcells to have a value of 0 rather than NA, 
+## we could do the following:
 f <- function(sp) {
 	if (length(sp) == 1) {
 		0
@@ -72,11 +82,12 @@ f <- function(sp) {
 }
 
 # and change minTaxCount to 1
-xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, metricName = 'disparity')
+xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, 
+metricName = 'disparity')
 
 
 # phylogenetic example: mean patristic distance
-## this example doesn't actually involve the phylogeny internally, 
+## this example doesn't actually involve the phylogeny internally,
 ## we can just supply what is needed to the function
 patdist <- cophenetic(tamiasEPM[['phylo']])
 patdist[upper.tri(patdist, diag = TRUE)] <- NA
@@ -84,7 +95,8 @@ f <- function(cells) {
 	mean(patdist[cells, cells], na.rm = TRUE)
 }
 
-xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, metricName = 'mean patristic')
+xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 1, 
+metricName = 'mean patristic')
 
 # an example that involves both morphological and phylogenetic data
 ## nonsensical, but for illustrative purposes:
@@ -93,7 +105,52 @@ f <- function(cells) {
 	faithPD(phylo, cells) / max(dist(dat[cells, ]))
 }
 
-xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, metricName = 'PD_range_ratio')
+xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, 
+metricName = 'PD_range_ratio')
+
+
+\dontrun{
+
+# multivariate phylogenetic signal: Blomberg's K for multivariate shape
+## as implemented in the geomorph R package, function physignal.
+
+f <- function(cells) {
+	geomorph::physignal(as.matrix(dat[cells,]), 
+	phy = ape::keep.tip(phylo, cells), iter = 999, 
+	print.progress = FALSE)$phy.signal
+}
+
+xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 3, 
+metricName = 'phylosignal')
+
+
+# univariate phylogenetic signal: Blomberg's K for single traits
+## as implemented in the phytools R package, function phylosig
+f <- function(cells) {
+	as.numeric(phytools::phylosig(ape::keep.tip(phylo, cells), dat[cells], 
+	method = 'K'))
+}
+
+# create an epmGrid object with a univariate trait. Here, we'll just pull 
+## one of the columns from the multivariate dataset 
+## (for demonstration purposes only)
+tamiasEPM2 <- addTraits(tamiasEPM, data = setNames(tamiasTraits[,1], 
+rownames(tamiasTraits)), replace = TRUE)
+
+xx <- customGridMetric(tamiasEPM2, fun = f, minTaxCount = 3, 
+	metricName = 'phylosignal')
+
+
+# Example involving a set of trees
+tamiasEPM <- addPhylo(tamiasEPM, tamiasTreeSet, replace = TRUE)
+
+# get crown clade age of clade containing taxa present in grid cell
+f <- function(sp) {
+	ape::branching.times(phylo)[as.character(ape::getMRCA(phylo, sp))]
+}
+
+xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, metric = 'nodeAge')
+}
 
 
 }

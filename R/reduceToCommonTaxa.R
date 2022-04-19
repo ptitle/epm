@@ -1,6 +1,6 @@
 ##' @title Subset epmGrid to shared taxa
 ##'
-##' @description An EpmGrid object may contain more taxa with morphological
+##' @description An epmGrid object may contain more taxa with morphological
 ##' 	data than taxa with phylogenetic information, or vice versa. This 
 ##' 	function subsets all epmGrid components to the set of taxa shared 
 ##' 	across geographic, phenotypic and phylogenetic datasets. This might
@@ -35,7 +35,12 @@ reduceToCommonTaxa <- function(x) {
 		stop('Object must be of class epmGrid')
 	}
 	
-	if (is.null(x[['data']]) & !inherits(x[['phylo']], 'phylo')) {
+	if (inherits(x[['phylo']], 'phylo')) {
+		x[['phylo']] <- list(x[['phylo']])
+		class(x[['phylo']]) <- 'multiPhylo'
+	}	
+	
+	if (is.null(x[['data']]) & !inherits(x[['phylo']], 'multiPhylo')) {
 		stop('This epmGrid only contains geographic data.')
 	}
 	
@@ -51,8 +56,8 @@ reduceToCommonTaxa <- function(x) {
 		set2 <- set1
 	}
 	
-	if (inherits(x[['phylo']], 'phylo')) {
-		set3 <- x[['phylo']]$tip.label
+	if (inherits(x[['phylo']], 'multiPhylo')) {
+		set3 <- x[['phylo']][[1]]$tip.label
 	} else {
 		set3 <- set1
 	}
@@ -76,8 +81,12 @@ reduceToCommonTaxa <- function(x) {
 		}
 	}
 	
-	if (inherits(x[['phylo']], 'phylo')) {
-		newEpm[['phylo']] <- ape::keep.tip(x[['phylo']], commontaxa)
+	if (inherits(x[['phylo']], 'multiPhylo')) {
+		newEpm[['phylo']] <- lapply(x[['phylo']], ape::keep.tip, commontaxa)
+		class(newEpm[['phylo']]) <- 'multiPhylo'
+		if (length(newEpm[['phylo']]) == 1) {
+			newEpm[['phylo']] <- newEpm[['phylo']][[1]]
+		}
 	}
 	
 	return(newEpm)

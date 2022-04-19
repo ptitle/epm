@@ -40,9 +40,16 @@ summary.epmGrid <- function(object, ...) {
 	
 	# if phylogeny present in object, then report info
 	if (inherits(object[['phylo']], 'phylo')) {
-		phylo <- length(intersect(object[['geogSpecies']], object[['phylo']]$tip.label))
+		object[['phylo']] <- list(object[['phylo']])
+		class(object[['phylo']]) <- 'multiPhylo'
+	}
+
+	if (inherits(object[['phylo']], 'multiPhylo')) {
+		phylo <- length(intersect(object[['geogSpecies']], object[['phylo']][[1]]$tip.label))
+		nTrees <- length(object[['phylo']])
 	} else {
 		phylo <- NA
+		nTrees <- 0
 	}
 	
 	metric <- attributes(object)$metric
@@ -77,7 +84,8 @@ summary.epmGrid <- function(object, ...) {
 				numberUniqueSpecies = lengthUniqueSp, 
 				minSp = minSp,
 				maxSp = maxSp,
-				overlapWithPhylogeny = phylo)
+				overlapWithPhylogeny = phylo,
+				nTrees = nTrees)
 				
 	invisible(obj)
 }
