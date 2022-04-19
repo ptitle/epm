@@ -9,6 +9,8 @@
 ##'		If \code{'worldmap'}, then vector map is plotted.
 ##' 	If \code{'interactive'}, then the plotting is done via your web browser.
 ##' @param lwd grid cell border width
+##' @param alpha opacity of all colors and borders, ranging from 0 
+##' (fully transparent) to 1 (fully opaque)
 ##' @param use_tmap if false, use sf or terra packages for plotting
 ##' @param add logical. If TRUE, adds the gridded taxon range to existing plot. 
 ##'
@@ -28,7 +30,7 @@
 
 # plot one species' geographic range, as encoded in the epmGrid object.
 
-plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', lwd = 0.5, use_tmap = TRUE, add = FALSE) {
+plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', lwd = 0.5, alpha = 1, use_tmap = TRUE, add = FALSE) {
 	
 	if (use_tmap & !requireNamespace('tmap', quietly = TRUE)) {
 		message('\ttmap package not installed -- defaulting to sf/terra plot')
@@ -62,7 +64,7 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 			}
 			
 			if (inherits(x[[1]], 'sf')) {
-				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_polygons(col = gray(0.95), border.col = gray(0.90), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(x[['grid']][cellInd, ]) + tmap::tm_polygons(col = taxonColor, border.col = 'black', lwd = lwd)
+				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_polygons(col = gray(0.95), border.col = gray(0.90), legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(x[['grid']][cellInd, ]) + tmap::tm_polygons(col = taxonColor, border.col = 'black', lwd = lwd, alpha = alpha)
 	
 			} else {
 				
@@ -72,7 +74,7 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 				fullGrid[!is.na(fullGrid)] <- 1
 				spGrid <- terra::rast(fullGrid)
 				spGrid[cellInd] <- 1
-				map <- map + tmap::tm_shape(fullGrid, bbox = datBB) + tmap::tm_raster(pal = gray(0.95), legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(pal = taxonColor, legend.show = FALSE)
+				map <- map + tmap::tm_shape(fullGrid, bbox = datBB) + tmap::tm_raster(pal = gray(0.95), legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(pal = taxonColor, alpha = alpha, legend.show = FALSE)
 			}
 			map
 		
@@ -81,7 +83,7 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 			tmap::tmap_mode('view')
 			
 			if (inherits(x[[1]], 'sf')) {
-				map <- tmap::tm_shape(x[[1]]) + tmap::tm_polygons(col = gray(0.95), border.col = gray(0.90), alpha = 0.75, legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(x[['grid']][cellInd, ]) + tmap::tm_polygons(col = taxonColor, border.col = 'black', lwd = lwd)
+				map <- tmap::tm_shape(x[[1]]) + tmap::tm_polygons(col = gray(0.95), border.col = gray(0.90), alpha = alpha, legend.show = FALSE) + tmap::tm_layout(frame = FALSE) + tmap::tm_shape(x[['grid']][cellInd, ]) + tmap::tm_polygons(col = taxonColor, border.col = 'black', lwd = lwd, alpha = alpha)
 	
 			} else {
 	
@@ -89,7 +91,7 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 				fullGrid[!is.na(fullGrid)] <- 1
 				spGrid <- terra::rast(fullGrid)
 				spGrid[cellInd] <- 1
-				map <- tmap::tm_shape(fullGrid) + tmap::tm_raster(pal = gray(0.95), alpha = 0.75, legend.show = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(pal = taxonColor, legend.show = FALSE)
+				map <- tmap::tm_shape(fullGrid) + tmap::tm_raster(pal = gray(0.95), alpha = alpha, legend.show = FALSE) + tmap::tm_shape(spGrid) + tmap::tm_raster(pal = taxonColor, alpha = alpha, legend.show = FALSE)
 			}
 	
 			map
@@ -102,19 +104,19 @@ plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', l
 		if (inherits(x[[1]], 'sf')) {
 			
 			if (!add) {
-				plot(sf::st_combine(sf::st_geometry(x[['grid']])), col = gray(0.95), lwd = lwd, border = NA)
+				plot(sf::st_combine(sf::st_geometry(x[['grid']])), col = gray(0.95, alpha = alpha), lwd = lwd, border = NA)
 			}
 			
-			plot(sf::st_geometry(x[['grid']])[cellInd], add = TRUE, lwd = lwd, col = taxonColor)
+			plot(sf::st_geometry(x[['grid']])[cellInd], add = TRUE, lwd = lwd, col = grDevices::adjustcolor(taxonColor, alpha.f = alpha), border = grDevices::adjustcolor('black', alpha.f = alpha))
 				
 		} else {
 			
 			spGrid <- terra::rast(x[['grid']][[1]])
 			spGrid[cellInd] <- 1
 			if (!add) {
-				terra::plot(x[['grid']]['spRichness'], col = gray(0.95), axes = FALSE, legend = FALSE)
+				terra::plot(x[['grid']]['spRichness'], col = gray(0.95, alpha = alpha), axes = FALSE, legend = FALSE)
 			}
-			terra::plot(spGrid, col = taxonColor, add = TRUE, axes = FALSE, legend = FALSE)
+			terra::plot(spGrid, col = grDevices::adjustcolor(taxonColor, alpha.f = alpha), add = TRUE, axes = FALSE, legend = FALSE)
 				
 		}
 				

@@ -10,6 +10,7 @@ plotSpRange(
   taxonColor = "orange",
   basemap = "worldmap",
   lwd = 0.5,
+  alpha = 1,
   use_tmap = TRUE,
   add = FALSE
 )
@@ -26,6 +27,9 @@ If \code{'worldmap'}, then vector map is plotted.
 If \code{'interactive'}, then the plotting is done via your web browser.}
 
 \item{lwd}{grid cell border width}
+
+\item{alpha}{opacity of all colors and borders, ranging from 0 
+(fully transparent) to 1 (fully opaque)}
 
 \item{use_tmap}{if false, use sf or terra packages for plotting}
 
