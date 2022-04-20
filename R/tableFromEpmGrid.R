@@ -53,6 +53,9 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL) {
     
     # x <- list(tamiasEPM, morphoDisp, meanPat); n = 100; minTaxCount = 2; coords = NULL
 
+	# capture input names
+	inputNames <- as.list(substitute(list(...)))[-1L]
+	
 	x <- list(...)
 	
 	if (!all(sapply(x, inherits, c('epmGrid', 'sf', 'SpatialPolygonsDataFrame', 'RasterLayer', 'RasterStack', 'SpatRaster')))) {
@@ -206,7 +209,7 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL) {
 	
 	# extract the information from each item
 	df <- as.data.frame(matrix(nrow = length(gridTemplate), ncol = length(x) + 2))
-	colnames(df)[1:2] <- c('x', 'y')
+	colnames(df) <- c('x', 'y', inputNames)
 
 	for (i in 1:length(x)) {
 
@@ -235,7 +238,6 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL) {
 			} else {
 				df[, i + 2] <- terra::extract(grid_multiSp, sf::st_coordinates(gridTemplate))
 			}
-			colnames(df)[i + 2] <- attributes(x[[i]])$metric			
 		
 		} else if (inherits(x[[i]], 'sf')) {
 			datCol <- setdiff(colnames(x[[i]]), attributes(x[[i]])$sf_column)
@@ -244,12 +246,10 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL) {
 			}
 			tmp <- sf::st_join(sf::st_as_sf(gridTemplate), x[[i]], join = sf::st_within)
 			df[, i + 2] <- sf::st_drop_geometry(tmp)[datCol]
-			colnames(df)[i + 2] <- datCol
 
 		} else if (inherits(x[[i]], 'SpatRaster')) {
 			for (j in 1:terra::nlyr(x[[i]])) {
 				df[, i + 2] <- terra::extract(x[[i]][[j]], sf::st_coordinates(gridTemplate))
-				colnames(df)[i + 2] <- names(x[[i]])[j]
 			}
 					
 		} else if (inherits(x[[i]], 'SpatialPolygonsDataFrame')) {
@@ -260,7 +260,6 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL) {
 			datCol <- setdiff(colnames(tmp), attributes(tmp)$sf_column)
 			tmp <- sf::st_join(sf::st_as_sf(templateCentroids), tmp, join = sf::st_within)
 			resList[[i]] <- which(!is.na(tmp[[datCol]]))
-			colnames(df)[i + 2] <- datCol
 	
 		} else {
 			stop(paste('Class of item', i, 'not expected.'))
