@@ -1,3 +1,6 @@
+  <!-- badges: start -->
+  [![R-CMD-check](https://github.com/ptitle/epm/workflows/R-CMD-check/badge.svg)](https://github.com/ptitle/epm/actions)
+  <!-- badges: end -->
 # epm
 ## EcoPhyloMapper R package
 
@@ -5,10 +8,11 @@
 
 The following R package dependencies are required:
 
-`terra, sf, rgdal, spdep, ape, geomorph, pbapply`
+`terra, sf, ape, viridisLite, pbapply, Rcpp`
 
-Additionally, the R package `tmap` provides additional functionality.
+Additionally, the R packages `tmap`, `data.table` and `spdep` provide additional functionality or speed improvements.
 
 To install, run the following in R: `remotes::install_github('ptitle/epm')`
 
 [Check out the wiki for explanations and discussions of the available options.](https://github.com/ptitle/epm/wiki)
+
