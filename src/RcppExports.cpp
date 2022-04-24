@@ -87,16 +87,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// getLeavesForNodes
-List getLeavesForNodes(List phylo);
-RcppExport SEXP _epm_getLeavesForNodes(SEXP phyloSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< List >::type phylo(phyloSEXP);
-    rcpp_result_gen = Rcpp::wrap(getLeavesForNodes(phylo));
-    return rcpp_result_gen;
-END_RCPP
-}
 // getRootToTipEdges
 List getRootToTipEdges(List phylo);
 RcppExport SEXP _epm_getRootToTipEdges(SEXP phyloSEXP) {
@@ -104,31 +94,6 @@ BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< List >::type phylo(phyloSEXP);
     rcpp_result_gen = Rcpp::wrap(getRootToTipEdges(phylo));
-    return rcpp_result_gen;
-END_RCPP
-}
-// getMRCA_from_nodeLeaves
-int getMRCA_from_nodeLeaves(List nodeLeaves, std::vector<std::string> taxa);
-RcppExport SEXP _epm_getMRCA_from_nodeLeaves(SEXP nodeLeavesSEXP, SEXP taxaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< List >::type nodeLeaves(nodeLeavesSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type taxa(taxaSEXP);
-    rcpp_result_gen = Rcpp::wrap(getMRCA_from_nodeLeaves(nodeLeaves, taxa));
-    return rcpp_result_gen;
-END_RCPP
-}
-// FaithPD_branchIndices
-std::vector<int> FaithPD_branchIndices(std::vector<std::string> a, List phylo, List nodeLeaves, List spEdges, bool includeRoot);
-RcppExport SEXP _epm_FaithPD_branchIndices(SEXP aSEXP, SEXP phyloSEXP, SEXP nodeLeavesSEXP, SEXP spEdgesSEXP, SEXP includeRootSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type a(aSEXP);
-    Rcpp::traits::input_parameter< List >::type phylo(phyloSEXP);
-    Rcpp::traits::input_parameter< List >::type nodeLeaves(nodeLeavesSEXP);
-    Rcpp::traits::input_parameter< List >::type spEdges(spEdgesSEXP);
-    Rcpp::traits::input_parameter< bool >::type includeRoot(includeRootSEXP);
-    rcpp_result_gen = Rcpp::wrap(FaithPD_branchIndices(a, phylo, nodeLeaves, spEdges, includeRoot));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -152,6 +117,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// varNNdist
+double varNNdist(NumericVector input);
+RcppExport SEXP _epm_varNNdist(SEXP inputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(varNNdist(input));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cellAvg
 NumericVector cellAvg(List input, NumericVector trait, String stat);
 RcppExport SEXP _epm_cellAvg(SEXP inputSEXP, SEXP traitSEXP, SEXP statSEXP) {
@@ -172,18 +147,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type input(inputSEXP);
     Rcpp::traits::input_parameter< StringVector >::type vec(vecSEXP);
     rcpp_result_gen = Rcpp::wrap(intersectList(input, vec));
-    return rcpp_result_gen;
-END_RCPP
-}
-// phyloBranchRanges
-List phyloBranchRanges(List phylo, List speciesList, List tipEdges);
-RcppExport SEXP _epm_phyloBranchRanges(SEXP phyloSEXP, SEXP speciesListSEXP, SEXP tipEdgesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< List >::type phylo(phyloSEXP);
-    Rcpp::traits::input_parameter< List >::type speciesList(speciesListSEXP);
-    Rcpp::traits::input_parameter< List >::type tipEdges(tipEdgesSEXP);
-    rcpp_result_gen = Rcpp::wrap(phyloBranchRanges(phylo, speciesList, tipEdges));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -221,18 +184,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// calcPairwisePhylosor
-NumericMatrix calcPairwisePhylosor(List allComm, List phylo, String component);
-RcppExport SEXP _epm_calcPairwisePhylosor(SEXP allCommSEXP, SEXP phyloSEXP, SEXP componentSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< List >::type allComm(allCommSEXP);
-    Rcpp::traits::input_parameter< List >::type phylo(phyloSEXP);
-    Rcpp::traits::input_parameter< String >::type component(componentSEXP);
-    rcpp_result_gen = Rcpp::wrap(calcPairwisePhylosor(allComm, phylo, component));
-    return rcpp_result_gen;
-END_RCPP
-}
 // calcPairwisePhylosor2
 NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component);
 RcppExport SEXP _epm_calcPairwisePhylosor2(SEXP allCommSEXP, SEXP phyloSEXP, SEXP componentSEXP) {
@@ -254,19 +205,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_epm_getComponentA", (DL_FUNC) &_epm_getComponentA, 2},
     {"_epm_getComponentB", (DL_FUNC) &_epm_getComponentB, 2},
     {"_epm_getComponentC", (DL_FUNC) &_epm_getComponentC, 2},
-    {"_epm_getLeavesForNodes", (DL_FUNC) &_epm_getLeavesForNodes, 1},
     {"_epm_getRootToTipEdges", (DL_FUNC) &_epm_getRootToTipEdges, 1},
-    {"_epm_getMRCA_from_nodeLeaves", (DL_FUNC) &_epm_getMRCA_from_nodeLeaves, 2},
-    {"_epm_FaithPD_branchIndices", (DL_FUNC) &_epm_FaithPD_branchIndices, 5},
     {"_epm_meanNNdist", (DL_FUNC) &_epm_meanNNdist, 1},
     {"_epm_minNNdist", (DL_FUNC) &_epm_minNNdist, 1},
+    {"_epm_varNNdist", (DL_FUNC) &_epm_varNNdist, 1},
     {"_epm_cellAvg", (DL_FUNC) &_epm_cellAvg, 3},
     {"_epm_intersectList", (DL_FUNC) &_epm_intersectList, 2},
-    {"_epm_phyloBranchRanges", (DL_FUNC) &_epm_phyloBranchRanges, 3},
     {"_epm_countCells", (DL_FUNC) &_epm_countCells, 2},
     {"_epm_calcPairwiseTaxonomicSorensen", (DL_FUNC) &_epm_calcPairwiseTaxonomicSorensen, 2},
     {"_epm_uniqueBranchesForSet", (DL_FUNC) &_epm_uniqueBranchesForSet, 3},
-    {"_epm_calcPairwisePhylosor", (DL_FUNC) &_epm_calcPairwisePhylosor, 3},
     {"_epm_calcPairwisePhylosor2", (DL_FUNC) &_epm_calcPairwisePhylosor2, 3},
     {NULL, NULL, 0}
 };

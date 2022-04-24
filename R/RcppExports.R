@@ -29,20 +29,8 @@ getComponentC <- function(commI, commJ) {
     .Call('_epm_getComponentC', PACKAGE = 'epm', commI, commJ)
 }
 
-getLeavesForNodes <- function(phylo) {
-    .Call('_epm_getLeavesForNodes', PACKAGE = 'epm', phylo)
-}
-
 getRootToTipEdges <- function(phylo) {
     .Call('_epm_getRootToTipEdges', PACKAGE = 'epm', phylo)
-}
-
-getMRCA_from_nodeLeaves <- function(nodeLeaves, taxa) {
-    .Call('_epm_getMRCA_from_nodeLeaves', PACKAGE = 'epm', nodeLeaves, taxa)
-}
-
-FaithPD_branchIndices <- function(a, phylo, nodeLeaves, spEdges, includeRoot = FALSE) {
-    .Call('_epm_FaithPD_branchIndices', PACKAGE = 'epm', a, phylo, nodeLeaves, spEdges, includeRoot)
 }
 
 meanNNdist <- function(input) {
@@ -53,16 +41,16 @@ minNNdist <- function(input) {
     .Call('_epm_minNNdist', PACKAGE = 'epm', input)
 }
 
+minNNdist <- function(input) {
+    .Call('_epm_varNNdist', PACKAGE = 'epm', input)
+}
+
 cellAvg <- function(input, trait, stat) {
     .Call('_epm_cellAvg', PACKAGE = 'epm', input, trait, stat)
 }
 
 intersectList <- function(input, vec) {
     .Call('_epm_intersectList', PACKAGE = 'epm', input, vec)
-}
-
-phyloBranchRanges <- function(phylo, speciesList, tipEdges) {
-    .Call('_epm_phyloBranchRanges', PACKAGE = 'epm', phylo, speciesList, tipEdges)
 }
 
 countCells <- function(cellList, vec) {
@@ -75,10 +63,6 @@ calcPairwiseTaxonomicSorensen <- function(allComm, component) {
 
 uniqueBranchesForSet <- function(a, tipLabels, spEdges) {
     .Call('_epm_uniqueBranchesForSet', PACKAGE = 'epm', a, tipLabels, spEdges)
-}
-
-calcPairwisePhylosor <- function(allComm, phylo, component) {
-    .Call('_epm_calcPairwisePhylosor', PACKAGE = 'epm', allComm, phylo, component)
 }
 
 calcPairwisePhylosor2 <- function(allComm, phylo, component) {
