@@ -50,7 +50,7 @@
 ##' @importFrom Rcpp sourceCpp
 ##'
 ##' @import methods
-##' 
+##' @import RcppProgress
 ##' 
 ##' @importFrom graphics axis grconvertX grconvertY par identify rect
 ##' @importFrom stats cophenetic cov dist prcomp runif sd setNames
