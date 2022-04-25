@@ -22,6 +22,10 @@
 ##'		\code{\link{createEPMgrid}}. Square cells will probably be fastest. If hexagons
 ##'		are selected, grid cell points are plotted instead of polygons to speed up plotting.
 ##'
+##'		You may see the message \code{Failed to compute min/max, no valid pixels found in 
+##' 		sampling. (GDAL error 1)} . This just means that a species did not register in any 
+##' 		grid cells. This can be ignored.
+##'
 ##' 	The basemap is from \url{https://www.naturalearthdata.com/}. 
 ##'
 ##' @return A list with a polygon, and its WKT string 

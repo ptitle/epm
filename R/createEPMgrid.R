@@ -76,7 +76,7 @@
 ##'}
 ##'
 ##'For options (1) and (3), the taxon names must be provided as the list names.
-##'For options (3) and (4), the columns must be 'taxon', 'x' and 'y' (or 'long',
+##'For options (2) and (4), the columns must be 'taxon', 'x' and 'y' (or 'long',
 ##''lat'). For options (3) and (4), as these are non-spatial, you must provide a
 ##'crs object to the \code{crs} argument, so that the function knows what
 ##'projection to use.
@@ -120,6 +120,11 @@
 ##'
 ##'If \code{retainSmallRanges = TRUE}, and an extent is provided, then species
 ##'may still be dropped if they fall outside of that extent.
+##'
+##'You may see the message \code{Failed to compute min/max, no valid pixels found in 
+##'sampling. (GDAL error 1)} . This just means that a species did not register in any 
+##'grid cells. If you specified \code{retainSmallRanges = TRUE}, then those species will
+##'be included in a subsequent step. Therefore, this message can be ignored.
 ##'
 ##'For very large datasets, this function will make a determination as to
 ##'whether or not there is sufficient memory. If there is not, an alternative
