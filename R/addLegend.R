@@ -100,22 +100,30 @@
 ##' @author Pascal Title
 ##'
 ##' @examples
-##' library(terra)
-##' r <- rast(system.file("ex/elev.tif", package="terra"))
-##' 
-##' plot(r, legend = FALSE)
-##' addLegend(r, location = 'right')
-##' addLegend(r, location = 'top')
+##' # create square-cell epmGrid object
+##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
+##'		cellType = 'square', method = 'centroid')
+##'
+##' # need to disable tmap if we want to anything to a plot
+##' plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
+##' addLegend(tamiasEPM2, location = 'right')
+##' addLegend(tamiasEPM2, location = 'top')
 ##' 
 ##' # fine-tune placement
-##' plot(r, legend = FALSE)
-##' addLegend(r, location=c(181000, 181100, 330500, 331500), side = 4)
+##' plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
+##' addLegend(tamiasEPM2, location=c(113281, 1265200, -1500000, -1401898), side = 1)
 ##'
 ##' # Using the params option
+##' xx <- plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE, 
+##' col = viridisLite::magma)
+##' addLegend(tamiasEPM2, params = xx, location = 'top')
+##'
+##' \donttest{
+##' # works with hex grids as well
 ##' xx <- plot(tamiasEPM, use_tmap = FALSE, legend = FALSE, 
 ##' col = viridisLite::magma)
 ##' addLegend(tamiasEPM, params = xx, location = 'top')
-##'  
+##' }
 ##' @export
 
 addLegend <- function(r, params = NULL, direction, side, location = 'right', nTicks = 3, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp, isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
@@ -151,7 +159,7 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 				grid_multiSp <- r[[1]][plotMetric]
 				grid_multiSp[tooFewInd] <- NA
 			}
-			r[[1]] <- grid_multiSp					
+			r <- grid_multiSp					
 		} else {		
 			r <- r[[1]][attributes(r)$metric]
 		}
@@ -255,7 +263,7 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 			randomSample <- sample(r[[datCol]], size=1000, replace = TRUE)
 		}
 		#if (identical(randomSample, trunc(randomSample))) {
-		if (is.integer(randomSample)) {
+		if (all(abs(randomSample - round(randomSample)) < .Machine$double.eps ^ 0.5)) {
 			isInteger <- TRUE
 		} else {
 			isInteger <- FALSE
@@ -431,14 +439,14 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 	
 	#determine side for labels based on location in plot and direction
 	if (!methods::hasArg('side')) {
-		if (direction == 'vertical') { #side = 1 or 4
+		if (direction == 'vertical') { #side = 2 or 4
 			if (mean(location[1:2]) <= mean(par('usr')[1:2])) {
 				side <- 4
 			} else {
 				side <- 2
 			}
 		}
-		if (direction == 'horizontal') { #side = 2 or 3
+		if (direction == 'horizontal') { #side = 1 or 3
 			if (mean(location[3:4]) > mean(par('usr')[3:4])) {
 				side <- 1
 			} else {

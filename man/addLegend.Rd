@@ -128,22 +128,30 @@ A number of predefined locations exist in this function to make it
   See examples.
 }
 \examples{
-library(terra)
-r <- rast(system.file("ex/elev.tif", package="terra"))
+# create square-cell epmGrid object
+tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
+	cellType = 'square', method = 'centroid')
 
-plot(r, legend = FALSE)
-addLegend(r, location = 'right')
-addLegend(r, location = 'top')
+# need to disable tmap if we want to anything to a plot
+plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
+addLegend(tamiasEPM2, location = 'right')
+addLegend(tamiasEPM2, location = 'top')
 
 # fine-tune placement
-plot(r, legend = FALSE)
-addLegend(r, location=c(181000, 181100, 330500, 331500), side = 4)
+plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
+addLegend(tamiasEPM2, location=c(113281, 1265200, -1500000, -1401898), side = 1)
 
 # Using the params option
+xx <- plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE, 
+col = viridisLite::magma)
+addLegend(tamiasEPM2, params = xx, location = 'top')
+
+\donttest{
+# works with hex grids as well
 xx <- plot(tamiasEPM, use_tmap = FALSE, legend = FALSE, 
 col = viridisLite::magma)
 addLegend(tamiasEPM, params = xx, location = 'top')
- 
+}
 }
 \author{
 Pascal Title

@@ -171,13 +171,13 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	ncol <- 100
 	isInt <- FALSE
 	if (inherits(x[[1]], 'sf')) {
-		if (is.integer(sf::st_drop_geometry(x[[1]])[, plotMetric]) & max(x[[1]][[plotMetric]]) <= 10) {
+		if (all(integercheck(sf::st_drop_geometry(x[[1]])[, plotMetric])) & max(x[[1]][[plotMetric]]) <= 10) {
 			ncol <- max(x[[1]][[plotMetric]])
 			isInt <- TRUE
 		}	
 	} else if (inherits(x[[1]], 'SpatRaster')) {
 		samp <- sample(as.vector(stats::na.omit(terra::values(x[[1]][plotMetric]))), size = 1000, replace = TRUE)
-		if (all(as.integer(samp) == samp) & max(terra::minmax(x[[1]][plotMetric])) <= 10) {
+		if (all(integercheck(samp)) & max(terra::minmax(x[[1]][plotMetric])) <= 10) {
 			ncol <- max(terra::minmax(x[[1]][plotMetric]))
 			isInt <- TRUE
 		}
@@ -487,7 +487,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 						nTicks <- 3
 					}
 					
-					minmax <- colorRampRange
+					minmax <- valRange
 
 					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
 
@@ -528,7 +528,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 			return(invisible(list(
 				log = log,
-				minmax = minmax,
+				minmax = valRange,
 				minTaxCount = minTaxCount,
 				colramp = colramp,
 				alpha = alpha,
@@ -539,51 +539,8 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	}	
 }
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-	
-# library(ggplot2)
-# gg <- ggplot(spRas[[1]]) + geom_sf(aes(fill = spRichness), color = NA) + scale_fill_viridis_c(option = "plasma")
-# gg
-
-		
-		
-			
-		
-		
-		
-		
-		
-		
-		
-# plot(grid_singleSp[plotMetric], extent = sf::st_bbox(x[[1]]), axes = includeFrame, main = NULL, pal = ignoredColor, border = NA, reset = FALSE)
-# plot(grid_multiSp[plotMetric], key.pos = key.pos, lwd = lwd, reset = FALSE, pal = colramp(ncol), breaks = breaks, add = TRUE)
-
-# use tmap_arrange() for multi-plots
-
-# diy with legend: show in example how to invisibly return and add legend where you want it
-
-
-# make basemap light gray, add graticules behind it, add arguments for basemap color, and true/false graticules
-
-
-
-
-# tmap::tm_shape(x[[1]]) + tmap::tm_fill(col = 'color', title = metricName, border.col = borderCol, lwd = lwd) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
-
-
-# tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = 'viridis', legend.show = legend, title = metricName, breaks = breaks) + tmap::tm_borders(col = borderCol, lwd = lwd) + tmap::tm_layout(frame = includeFrame)
-
-# tmap::tm_shape(x[[1]]) + tmap::tm_fill('loggedMetric', palette = colramp(ncol), legend.show = TRUE, title = metricName, breaks = seq(min(colorRampRange), max(colorRampRange), length.out = 5), style = 'cont', as.count = isInt) + tm_layout(legend.only = TRUE)
-
+integercheck <- function(x) {
+	abs(x - round(x)) < .Machine$double.eps ^ 0.5
+}
 
 
