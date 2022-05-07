@@ -16,13 +16,14 @@
 ##' @author Pascal Title
 ##' 
 ##' @examples
+##' \donttest{
 ##' tamiasEPM
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##'	meanshape <- calcMeanShape(tamiasEPM)
 ##' 
 ##' head(meanshape[[1]])
 ##' head(meanshape[[2]])
-##' 
+##' }
 ##' @export
 
 

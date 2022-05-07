@@ -24,13 +24,14 @@ mean shape.
 This function will ignore cells that are empty.
 }
 \examples{
+\donttest{
 tamiasEPM
 tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 meanshape <- calcMeanShape(tamiasEPM)
 
 head(meanshape[[1]])
 head(meanshape[[2]])
-
+}
 }
 \author{
 Pascal Title

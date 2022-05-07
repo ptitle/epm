@@ -38,6 +38,7 @@
 ##'@author Pascal Title
 ##'
 ##' @examples
+##' \donttest{
 ##' tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 ##' tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 ##' 
@@ -53,7 +54,6 @@
 ##' }
 ##' 
 ##' xx <- customBetaDiv(tamiasEPM, fun = f, radius = 70000, minTaxCount = 2, metricName = 'maxdist')
-##' 
 ##' 
 ##' 
 ##' # An example using only the phylogeny.
@@ -123,7 +123,6 @@
 ##' 
 ##' 
 ##' 
-##' \dontrun{
 ##' # also works with square grid cells
 ##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 ##' 	cellType = 'square', method = 'centroid')

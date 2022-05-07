@@ -58,6 +58,7 @@ apply the specified function to those sets of cell neighborhoods.
  See examples below.
 }
 \examples{
+\donttest{
 tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 
@@ -73,7 +74,6 @@ f <- function(cellList) {
 }
 
 xx <- customBetaDiv(tamiasEPM, fun = f, radius = 70000, minTaxCount = 2, metricName = 'maxdist')
-
 
 
 # An example using only the phylogeny.
@@ -143,7 +143,6 @@ xx <- customBetaDiv(tamiasEPM, fun = f, radius = 70000, minTaxCount = 1,
 
 
 
-\dontrun{
 # also works with square grid cells
 tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 	cellType = 'square', method = 'centroid')

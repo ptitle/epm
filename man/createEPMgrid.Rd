@@ -172,6 +172,7 @@ tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 tamiasEPM2
 
 #######
+\donttest{
 # demonstration of site-by-species matrix as input.
 tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 	cellType = 'square', method = 'centroid')
@@ -236,7 +237,7 @@ tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
 spOccList4 <- st_as_sf(spOccList3[, c("taxon", "X", "Y")], coords = c("X","Y"),
 crs = st_crs(spOccList[[1]]))
 tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
-
+}
 
 
 }
