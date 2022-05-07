@@ -97,7 +97,13 @@ extractFromEpmGrid <- function(x, spatial, returnCells = FALSE, collapse=TRUE) {
 	if (inherits(x[[1]], 'sf')) {
 		cells <- unlist(sf::st_intersects(spatial, x[[1]]))
 	} else if (inherits(x[[1]], 'SpatRaster')) {
-		cells <- terra::cellFromXY(x[[1]], sf::st_coordinates(spatial))
+		if (unique(as.character(sf::st_geometry_type(spatial))) == 'POINT') {
+			cells <- terra::cellFromXY(x[[1]], sf::st_coordinates(spatial))
+		} else if (unique(as.character(sf::st_geometry_type(spatial))) %in% c('MULTIPOLYGON', 'POLYGON', 'GEOMETRY')) {
+			cells <- terra::cells(x[[1]], terra::vect(spatial))[, 2]
+		} else {
+			stop('Spatial type not recognized.')
+		}
 	} else {
 		stop('EPM grid format not recognized.')
 	}
