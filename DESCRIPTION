@@ -1,8 +1,8 @@
 Package: epm
 Type: Package
 Title: EcoPhyloMapper
-Version: 1.0
-Author: Pascal Title
+Version: 1.0.0
+Author: Pascal Title, Donald Swiderski, Miriam Zelditch
 Maintainer: Pascal Title <pascal.title@stonybrook.edu>
 Depends: R (>= 4.0)
 Imports: terra (>= 1.5.10), sf, ape, viridisLite, pbapply, methods, Rcpp (>= 0.12.9), RcppProgress
