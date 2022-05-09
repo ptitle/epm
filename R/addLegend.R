@@ -100,6 +100,7 @@
 ##' @author Pascal Title
 ##'
 ##' @examples
+##' \donttest{
 ##' # create square-cell epmGrid object
 ##' tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 ##'		cellType = 'square', method = 'centroid')
@@ -110,7 +111,6 @@
 ##' addLegend(tamiasEPM2, location = 'top')
 ##' 
 ##' # fine-tune placement
-##' plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
 ##' addLegend(tamiasEPM2, location=c(113281, 1265200, -1500000, -1401898), side = 1)
 ##'
 ##' # Using the params option
@@ -118,7 +118,6 @@
 ##' col = viridisLite::magma)
 ##' addLegend(tamiasEPM2, params = xx, location = 'top')
 ##'
-##' \donttest{
 ##' # works with hex grids as well
 ##' xx <- plot(tamiasEPM, use_tmap = FALSE, legend = FALSE, 
 ##' col = viridisLite::magma)
