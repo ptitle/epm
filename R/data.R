@@ -4,6 +4,7 @@
 ##' 
 ##' @name epm-example
 ##' @docType data
+##' @format NULL
 ##' 
 ##' @aliases tamiasEPM tamiasPolyList tamiasTraits tamiasTree tamiasTreeSet
 ##'
@@ -37,7 +38,22 @@
 ##'
 ##'
 "tamiasEPM"
+##' @name epm-example
+##' @rdname epm-example
+##' @format NULL
 "tamiasPolyList"
+##' @name epm-example
+##' @rdname epm-example
+##' @format NULL
 "tamiasTraits"
+##' @name epm-example
+##' @rdname epm-example 
+##' @format NULL
 "tamiasTree"
+##' @name epm-example
+##' @rdname epm-example
+##' @format NULL
 "tamiasTreeSet"
+##' @name epm-example
+##' @rdname epm-example
+##' @format NULL
