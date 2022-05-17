@@ -20,13 +20,15 @@ This function will read in epmGrid objects that
 were saved with \code{\link{write.epmGrid}}.
 }
 \examples{
-\dontrun{
 #save
-write.epmGrid(tamiasEPM, '~/tamiasEPM')
+write.epmGrid(tamiasEPM, paste0(tempdir(), '/tamiasEPM'))
 
 # read back in
-tamiasEPM <- read.epmGrid('~/tamiasEPM.rds')
-}
+tamiasEPM <- read.epmGrid(paste0(tempdir(), '/tamiasEPM.rds'))
+
+# delete the file
+unlink(paste0(tempdir(), '/tamiasEPM.rds'))
+
 }
 \author{
 Pascal Title

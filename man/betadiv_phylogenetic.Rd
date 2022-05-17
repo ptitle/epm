@@ -69,7 +69,7 @@ beta_phylo_nestedness <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 beta_phylo_full <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 		component = 'full')
 
-par(mfrow=c(1,3))
+oldpar <- par(mfrow=c(1,3))
 plot(beta_phylo_turnover, reset = FALSE, key.pos = NULL)
 plot(beta_phylo_nestedness, reset = FALSE, key.pos = NULL)
 plot(beta_phylo_full, reset = FALSE, key.pos = NULL)
@@ -84,7 +84,7 @@ beta_phylo_full <- betadiv_phylogenetic(tamiasEPM2, radius = 70000,
 beta_phylo_full_slow <- betadiv_phylogenetic(tamiasEPM2, radius = 70000,
 		component = 'full', slow = TRUE)
 
-par(mfrow=c(1,2))
+par(mfrow = c(1,2))
 terra::plot(beta_phylo_full, col = sf::sf.colors(100))
 terra::plot(beta_phylo_full_slow, col = sf::sf.colors(100))
 
@@ -94,7 +94,7 @@ focalBeta <- betadiv_phylogenetic(tamiasEPM, radius = 70000,
 plot(focalBeta, reset = FALSE)
 points(-1413764, 573610.8, pch = 3, col = 'white')
 
-
+par(oldpar)
 }
 }
 \references{

@@ -1,1 +1,11 @@
 ^\.github$
+LICENSE
+documentation
+exampleData\.R
+ne_110m_admin_0_countries
+scratch
+spatialAutocorrTesting\.R
+tester\.R
+testingScript\.R
+^LICENSE\.md$
+^README\.md$

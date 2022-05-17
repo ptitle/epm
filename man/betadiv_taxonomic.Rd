@@ -74,7 +74,7 @@ beta_taxonomic_full <- betadiv_taxonomic(tamiasEPM, radius = 70000,
 
 
 
-par(mfrow=c(1,3))
+oldpar <- par(mfrow = c(1, 3))
 plot(beta_taxonomic_turnover, reset = FALSE, key.pos = NULL)
 plot(beta_taxonomic_nestedness, reset = FALSE, key.pos = NULL)
 plot(beta_taxonomic_full, reset = FALSE, key.pos = NULL)
@@ -100,6 +100,7 @@ focalBeta <- betadiv_taxonomic(tamiasEPM, radius = 70000,
 plot(focalBeta, reset = FALSE)
 points(-1413764, 573610.8, pch = 3, col = 'white')
 
+par(oldpar)
 }
 }
 \references{

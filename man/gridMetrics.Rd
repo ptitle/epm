@@ -106,7 +106,7 @@ tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 # univariate morphological example
 x <- gridMetrics(tamiasEPM, metric='mean', column='V2')
 plot(x)
-
+\donttest{
 # multivariate morphological
 x <- gridMetrics(tamiasEPM, metric='disparity')
 plot(x)
@@ -114,7 +114,7 @@ plot(x)
 # phylogenetic metrics
 x <- gridMetrics(tamiasEPM, metric='meanPatristic')
 plot(x)
-
+}
 }
 \references{
 partial disparity\cr Foote, M. (1993). Contributions of individual taxa to

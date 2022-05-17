@@ -121,7 +121,7 @@
 ##' # univariate morphological example
 ##' x <- gridMetrics(tamiasEPM, metric='mean', column='V2')
 ##' plot(x)
-##'
+##' \donttest{
 ##' # multivariate morphological
 ##' x <- gridMetrics(tamiasEPM, metric='disparity')
 ##' plot(x)
@@ -129,7 +129,7 @@
 ##' # phylogenetic metrics
 ##' x <- gridMetrics(tamiasEPM, metric='meanPatristic')
 ##' plot(x)
-##'
+##' }
 ##'@export
 
 

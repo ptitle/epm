@@ -33,20 +33,20 @@
 ##' @author Pascal Title
 ##' 
 ##' @examples
-##' \dontrun{
-##' ex <- interactiveExtent(tamiasPolyList)
+##' if (interactive()) {
+##' 	ex <- interactiveExtent(tamiasPolyList)
 ##'
-##' # You can use this as the extent in createEPMgrid
-##' grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = ex$wkt)
+##' 	# You can use this as the extent in createEPMgrid
+##' 	grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = ex$wkt)
 ##'
-##' # One way to make your code reproducible would be to copy/paste the wkt 
-##' # in your code for future use:
-##' ex <- interactiveExtent(tamiasPolyList)
-##' ex$wkt
-##' customExtent <- "POLYGON ((-2238201 3532133, -2675450 1722657, -2470677 -317634, 
-##' -1863632 -1854074, -521614.8 -2170280, -349356.8 799040.9, -2238201 3532133))"
+##' 	# One way to make your code reproducible would be to copy/paste the wkt 
+##' 	# in your code for future use:
+##' 	ex <- interactiveExtent(tamiasPolyList)
+##' 	ex$wkt
+##' 	customExtent <- "POLYGON ((-2238201 3532133, -2675450 1722657, -2470677 -317634, 
+##' 	-1863632 -1854074, -521614.8 -2170280, -349356.8 799040.9, -2238201 3532133))"
 ##'
-##' grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = customExtent)
+##' 	grid <- createEPMgrid(tamiasPolyList, resolution = 50000, extent = customExtent)
 ##'
 ##'}
 ##' @export

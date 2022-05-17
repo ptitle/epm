@@ -109,38 +109,6 @@ xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2,
 metricName = 'PD_range_ratio')
 
 
-\dontrun{
-
-# multivariate phylogenetic signal: Blomberg's K for multivariate shape
-## as implemented in the geomorph R package, function physignal.
-
-f <- function(cells) {
-	geomorph::physignal(as.matrix(dat[cells,]), 
-	phy = ape::keep.tip(phylo, cells), iter = 999, 
-	print.progress = FALSE)$phy.signal
-}
-
-xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 3, 
-metricName = 'phylosignal')
-
-
-# univariate phylogenetic signal: Blomberg's K for single traits
-## as implemented in the phytools R package, function phylosig
-f <- function(cells) {
-	as.numeric(phytools::phylosig(ape::keep.tip(phylo, cells), dat[cells], 
-	method = 'K'))
-}
-
-# create an epmGrid object with a univariate trait. Here, we'll just pull 
-## one of the columns from the multivariate dataset 
-## (for demonstration purposes only)
-tamiasEPM2 <- addTraits(tamiasEPM, data = setNames(tamiasTraits[,1], 
-rownames(tamiasTraits)), replace = TRUE)
-
-xx <- customGridMetric(tamiasEPM2, fun = f, minTaxCount = 3, 
-	metricName = 'phylosignal')
-
-
 # Example involving a set of trees
 tamiasEPM <- addPhylo(tamiasEPM, tamiasTreeSet, replace = TRUE)
 
@@ -150,7 +118,7 @@ f <- function(sp) {
 }
 
 xx <- customGridMetric(tamiasEPM, fun = f, minTaxCount = 2, metric = 'nodeAge')
-}
+
 
 
 }
