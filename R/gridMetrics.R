@@ -387,13 +387,6 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		}
 	}
 	
-	# if (metric == 'phylosignal' & metricType == 'uniVar') {
-		# if (verbose & metricType == 'uniVar') message('\t...calculating univariate metric: ', metric, '...\n')
-		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		# ind <- which(lengths(uniqueComm) > 2)
-		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(dat[y]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
-	# }
-
 	## MULTIVARIATE
 	
 	if (metric == 'disparity' & metricType == 'multiVar') {
@@ -467,13 +460,6 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 	}
 	
 	
-	# if (metric == 'phylosignal' & metricType == 'multiVar') {
-		# if (verbose & metricType == 'multiVar') message('\t...calculating multivariate metric: ', metric, '...\n')
-		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		# ind <- which(lengths(uniqueComm) > 2)
-		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) geomorph::physignal(as.matrix(dat[y, ]), phy = ape::keep.tip(x$phylo, y), iter = 999, print.progress = FALSE)$phy.signal)	
-	# }
-	
 	## ----------------------------------
 	## PHYLOGENY-RELATED METRICS
 	
@@ -501,13 +487,6 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 				sum(tree$edge.length[unique(unlist(yy))])
 			})
 			
-			# mat <- matrix(0, nrow = length(uniqueComm), ncol = length(x$phylo$tip.label))
-			# colnames(mat) <- x$phylo$tip.label
-			# for (i in 1:length(uniqueComm)) {
-				# mat[i, colnames(mat) %in% uniqueComm[[i]]] <- 1
-			# }
-			# resVal <- picante::pd(mat, x$phylo, include.root = TRUE)$PD
-			# resVal[sapply(uniqueComm, anyNA)] <- NA
 		}
 		
 		if (metric == 'meanPatristic') {
@@ -621,30 +600,6 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 	
 	if (metric == 'phyloWeightedEndemism') {
 		if (verbose) message('\t...calculating phylogenetic weighted endemism...\n')
-
-		# spEdges <- getRootToTipEdges(tree)
-		# if (!'edgeArea' %in% names(x)) {
-			# if (verbose) message('\t...calculating branch-specific range sizes...\n')
-
-			# # phylo branch ranges must be based on full list of cell communities, therefore we need to expand the speciesList
-			# fullSpList <- expandSpeciesCellList(x)
-			# x[['edgeArea']] <- do.call(cbind, phyloBranchRanges(tree, convertNAtoEmpty(fullSpList), spEdges))
-		# }
-		# tipIndVec <- sapply(tree$tip.label, function(z) which(tree$tip.label == z))
-		# resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		# ind <- which(sapply(uniqueComm, anyNA) == FALSE)
-
-		# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
-			# commEdges <- unique(unlist(spEdges[tipIndVec[y]])) + 1
-			# sub <- x[['edgeArea']][commEdges,]
-			# if (inherits(sub, 'numeric')) {
-				# sub <- matrix(sub, nrow = 1)
-			# }
-			# sum(sub[,1] / sub[,2])
-		# })
-
-	
-		## version 2 implementation
 		
 		# Phylogenetic endemism is total branch length for edges uniting a set of taxa, standardized
 		# by total tree branch length

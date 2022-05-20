@@ -1,13 +1,13 @@
 Package: epm
 Type: Package
 Title: EcoPhyloMapper
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(
 	person("Pascal", "Title", email = "pascal.title@stonybrook.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6316-0736")),
 	person("Donald", "Swiderski", role = "aut"),
 	person("Miriam", "Zelditch", role = "aut"))
 Depends: R (>= 4.0)
-Imports: terra (>= 1.5.10), sf, ape, viridisLite, pbapply, methods, Rcpp (>= 0.12.9), RcppProgress
+Imports: terra (>= 1.5-21), sf, ape, viridisLite, pbapply, methods, Rcpp (>= 0.12.9), RcppProgress
 Suggests: tmap, data.table, spdep
 Description: Facilitates the aggregation of species' geographic ranges from vector or raster spatial data, and that enables the calculation of various morphological and phylogenetic community metrics across geography.
 License: GPL (>= 3)
@@ -17,6 +17,6 @@ NeedsCompilation: yes
 SystemRequirements: C++11
 LinkingTo: Rcpp, RcppProgress
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 ByteCompile: true
 Encoding: UTF-8

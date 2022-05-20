@@ -351,7 +351,7 @@ NumericMatrix calcPairwiseTaxonomicSorensen(List allComm, String component) {
 				std::vector<std::string> commJ = as< std::vector<std::string> >(allComm[j]);
 
 				// if a community is empty, there is no distance
-				if ((commI[0] == "empty") | (commJ[0] == "empty")) {
+				if ((commI[0] == "empty") || (commJ[0] == "empty")) {
 					out(i,j) = -1.0;
 					out(j,i) = -1.0;
 				} else {
@@ -471,7 +471,7 @@ NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component) 
 				std::vector<std::string> commI = as< std::vector<std::string> >(allComm[i]);
 				std::vector<std::string> commJ = as< std::vector<std::string> >(allComm[j]);
 
-				if ((commI[0] == "empty") | (commJ[0] == "empty")) {
+				if ((commI[0] == "empty") || (commJ[0] == "empty")) {
 					out(i,j) = -1.0;
 					out(j,i) = -1.0;
 				} else {

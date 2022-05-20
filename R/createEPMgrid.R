@@ -781,12 +781,8 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 		
 		if (method == 'percentOverlap') {
 			if (verbose) message('\t\t Converting ranges to grid...')
-			# tmp <- sf::st_intersects(poly, gridTemplate, sparse = FALSE)
-			# tmp <- apply(tmp, 1, function(x) which(x == TRUE))
 			tmp <- sf::st_intersects(poly, gridTemplate, sparse = TRUE)
 			
-			# tmpCrosses <- sf::st_intersects(sf::st_cast(poly, 'MULTILINESTRING'), gridTemplate ,sparse = FALSE)
-			# tmpCrosses <- apply(tmpCrosses, 1, function(x) which(x == TRUE))
 			tmpCrosses <- sf::st_intersects(sf::st_cast(poly, 'MULTILINESTRING'), gridTemplate, sparse = TRUE)
 		
 			# plot(poly[i])
@@ -818,10 +814,7 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 		}
 	} else {
 		# for points
-		# spGridList <- sf::st_intersects(poly, gridTemplate, sparse = FALSE)
-		# spGridList <- apply(spGridList, 1, function(x) which(x == TRUE))
 		spGridList <- sf::st_intersects(poly, gridTemplate, sparse = TRUE)
-		# spGridList <- pbapply::pblapply(poly, function(x) unlist(sf::st_intersects(x, gridTemplate)), cl = cl)
 	}
 
 	names(spGridList) <- taxonNames
@@ -839,83 +832,7 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 				setTxtProgressBar(pb, i)
 
 				spGridList[[smallSp[i]]] <- findTopCells5(poly[smallSp[i]], gridTemplate, resolution)
-				
-			# smallSpPoly <- poly[smallSp]
-			# tmp <- sf::st_intersects(smallSpPoly, gridTemplate, sparse = TRUE)
-			# tmpCrosses <- sf::st_intersects(sf::st_cast(smallSpPoly, 'MULTILINESTRING'), gridTemplate, sparse = TRUE)
-			
-			
 
-			# for (i in 1:length(tmp)) {
-			#	 # message('\t', i)
-			#	 if (length(tmp[[i]]) > 0) {
-			#		 tmpWithin <- setdiff(tmp[[i]], tmpCrosses[[i]])
-			#		 xx <- tmpCrosses[[i]][which.max(as.vector(sf::st_area(sf::st_intersection(sf::st_union(smallSpPoly[i]), gridTemplate[tmpCrosses[[i]],])) / sf::st_area(gridTemplate[tmpCrosses[[i]],])))]
-			#		 
-			#		 spGridList[[smallSp[i]]] <- union(tmpWithin, xx)
-			#	 }
-			# }
-			
-		# 	# dealing with disjunct ranges	
-		#	 for (i in 1:length(tmp)) {
-		#		 # message('\t', i)
-		#		 if (verbose) setTxtProgressBar(pb, i)
-		#		 if (length(tmp[[i]]) > 0) {
-		#			 check <- sf::st_intersects(sf::st_cast(smallSpPoly[i], 'POLYGON'), sf::st_cast(smallSpPoly[i], 'POLYGON'))
-		#			 if (any(lengths(check)) > 1) {
-		#				 mergedPoly <- sf::st_union(smallSpPoly[i])
-		#				 mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
-		#			 } else {
-		#				 mergedPoly <- sf::st_cast(smallSpPoly[i], 'POLYGON')
-		#			 }
-		#			 
-		#			 xx <- sf::st_intersects(mergedPoly, gridTemplate[tmpCrosses[[i]],])
-		#			 
-		#			 topCells <- integer(length(mergedPoly))
-		#			 for (j in 1:length(mergedPoly)) {
-		#				 topCells[j] <- tmpCrosses[[i]][xx[[j]]][which.max(sf::st_area(sf::st_intersection(mergedPoly[j], gridTemplate[tmpCrosses[[i]][xx[[j]]],])) / sf::st_area(gridTemplate[tmpCrosses[[i]][xx[[j]]],]))]
-		#			 }
-		#			 spGridList[[smallSp[i]]] <- sort(unique(topCells))
-		#		 }
-		#	 }
-		# 
-		#	 sf::st_area(sf::st_intersection(mergedPoly, gridTemplate[tmpCrosses[[i]],])) / sf::st_area(gridTemplate[tmpCrosses[[i]],])
-		#	 
-		#	 spdep::poly2nb(sf::st_cast(smallSpPoly[i], 'POLYGON'))
-		#	 
-		#	 samplePts <- sf::st_sample(gridTemplate, size = rep(100, nrow(gridTemplate)), type = 'hexagonal')
-			
-				# findTopCells2(poly[smallSp[i]], gridTemplate)
-				# tmp <- unlist(sf::st_intersects(poly[smallSp[i]], gridTemplate))
-				
-				# if (length(tmp) > 0) {
-				
-  					# # of grid cells intersected by small-ranged species, keep the cell most occupied.
-  					# # this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
-  					
-  					# check <- sf::st_intersects(sf::st_cast(poly[smallSp[i]], 'POLYGON'), sf::st_cast(poly[smallSp[i]], 'POLYGON'))
-  					# if (any(lengths(check)) > 1) {
-	  					# mergedPoly <- sf::st_union(poly[smallSp[i]])
-  						# mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
-  					# } else {
-  						# mergedPoly <- sf::st_cast(poly[smallSp[i]])
-  					# }			
-  					# # now mergedPoly should be a set of separate polygons that do not share borders
-					# topCells <- integer(length(mergedPoly))
-  					# for (j in 1:length(mergedPoly)) {
-  						# areas <- sapply(tmp, function(y) {
-  							# x1 <- as.vector(sf::st_area(sf::st_intersection(mergedPoly[j], gridTemplate[y,])))
-  							# if (length(x1) == 0) stop()
-  							# if (length(x1) == 0) x1 <- 0
-  							# x2 <- as.vector(sf::st_area(gridTemplate[y,]))
-  							# x1 / x2
-  						# })
-  						# topCells[j] <- tmp[which.max(areas)]	
-  					# }  					
-  									
-  					# spGridList[[smallSp[i]]] <- sort(unique(topCells))
-
-  				# }
 			}
 			if (verbose) cat('\n'); close(pb)
 			rescued <- setdiff(names(smallSp), names(which(lengths(spGridList) == 0)))
@@ -1160,16 +1077,6 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 		cellsToExclude <- FALSE
 	}
 	
-		# xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
-		# if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
-			# goodCells <- unique(xx[, 'cell'])
-			# cellsToExclude <- TRUE
-		# } else {
-			# cellsToExclude <- FALSE
-		# }
-	# } else {
-		# cellsToExclude <- FALSE
-	# }
 	
 	# prep for parallel computing
 	if (nThreads == 1) {
@@ -1227,40 +1134,6 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 					}
 					
 					presenceCells <- which(!is.na(terra::values(xx)))
-					
-								
-					# gridTemplateCrop <- terra::crop(gridTemplate, terra::vect(x))
-					# xx <- terra::cells(gridTemplateCrop, y = terra::vect(x), weights = TRUE)
-					
-					# if (all(is.na(xx[, 'cell']))) {
-						# stop('Memory requirement too high. Suggest switching to centroid method.')
-					# }
-					
-		 	   		# if (nrow(xx) > 0) {
-		 	   			# # if polygon extends beyond grid template, cell may be NaN
-						# if (anyNA(xx[, 'cell'])) {
-							# xx <- xx[!is.na(xx[, 'cell']), ]
-						# }
-														
-						# if (!is.matrix(xx)) {
-						# # if xx was a single row, the subsetting might cause it to become a vector
-							# xx <- matrix(xx, ncol = 3, dimnames = list(NULL, names(xx)))
-						# }
-						
-							# if (nrow(xx) > 0) {
-								# presenceCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateCrop, cell = xx[xx[, 'weights'] >= percentThreshold, 'cell']))
-								
-							# # exclude some cells if needed
-							# if (cellsToExclude) {
-								# presenceCells <- presenceCells[!is.na(unlist(gridmask[presenceCells]))]
-							# }
-
-						# } else {
-							# presenceCells <- integer(0)
-						# }
-		 	   		# } else {
-						# presenceCells <- integer(0)
-					# }
 				}
 			} else {
 				presenceCells <- integer(0)
@@ -1318,71 +1191,6 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 				}
 			}
 			
-			
-			
-# # 			gridTemplateHighRes <- terra::rast(terra::disagg(gridTemplate, fact = 10))
-			
-			# pb <- txtProgressBar(max = length(smallSp), style = 3)
-			# for (i in 1:length(smallSp)) {
-				
-				# if (verbose) setTxtProgressBar(pb, i)
-				
-				# # do the extents overlap? If not, then skip
-				# if (terra::relate(gridext, terra::ext(terra::vect(poly[[smallSp[i]]])), relation = 'intersects')[1,1]) {
-				
-					 # check <- sf::st_intersects(sf::st_cast(sf::st_geometry(poly[[smallSp[i]]]), 'POLYGON'), sf::st_cast(sf::st_geometry(poly[[smallSp[i]]]), 'POLYGON'))
-					# if (any(lengths(check)) > 1) {
-						# mergedPoly <- sf::st_union(poly[[smallSp[i]]])
-						# mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
-					# } else {
-						# mergedPoly <- sf::st_cast(poly[[smallSp[i]]])
-					# }
-					
-					# mergedPoly <- sf::st_geometry(mergedPoly)	
-	
-					# # now mergedPoly should be a set of separate polygons that do not share borders
-					# topCells <- integer(length(mergedPoly))
-					
-					# for (j in 1:length(mergedPoly)) {
-						
-						# xx <- terra::cells(gridTemplateHighRes, y = terra::vect(mergedPoly[j]), weights = TRUE)
-	
-						# # if polygon extends beyond grid template, cell may be NaN
-						# if (anyNA(xx[, 'cell'])) {
-							# xx <- xx[!is.na(xx[, 'cell']),]
-						# }
-	 
-						# if (nrow(xx) > 0) {
-							
-							# smallCells <- xx[which.max(xx[, 'weights']), 'cell']
-							# smallCells <- terra::cellFromXY(gridTemplate, terra::xyFromCell(gridTemplateHighRes, cell = smallCells))
-							# topCells[j] <- smallCells
-						# }
-					# }
-					
-					# if (cellsToExclude) {
-						# topCells <- topCells[!is.na(unlist(gridmask[topCells]))]
-						# # if (length(topCells) > 0) {
-							# # stop()
-						# # }
-					# }
-						
-					# spGridList[[smallSp[i]]] <- sort(unique(topCells))
-	
-					# # ## alternative approach using point sampling
-					# # xx <- terra::cells(gridTemplateHighRes, y = terra::vect(poly[[smallSp[i]]]), weights = TRUE)
-					# # if (nrow(xx) > 0) {
-						# # pts <- terra::xyFromCell(gridTemplateHighRes, cell = xx[, 'cell'])
-					# # } else {
-						# # # if range is too small to register, sample points within the polygon
-						# # pts <- sf::st_sample(poly[[smallSp[i]]], size = 100)
-						# # pts <- sf::st_coordinates(pts)
-					# # }
-					# # smallCells <- unique(terra::cellFromXY(gridTemplate, pts))
-					# # spGridList[[smallSp[i]]] <- smallCells		
-				# }
-			# }
-			
 			if (verbose) cat('\n'); close(pb)
 			
 			rescued <- setdiff(names(smallSp), names(which(lengths(spGridList) == 0)))
@@ -1392,16 +1200,7 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 			}
 		}
 	}
-	
-	# # if extent was polygon, then mask cells that fall outside
-	# if (inherits(extentVec, 'sf')) {
-	
-		# xx <- terra::cells(gridTemplate, y = terra::vect(extentVec), weights = TRUE)
-		# if (terra::ncell(gridTemplate) != length(unique(xx[, 'cell']))) {
-			# spGridList <- lapply(spGridList, function(x) intersect(x, unique(xx[, 'cell'])))
-		# }
-	# }
-	
+		
 	return(list(gridTemplate, spGridList))
 }
 
@@ -1650,140 +1449,4 @@ processSiteBySpeciesMatrix <- function(mat, gridTemplate) {
 	return(obj)
 }
 
-
-
-
-# old version, no longer used
-# # polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs, nGroups, retainSmallRanges, nThreads) {
-	
-	# # Generate template
-	# if (!inherits(extentVec, 'sf')) {
-		# masterExtent <-  sf::st_as_sfc(extentVec)
-	# } else {
-		# masterExtent <- extentVec
-	# }
-	# gridTemplate <- sf::st_make_grid(masterExtent, cellsize = c(resolution, resolution), square = FALSE, crs = sf::st_crs(masterExtent))
-	
-	# # if extent was polygon, then mask the grid template
-	# if (inherits(masterExtent, c('sf', 'sfc'))) {
-		# gridTemplate <- gridTemplate[lengths(sf::st_intersects(gridTemplate, masterExtent)) > 0]
-	# }	
-	
-	# gridTemplate <- sf::st_sf(gridTemplate, grid_id = 1:length(gridTemplate))
-	
-	# gridCentroids <- suppressWarnings(sf::st_centroid(gridTemplate))
-	
-	# # do kmeans clustering on centroid coords.
-	# if (nGroups > 1) {
-		# clusters <- stats::kmeans(sf::st_coordinates(gridCentroids), centers = nGroups)
-		# gridTemplate$clusters <- clusters$cluster
-	# }
-	
-	# # prep for parallel computing
-	# if (nThreads == 1) {
-		# cl <- NULL
-	# } else if (nThreads > 1) {
-		# if (.Platform$OS.type != 'windows') {
-			# cl <- nThreads
-		# } else {
-			# cl <- parallel::makeCluster(nThreads)
-			# parallel::clusterExport(cl, c('polyToGridCells', 'method', 'gridTemplate', 'gridCentroids', 'percentThreshold'))
-		# }
-	# }
-	
-	# if (nGroups > 1) {
-		# subsetsList <- list()
-		# for (i in 1:nGroups) {
-			
-			# message('\tProcessing subgroup ', i, ' of ', nGroups, '...')
-			
-			# # get grid cells per species
-			# subsetsList[[i]] <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, percentThreshold, subset = i), cl = cl)
-		# }
-		
-		# spGridList <- lapply(1:length(subsetsList[[1]]), function(i) {
-			# unlist(lapply(subsetsList, function(x) x[[i]]))
-		# })
-		# names(spGridList) <- names(subsetsList[[1]])
-		# rm(subsetsList, clusters)	
-	
-	
-	# } else {
-		
-		# if (unique(as.character(sf::st_geometry_type(poly[[1]]))) == 'MULTIPOLYGON') {
-			# spGridList <- pbapply::pblapply(poly, function(x) polyToGridCells(x, method = method, gridTemplate, gridCentroids, percentThreshold, subset = 0), cl = cl)
-			# # for (i in 1:length(poly)) {
-			# #	 message(i)
-			# #	 tmp <- epm:::polyToGridCells(poly[[i]], method = method, gridTemplate, gridCentroids, percentThreshold, subset = 0)
-			# # }
-		# } else {
-			# # for points
-			# spGridList <- pbapply::pblapply(poly, function(x) unlist(sf::st_intersects(x, gridTemplate)), cl = cl)
-		# }
-	# }
-
-	# if (nThreads > 1 & .Platform$OS.type == 'windows') parallel::stopCluster(cl)
-		
-	# # if we are retaining small ranged species that would otherwise be dropped,
-	# # then we will search for species that did not register in any grid cell
-	# smallSp <- which(lengths(spGridList) == 0)
-	
-	# if (retainSmallRanges) {
-		# if (length(smallSp) > 0) {
-			# for (i in 1:length(smallSp)) {
-				# # message('\t', i)
-
-				# tmp <- unlist(sf::st_intersects(poly[[smallSp[i]]], gridTemplate))
-				
-				# if (length(tmp) > 0) {
-				
-  					# # of grid cells intersected by small-ranged species, keep the cell most occupied.
-  					# # this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
-  					# tmp <- tmp[which.max(as.vector(sf::st_area(sf::st_intersection(sf::st_union(poly[[smallSp[i]]]), gridTemplate[tmp,])) / sf::st_area(gridTemplate[tmp,])))]
-				
-  					# spGridList[[smallSp[i]]] <- tmp
-
-  				# }
-			# }
-			# rescued <- setdiff(names(smallSp), names(which(lengths(spGridList) == 0)))
-			# if (length(rescued) > 0) {
-				# msg <- paste0(length(rescued), ' small-ranged species ', ifelse(length(rescued) > 1, 'were', 'was'), ' preserved:\n\t', paste(rescued, collapse='\n\t'))
-				# message(msg)
-			# }
-		# }
-	# }
-	
-	# return(list(gridTemplate, spGridList))
-# }	
-	
-
-# # Function to take a polygon and return occupied grid cells
-# # subset allows us to operate on a subset of grid cells at a time, if necessary
-# polyToGridCells <- function(poly, method, gridTemplate, gridCentroids, percentThreshold, subset) {
-
-	# if (subset == 0) {
-		# clusterInd <- 1:nrow(gridTemplate)
-	# } else {
-		# clusterInd <- which(gridTemplate$clusters == subset)
-	# }
-	
-	# if (method == 'centroid') {
-		# tmp <- clusterInd[unlist(sf::st_intersects(poly, gridCentroids[clusterInd, ]))]
-	# }
-
-	# if (method == 'percentOverlap') {
-		# tmp <- unlist(sf::st_intersects(poly, gridTemplate[clusterInd, ]))
-		# tmpWithin <- clusterInd[tmp][lengths(sf::st_within(gridTemplate[clusterInd[tmp],], poly)) > 0]
-		# tmpCrosses <- setdiff(clusterInd[tmp], tmpWithin)
-		# # tmpWithin <- tmp[lengths(sf::st_within(gridTemplate[tmp,], poly)) > 0]
-		# # tmpCrosses <- setdiff(tmp, tmpWithin)
-				
-		# if (length(tmpWithin) > 0 & length(tmpCrosses) > 0) {
-			# tmpCrosses <- tmpCrosses[as.vector(sf::st_area(sf::st_intersection(sf::st_union(poly), gridTemplate[tmpCrosses,])) / sf::st_area(gridTemplate[tmpCrosses,])) >= percentThreshold]
-			# tmp <- union(tmpWithin, tmpCrosses)
-		# }
-	# }
-	
-	# return(tmp)
-# }
 
