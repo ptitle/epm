@@ -2,6 +2,7 @@
   [![R-CMD-check](https://github.com/ptitle/epm/workflows/R-CMD-check/badge.svg)](https://github.com/ptitle/epm/actions)
   [![rstudio mirror downloads](https://cranlogs.r-pkg.org/badges/epm)](https://github.com/r-hub/cranlogs.app)
   [![cran version](https://www.r-pkg.org/badges/version/epm)](https://cran.r-project.org/package=epm)
+  [![DOI](https://zenodo.org/badge/348488706.svg)](https://zenodo.org/badge/latestdoi/348488706)
   <!-- badges: end -->
 # epm
 ## EcoPhyloMapper R package
