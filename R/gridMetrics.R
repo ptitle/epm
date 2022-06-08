@@ -466,7 +466,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 	if (metric %in% c('pd', 'meanPatristic', 'minPatristicNN', 'meanPatristicNN', 'phyloEvenness', 'phyloDisparity', 'PSV', 'PSR', 'DR')) {
 		
 		# calculate pairwise patristic distance
-		patdist <- cophenetic(tree)
+		patdist <- ape::cophenetic.phylo(tree)
 		diag(patdist) <- NA
 		
 		if (metric == 'pd') {
