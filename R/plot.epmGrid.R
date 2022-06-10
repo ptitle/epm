@@ -98,7 +98,7 @@
 
 plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, minTaxCount = 'auto', ignoredColor = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, title = '', add = FALSE, ...) {
 	
-	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; ignoredColor = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE; minTaxCount = 'auto'; title = NA
+	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; ignoredColor = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE; minTaxCount = 'auto'; title = ''
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('Object must be of class epmGrid')
@@ -168,18 +168,22 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 		}	
 	} 	
 	
-	ncol <- 100
+	ncolors <- 100
 	isInt <- FALSE
 	if (inherits(x[[1]], 'sf')) {
-		if (all(integercheck(sf::st_drop_geometry(x[[1]])[, plotMetric])) & max(x[[1]][[plotMetric]]) <= 10) {
-			ncol <- max(x[[1]][[plotMetric]])
+		if (all(integercheck(sf::st_drop_geometry(x[[1]])[, plotMetric]))) {
 			isInt <- TRUE
+			if (max(x[[1]][[plotMetric]]) <= 10) {
+				ncolors <- max(x[[1]][[plotMetric]])
+			}
 		}	
 	} else if (inherits(x[[1]], 'SpatRaster')) {
 		samp <- sample(as.vector(stats::na.omit(terra::values(x[[1]][plotMetric]))), size = 1000, replace = TRUE)
-		if (all(integercheck(samp)) & max(terra::minmax(x[[1]][plotMetric])) <= 10) {
-			ncol <- max(terra::minmax(x[[1]][plotMetric]))
+		if (all(integercheck(samp))) {
 			isInt <- TRUE
+			if (max(terra::minmax(x[[1]][plotMetric])) <= 10) {
+				ncolors <- max(terra::minmax(x[[1]][plotMetric]))
+			}
 		}
 	}
 
@@ -204,7 +208,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	
 	metricName <- plotMetric
 	
-	####################################3
+	####################################
 	## HEXAGONAL GRIDS
 	
 	if (inherits(x[[1]], 'sf')) {
@@ -243,7 +247,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 				tmap::tmap_mode('view')
 			}
 			
-			if (isInt) {
+			if (isInt & ncolors <= 10) {
 				tmapStyle <- 'pretty'
 			} else {
 				tmapStyle <- 'cont'
@@ -251,11 +255,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 			if (minTaxCount <= 1) {
 				
-				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 								
 			} else {
 				
-				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(1000), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -276,12 +280,12 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 				} else {
 					valRange <- range(grid_multiSp[[plotMetric]], na.rm = TRUE)
 				}
-				breaks <- seq(min(valRange), max(valRange), length.out = ncol + 1)
+				breaks <- seq(min(valRange), max(valRange), length.out = ncolors + 1)
 			} else {
-				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncol + 1)
+				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncolors + 1)
 			}
 			
-			colors <- colramp(ncol)
+			colors <- colramp(ncolors)
 			colors <- grDevices::adjustcolor(colors, alpha.f = alpha)
 			borderColor <- grDevices::adjustcolor('black', alpha.f = alpha)
 			ignoredColor <- grDevices::adjustcolor(ignoredColor, alpha.f = alpha)
@@ -322,7 +326,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (legend) {
 	
 				if (minTaxCount <= 1) {
-					if (isInt) {
+					if (isInt & ncolors <= 10) {
 						if (inherits(x[[1]], 'sf')) {
 							nTicks <- max(x[[1]][[plotMetric]])
 						} else if (inherits(x[[1]], 'SpatRaster')) {
@@ -334,11 +338,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					
 					minmax <- colorRampRange
 
-					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
+					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncolors, nTicks = nTicks, minmax = minmax)
 
 				} else {
 
-					if (isInt) {
+					if (isInt & ncolors <= 10) {
 						if (inherits(x[[1]], 'sf')) {
 							nTicks <- max(grid_multiSp[plotMetric])
 						} else if (inherits(x[[1]], 'SpatRaster')) {
@@ -354,7 +358,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 						minmax <- colorRampRange
 					}
 
-					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncolors, nTicks = nTicks, minmax = minmax)
 				}
 			}
 	
@@ -429,18 +433,18 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 				tmap::tmap_mode('view')
 			}
 			
-#			if (isInt) {
-#				tmapStyle <- 'pretty'
-#			} else {
+			if (isInt & ncolors <= 10) {
+				tmapStyle <- 'cat'
+			} else {
 				tmapStyle <- 'cont'
-#			}
+			}
 			
 			if (minTaxCount <= 1) {
-				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, bbox = datBB) + tmap::tm_raster(palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 				
 			} else {
 				
-				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(1000), legend.show = legend, title = NA, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				map <- map + tmap::tm_shape(metricMap, is.master = TRUE, bbox = datBB) + tmap::tm_raster(palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_shape(grid_singleSp) + tmap::tm_raster(palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
 			
 			}
 		
@@ -465,11 +469,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 
 			if (minTaxCount <= 1) {
-				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncolors), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
 				
 			} else {
 				
-				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncol), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
+				terra::plot(terra::crop(metricMap, datBB2), col = colramp(ncolors), axes = includeFrame, legend = FALSE, plg = list(shrink = 0.7, title = metricName), range = valRange, alpha = alpha, add = add, ...)
 				terra::plot(grid_singleSp, col = ignoredColor, axes = includeFrame, legend = FALSE, range = valRange, add = TRUE, alpha = alpha)
 				
 			}
@@ -477,7 +481,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (legend) {
 	
 				if (minTaxCount <= 1) {
-					if (isInt) {
+					if (isInt & ncolors <= 10) {
 						if (inherits(x[[1]], 'sf')) {
 							nTicks <- max(x[[1]][[plotMetric]])
 						} else if (inherits(x[[1]], 'SpatRaster')) {
@@ -489,11 +493,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					
 					minmax <- valRange
 
-					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
+					addLegend(x[[1]][plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncolors, nTicks = nTicks, minmax = minmax)
 
 				} else {
 
-					if (isInt) {
+					if (isInt & ncolors <= 10) {
 						if (inherits(x[[1]], 'sf')) {
 							nTicks <- max(grid_multiSp[plotMetric])
 						} else if (inherits(x[[1]], 'SpatRaster')) {
@@ -509,7 +513,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 						minmax <- colorRampRange
 					}
 
-					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncol, nTicks = nTicks, minmax = minmax)
+					addLegend(grid_multiSp[plotMetric], location = 'topright', ramp = colramp, isInteger = isInt, ncolors = ncolors, nTicks = nTicks, minmax = minmax)
 				}
 			}
 			
