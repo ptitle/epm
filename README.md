@@ -21,3 +21,8 @@ To install the latest development version from GitHub, run the following in R: `
 
 [Check out the wiki for explanations and discussions of the available options.](https://github.com/ptitle/epm/wiki)
 
+## Citation
+If you use this R package, please cite the accompanying article: <br>
+Pascal O. Title, Donald L. Swiderski and Miriam L. Zelditch. 2022. EcoPhyloMapper: an R package for integrating geographic ranges, phylogeny, and morphology. Methods in Ecology and Evolution. https://doi.org/10.1111/2041-210X.13914
+
+
