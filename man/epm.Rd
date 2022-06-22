@@ -12,6 +12,11 @@ across geography.
 
 A detailed wiki for the R package can be found on the epm github page:
 \url{https://github.com/ptitle/epm/wiki#table-of-contents}
+
+To cite the epm package in publications, please use: \cr
+Pascal O. Title, Donald L. Swiderski and Miriam L. Zelditch. 2022. EcoPhyloMapper: 
+an R package for integrating geographic ranges, phylogeny, and morphology. Methods 
+in Ecology and Evolution. \doi{10.1111/2041-210X.13914}
 }
 \details{
 \strong{Creating and enhancing an epmGrid object} \cr
