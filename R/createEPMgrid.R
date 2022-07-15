@@ -796,6 +796,8 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 					poly[i] <- sf::st_make_valid(poly[i])
 				}
 			}
+			
+			# table(sf::st_is_valid(poly))
 
 			spGridList <- vector('list', length(tmp))
 			pb <- txtProgressBar(max = length(tmp), style = 3)
@@ -812,7 +814,7 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 			}
 			if (verbose) cat('\n'); close(pb)
 		}
-	} else {
+	} else 	{
 		# for points
 		spGridList <- sf::st_intersects(poly, gridTemplate, sparse = TRUE)
 	}
@@ -1013,23 +1015,35 @@ findTopCells5 <- function(x, grid, resolution) {
 	tmp <- unlist(sf::st_intersects(x, grid))
 			
 	if (length(tmp) > 0) {
+		
+		if (length(tmp) == 1) {
+			tmp
+		} else {
+				
+			# of grid cells intersected by small-ranged species, keep the cell most occupied.
+			# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage, for example.
+		  					
+			ras <- terra::rast(extent = terra::ext(terra::vect(grid[tmp,])), resolution = rep(resolution/100, 2), crs = sf::st_crs(grid)$input)
+			gridcellras <- terra::rasterize(terra::vect(grid[tmp,]), ras, field = 'grid_id')
+			polyRas <- terra::rasterize(terra::vect(x), ras, cover = TRUE)
+	
+			if (all(is.nan(terra::values(polyRas)))) {
+				# if (length(tmp) > 1) stop()
+				xx <- terra::cells(ras, terra::vect(x), weights = T)
+				polyRas[xx[, 'cell']] <- xx[, 'weights']	
+			}
 			
-		# of grid cells intersected by small-ranged species, keep the cell most occupied.
-		# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
-	  					
-		ras <- terra::rast(extent = terra::ext(terra::vect(grid[tmp,])), resolution = rep(resolution/100, 2), crs = sf::st_crs(grid)$input)
-		gridcellras <- terra::rasterize(terra::vect(grid[tmp,]), ras, field = 'grid_id')
-		polyRas <- terra::rasterize(terra::vect(x), ras, cover = TRUE)
-		clusters <- terra::patches(polyRas, directions = 8, allowGaps = FALSE)
-
-		# and identify most occupied cell per patch
-		topCells <- integer(max(terra::minmax(clusters)))
-		for (j in 1:max(terra::minmax(clusters))) {
-			yy <- terra::mask(polyRas, clusters, maskvalues = j, inverse = TRUE)
-			yy <- terra::mask(gridcellras, yy)
-			topCells[j] <- as.integer(names(which.max(table(terra::values(yy)))))
+			clusters <- terra::patches(polyRas, directions = 8, allowGaps = FALSE)
+	
+			# and identify most occupied cell per patch
+			topCells <- integer(max(terra::minmax(clusters)))
+			for (j in 1:max(terra::minmax(clusters))) {
+				yy <- terra::mask(polyRas, clusters, maskvalues = j, inverse = TRUE)
+				yy <- terra::mask(gridcellras, yy)
+				topCells[j] <- as.integer(names(which.max(table(terra::values(yy)))))
+			}
+			sort(unique(topCells))
 		}
-		sort(unique(topCells))
 	} else {
 		numeric(0)
 	}
