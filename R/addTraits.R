@@ -45,10 +45,11 @@ addTraits <- function(x, data, replace = FALSE, verbose = FALSE) {
 	}
 	
 	# drop species from trait vector if missing from grid
-	if (is.vector(data)) {
+	if (is.null(dim(data))) {
 		if (is.null(names(data))) {
 			stop('Data must have names.')
 		}
+		data <- data[!is.na(data)]
 		traitSpecies <- intersect(x$geogSpecies, names(data))
 		inGeogNotData <- setdiff(x$geogSpecies, names(data))
 		inDataNotGeog <- setdiff(names(data), x$geogSpecies)
