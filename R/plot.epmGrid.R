@@ -280,10 +280,11 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 				} else {
 					valRange <- range(grid_multiSp[[plotMetric]], na.rm = TRUE)
 				}
-				breaks <- seq(min(valRange), max(valRange), length.out = ncolors + 1)
 			} else {
-				breaks <- seq(min(colorRampRange), max(colorRampRange), length.out = ncolors + 1)
+				valRange <- colorRampRange
 			}
+			
+			breaks <- seq(min(valRange), max(valRange), length.out = ncolors + 1)
 			
 			colors <- colramp(ncolors)
 			colors <- grDevices::adjustcolor(colors, alpha.f = alpha)
