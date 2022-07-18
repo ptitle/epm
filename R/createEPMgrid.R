@@ -224,7 +224,7 @@
 
 createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', percentThreshold = 0.25, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, verbose = FALSE, use.data.table = 'auto') {
 	
-	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; percentThreshold = 0.1; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; verbose = TRUE; use.data.table = 'auto';
+	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; percentThreshold = 0.25; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; verbose = TRUE; use.data.table = 'auto';
 	
 	# test with occurrences
 	# spOccList <- lapply(tamiasPolyList, function(x) sf::st_sample(x, size = 10, type= 'random'))
@@ -483,13 +483,16 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 			masterExtent <- getExtentOfList(spDat)
 			percentWithin <- 0
 		}
-	} else if (is.numeric(extent) & length(extent) == 4) {
+	} else if (!inherits(extent, 'bbox') & is.numeric(extent) & length(extent) == 4) {
 		# use user-specified bounds
 		masterExtent <- sf::st_bbox(spDat[[1]])
 		masterExtent[[1]] <- extent[1]
 		masterExtent[[2]] <- extent[3]
 		masterExtent[[3]] <- extent[2]
 		masterExtent[[4]] <- extent[4]
+		
+	} else if (inherits(extent, 'bbox')) {
+		masterExtent <- extent
 		
 	} else if (inherits(extent, c('SpatialPolygons', 'SpatialPolygonsDataFrame', 'SpatialPoints', 'SpatialPointsDataFrame', 'sf', 'sfc'))) {
 		
