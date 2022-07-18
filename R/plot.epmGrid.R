@@ -214,7 +214,12 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 	if (inherits(x[[1]], 'sf')) {
 	
 		if (log) {
-			x[[1]]$loggedMetric <- log(x[[1]][[plotMetric]])
+			if (minTaxCount <= 1) {
+				x[[1]]$loggedMetric <- log(x[[1]][[plotMetric]])
+			} else {
+				grid_singleSp$loggedMetric <- log(grid_singleSp[[plotMetric]]) 
+				grid_multiSp$loggedMetric <- log(grid_multiSp[[plotMetric]])
+			}
 			metricName <- paste0('log ', plotMetric)
 			isInt <- FALSE
 			plotMetric <- 'loggedMetric'
@@ -354,7 +359,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 					}
 					
 					if (is.null(colorRampRange)) {
-						minmax <- range(sf::st_drop_geometry(grid_multiSp[plotMetric]))
+						minmax <- range(sf::st_drop_geometry(grid_multiSp[plotMetric]), na.rm = TRUE)
 					} else {
 						minmax <- colorRampRange
 					}
