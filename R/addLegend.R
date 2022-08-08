@@ -55,6 +55,8 @@
 ##'	  this is supplied as a character vector, then the labels will be plotted
 ##'	  verbatim.
 
+##' @param label text to plot alongside the legend
+
 ##'	@param cex.axis size of axis labels
 
 ##'	@param tcl length of tick marks (see help for tcl in ?par)
@@ -107,8 +109,8 @@
 ##'
 ##' # need to disable tmap if we want to anything to a plot
 ##' plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
-##' addLegend(tamiasEPM2, location = 'right')
-##' addLegend(tamiasEPM2, location = 'top')
+##' addLegend(tamiasEPM2, location = 'right', label = 'richness')
+##' addLegend(tamiasEPM2, location = 'top', label = 'richness')
 ##' 
 ##' # fine-tune placement
 ##' addLegend(tamiasEPM2, location=c(113281, 1265200, -1500000, -1401898), side = 1)
@@ -125,10 +127,10 @@
 ##' }
 ##' @export
 
-addLegend <- function(r, params = NULL, direction, side, location = 'right', nTicks = 3, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp, isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
+addLegend <- function(r, params = NULL, direction, side, location = 'right', nTicks = 3, adj = NULL, shortFrac = 0.02, longFrac = 0.3, axisOffset = 0, border = TRUE, ramp, isInteger = 'auto', ncolors = 64, breaks = NULL, minmax = NULL, locs = NULL, label = '', cex.axis = 0.8, tcl = NA, labelDist = 0.7, minDigits = 2) {
 	
 	# for testing
-	# r = tamiasEPM; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2
+	# r = tamiasEPM; params = NULL; direction = 'vertical'; location = 'right'; nTicks = 2; adj = NULL; shortFrac = 0.02; longFrac = 0.3; axisOffset = 0; border = TRUE; isInteger = 'auto'; ncolors = 64; breaks = NULL; minmax = NULL; locs = NULL; cex.axis = 0.8; labelDist = 0.7; minDigits = 2; label = 'metric'
 	
 	if (!is.null(params)) {
 		log <- params$log
@@ -199,7 +201,7 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 		ramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
 	}
 	
-	if(!methods::hasArg('ramp')) {
+	if (!methods::hasArg('ramp')) {
 		ramp <- function(n) viridisLite::turbo(n = n, begin = 0.1, end = 0.9)
 		pal <- ramp(ncolors)
 	} else {
@@ -256,13 +258,13 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 	#if raster values are integer, then make legend have integer values
 	if (isInteger == 'auto') {
 		if (inherits(r, 'SpatRaster')) {
-			randomSample <- sample(terra::values(r)[which(!is.na(terra::values(r)))], size = 1000, replace = TRUE)
+			randomSample <- sample(as.vector(stats::na.omit(terra::values(r)[which(!is.na(terra::values(r)))])), size = 1000, replace = TRUE)
 		} else if (inherits(r, 'sf')) {
 			datCol <- setdiff(colnames(r), attributes(r)$sf_column)
 			randomSample <- sample(r[[datCol]], size=1000, replace = TRUE)
 		}
 		#if (identical(randomSample, trunc(randomSample))) {
-		if (all(abs(randomSample - round(randomSample)) < .Machine$double.eps ^ 0.5)) {
+		if (all(integercheck(randomSample))) {
 			isInteger <- TRUE
 		} else {
 			isInteger <- FALSE
@@ -436,7 +438,7 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 		axisOffset <- axisOffset * (par('usr')[2] - par('usr')[1])
 	}
 	
-	#determine side for labels based on location in plot and direction
+	# determine side for labels based on location in plot and direction
 	if (!methods::hasArg('side')) {
 		if (direction == 'vertical') { #side = 2 or 4
 			if (mean(location[1:2]) <= mean(par('usr')[1:2])) {
@@ -592,6 +594,17 @@ addLegend <- function(r, params = NULL, direction, side, location = 'right', nTi
 	}
 	if (side == 4) { #right
 		axis(side, at = tickLocs, pos = location[2] + axisOffset, labels = tickLabels, xpd = NA, las = 1, cex.axis = cex.axis, mgp = c(3, labelDist, 0), tcl = tcl)
+	}
+	
+	# add label
+	if (direction == 'vertical') {
+		graphics::text(x = mean(c(location[1], location[2])), y = location[4], labels = label, pos = 3, xpd = NA)
+	} else {
+		if (side == 1) { # top, label goes above
+			graphics::text(x = mean(c(location[1], location[2])), y = location[4], labels = label, pos = 3, xpd = NA)
+		} else { # bottom, label goes under
+			graphics::text(x = mean(c(location[1], location[2])), y = location[3], labels = label, pos = 1, xpd = NA)
+		}
 	}
 	
 	invisible(list(

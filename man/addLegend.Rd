@@ -22,6 +22,7 @@ addLegend(
   breaks = NULL,
   minmax = NULL,
   locs = NULL,
+  label = "",
   cex.axis = 0.8,
   tcl = NA,
   labelDist = 0.7,
@@ -81,6 +82,8 @@ If left as \code{NULL}, the min and max of \code{r} will be used.}
 this is supplied as a character vector, then the labels will be plotted
 verbatim.}
 
+\item{label}{text to plot alongside the legend}
+
 \item{cex.axis}{size of axis labels}
 
 \item{tcl}{length of tick marks (see help for tcl in ?par)}
@@ -135,8 +138,8 @@ tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 
 # need to disable tmap if we want to anything to a plot
 plot(tamiasEPM2, use_tmap = FALSE, legend = FALSE)
-addLegend(tamiasEPM2, location = 'right')
-addLegend(tamiasEPM2, location = 'top')
+addLegend(tamiasEPM2, location = 'right', label = 'richness')
+addLegend(tamiasEPM2, location = 'top', label = 'richness')
 
 # fine-tune placement
 addLegend(tamiasEPM2, location=c(113281, 1265200, -1500000, -1401898), side = 1)
