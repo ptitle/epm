@@ -1,7 +1,7 @@
 Package: epm
 Type: Package
 Title: EcoPhyloMapper
-Version: 1.0.2
+Version: 1.1.0
 Authors@R: c(
 	person("Pascal", "Title", email = "pascal.title@stonybrook.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6316-0736")),
 	person("Donald", "Swiderski", role = "aut"),
@@ -17,6 +17,6 @@ NeedsCompilation: yes
 SystemRequirements: C++11
 LinkingTo: Rcpp, RcppProgress
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 ByteCompile: true
 Encoding: UTF-8
