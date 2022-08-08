@@ -12,6 +12,7 @@
   basemap = "worldmap",
   colorRampRange = NULL,
   minTaxCount = "auto",
+  zoom = TRUE,
   ignoredColor = gray(0.9),
   lwd,
   borderCol = "black",
@@ -49,6 +50,8 @@ containing certain numbers of taxa be grayed out? For example,
 should single-taxon cells be ignored because the metric only makes sense 
 for multi-taxon cells? This is predetermined for all metrics in
  \code{\link{gridMetrics}} if  minTaxCount = 'auto'.}
+
+\item{zoom}{Should plot zoom in on cells with data. Default is TRUE.}
 
 \item{ignoredColor}{color for ignored cells. See details.}
 
