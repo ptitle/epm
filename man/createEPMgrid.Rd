@@ -13,6 +13,7 @@ createEPMgrid(
   retainSmallRanges = TRUE,
   extent = "auto",
   percentWithin = 0,
+  dropEmptyCells = TRUE,
   checkValidity = FALSE,
   crs = NULL,
   nThreads = 1,
@@ -44,8 +45,8 @@ used. If not 'auto', can be a SpatialPolygon, sf object, or raster, in
 which case the resulting epmGrid will be cropped and masked with respect to
 the polygon; or a spatial coordinates object, from which an extent object
 will be generated; or a numeric vector of length 4 with minLong, maxLong,
-minLat, maxLat. See \code{\link{interactiveExtent}} to draw your own
-extent.}
+minLat, maxLat. If 'global', a global extent will be specified. 
+See \code{\link{interactiveExtent}} to draw your own extent.}
 
 \item{percentWithin}{The percentage of a species range that must be within
 the defined extent in order for that species to be included. This filter
@@ -53,6 +54,11 @@ can be used to exclude species whose range barely enters the area of
 interest. The default value of 0 will disable this filter. If \code{extent
 == 'auto'}, then this filter will also have no effect, as the extent is
 defined by the species' ranges.}
+
+\item{dropEmptyCells}{only relevant for hexagonal grids, should empty cells be
+excluded from the resulting grid. Default is TRUE. Reasons to set this to FALSE
+    may be if you want to retain a grid of a certain extent, regardless of which
+cells contain species.}
 
 \item{checkValidity}{if \code{TRUE}, then check polygon validity and repair
 if needed, using sf::st_make_valid.}
@@ -64,9 +70,9 @@ must specify the crs. For unprojected long/lat data, you can simply provide
 \item{nThreads}{if > 1, then employ parallel computing. This won't
 necessarily improve runtime.}
 
-\item{template}{an object of class \code{SpatRaster} or \code{RasterLayer}
-that can be used to get extent and resolution. If \code{cellType =
-'square'}, then the template will be used as the reference grid.}
+\item{template}{a grid (SpatRaster, RasterLayer or sf)
+that will be directly used as the reference grid, bypassing any inference from
+the input data.}
 
 \item{verbose}{if TRUE, list out all species that are dropped/excluded,
 rather than counts.}
@@ -172,6 +178,14 @@ tamiasEPM2 <- createEPMgrid(tamiasPolyList, resolution = 50000,
 	cellType = 'square', method = 'centroid')
 tamiasEPM2
 
+# use of a grid from one analysis for another analysis
+\donttest{
+tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000,
+	cellType = 'hexagon', method = 'centroid')
+
+tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000,
+	cellType = 'hexagon', method = 'centroid', template = tamiasEPM[[1]])
+}	
 #######
 \donttest{
 # demonstration of site-by-species matrix as input.

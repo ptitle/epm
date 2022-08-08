@@ -26,8 +26,8 @@
 ##'  which case the resulting epmGrid will be cropped and masked with respect to
 ##'  the polygon; or a spatial coordinates object, from which an extent object
 ##'  will be generated; or a numeric vector of length 4 with minLong, maxLong,
-##'  minLat, maxLat. See \code{\link{interactiveExtent}} to draw your own
-##'  extent.
+##'  minLat, maxLat. If 'global', a global extent will be specified. 
+##'  See \code{\link{interactiveExtent}} to draw your own extent.
 ##'
 ##'@param percentWithin The percentage of a species range that must be within
 ##'  the defined extent in order for that species to be included. This filter
@@ -35,6 +35,11 @@
 ##'  interest. The default value of 0 will disable this filter. If \code{extent
 ##'  == 'auto'}, then this filter will also have no effect, as the extent is
 ##'  defined by the species' ranges.
+##'
+##'@param dropEmptyCells only relevant for hexagonal grids, should empty cells be
+##'	excluded from the resulting grid. Default is TRUE. Reasons to set this to FALSE
+##' 	may be if you want to retain a grid of a certain extent, regardless of which
+##'	cells contain species.
 ##'
 ##'@param checkValidity if \code{TRUE}, then check polygon validity and repair
 ##'  if needed, using sf::st_make_valid.
@@ -46,9 +51,9 @@
 ##'@param nThreads if > 1, then employ parallel computing. This won't
 ##'  necessarily improve runtime.
 ##'
-##'@param template an object of class \code{SpatRaster} or \code{RasterLayer}
-##'  that can be used to get extent and resolution. If \code{cellType =
-##'  'square'}, then the template will be used as the reference grid.
+##'@param template a grid (SpatRaster, RasterLayer or sf)
+##'  that will be directly used as the reference grid, bypassing any inference from
+##'  the input data. 
 ##'
 ##'@param verbose if TRUE, list out all species that are dropped/excluded,
 ##'  rather than counts.
@@ -151,6 +156,14 @@
 ##' 	cellType = 'square', method = 'centroid')
 ##' tamiasEPM2
 ##'
+##' # use of a grid from one analysis for another analysis
+##' \donttest{
+##' tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000,
+##' 	cellType = 'hexagon', method = 'centroid')
+##'	
+##' tamiasEPM <- createEPMgrid(tamiasPolyList, resolution = 50000,
+##' 	cellType = 'hexagon', method = 'centroid', template = tamiasEPM[[1]])
+##' }	
 ##' #######
 ##' \donttest{
 ##' # demonstration of site-by-species matrix as input.
@@ -222,9 +235,9 @@
 ##'
 ##'@export
 
-createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', percentThreshold = 0.25, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, verbose = FALSE, use.data.table = 'auto') {
+createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellType = 'hexagon', percentThreshold = 0.25, retainSmallRanges = TRUE, extent = 'auto', percentWithin = 0, dropEmptyCells  = TRUE, checkValidity = FALSE, crs = NULL, nThreads = 1, template = NULL, verbose = FALSE, use.data.table = 'auto') {
 	
-	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; percentThreshold = 0.25; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; checkValidity = FALSE; nThreads = 1; template = NULL; verbose = TRUE; use.data.table = 'auto';
+	# spDat <- tamiasPolyList; resolution = 50000; method = 'centroid'; cellType = 'hexagon'; percentThreshold = 0.25; retainSmallRanges = TRUE; extent = 'auto'; percentWithin = 0; dropEmptyCells  = TRUE; checkValidity = FALSE; nThreads = 1; template = NULL; verbose = TRUE; use.data.table = 'auto';
 	
 	# test with occurrences
 	# spOccList <- lapply(tamiasPolyList, function(x) sf::st_sample(x, size = 10, type= 'random'))
@@ -412,22 +425,34 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	terra::terraOptions(progress = 0)
 	
 	if (!is.null(template)) {
-		if (!inherits(template, c('SpatRaster', 'RasterLayer'))) {
-			stop('template must be a RasterLayer or SpatRaster.')
+		if (!inherits(template, c('SpatRaster', 'RasterLayer', 'sf', 'sfc'))) {
+			stop('template must be a RasterLayer or SpatRaster or a sf object.')
+		}
+		if (inherits(template, c('sf', 'sfc'))) {
+			template <- sf::st_geometry(template)
+			if ('MULTIPOLYGON' %in% unique(as.character(sf::st_geometry_type(template)))) {
+				template <- sf::st_cast(template, 'POLYGON')
+			}
 		}
 		if (inherits(template, 'RasterLayer')) {
 			template <- as(template, 'SpatRaster')
 		}
 		if (datType != 'siteMat') {
-			if ((sum(c(terra::is.lonlat(template, perhaps = TRUE), sf::st_is_longlat(spDat[[1]]))) == 1)) {
-				stop('Raster provided as template has a different projection from input data.')
+			if (inherits(template, 'SpatRaster')) {
+				if ((sum(c(terra::is.lonlat(template, perhaps = TRUE), sf::st_is_longlat(spDat[[1]]))) == 1)) {
+					stop('Template has a different projection from input data.')
+				}
+			} else if (inherits(template, 'sfc')) {
+				if ((sum(c(sf::st_is_longlat(template), sf::st_is_longlat(spDat[[1]]))) == 1)) {
+					stop('Template has a different projection from input data.')
+				}				
 			}
 		}
-		resolution <- terra::res(template)[1]
-		extent <- as.vector(terra::ext(template))
-		if (cellType == 'hexagon') {
-			stop('Use of the template argument is intended for square-cell grids only.')
-		}
+#		resolution <- terra::res(template)[1]
+#		extent <- as.vector(terra::ext(template))
+#		if (cellType == 'hexagon') {
+#			stop('Use of the template argument is intended for square-cell grids only.')
+#		}
 	}
 		
 	if (checkValidity) {
@@ -471,61 +496,86 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		}
 	}
 
-	if (inherits(extent, 'character')) {
-		
-		if (all(extent != 'auto')) {
-			stop("If extent is a character vector, it must be 'auto'.")
-		}
-		
-		if (all(extent == 'auto')) {
-		
-			#get overall extent
-			masterExtent <- getExtentOfList(spDat)
-			percentWithin <- 0
-		}
-	} else if (!inherits(extent, 'bbox') & is.numeric(extent) & length(extent) == 4) {
-		# use user-specified bounds
-		masterExtent <- sf::st_bbox(spDat[[1]])
-		masterExtent[[1]] <- extent[1]
-		masterExtent[[2]] <- extent[3]
-		masterExtent[[3]] <- extent[2]
-		masterExtent[[4]] <- extent[4]
-		
-	} else if (inherits(extent, 'bbox')) {
-		masterExtent <- extent
-		
-	} else if (inherits(extent, c('SpatialPolygons', 'SpatialPolygonsDataFrame', 'SpatialPoints', 'SpatialPointsDataFrame', 'sf', 'sfc'))) {
-		
-		if (inherits(extent, c('SpatialPolygons', 'SpatialPolygonsDataFrame', 'SpatialPoints', 'SpatialPointsDataFrame'))) {
-			extent <- sf::st_as_sf(extent)
-		}
-			
-		if (!is.na(sf::st_crs(extent))) {
-			if (!identical(sf::st_crs(extent), proj)) {
-				extent <- sf::st_transform(extent, crs = proj)
+	# if a template is provided, then extent is not needed
+	if (is.null(template)) {
+		if (inherits(extent, 'character')) {
+	
+			if (extent[1] == 'global') {
+				
+				zz <- rbind.data.frame(cbind(seq(from = -180, to = 180, length.out = 100), -90),
+					cbind(180, seq(from = -90, to = 90, length.out = 100)),
+					cbind(seq(from = -180, to = 180, length.out = 100), 90),
+					cbind(-180, seq(from = 90, to = -90, length.out = 100)))
+				
+				zz <- sf::st_as_sf(zz, coords = 1:2, crs = 4326)
+				zz <- sf::st_transform(zz, sf::st_crs(spDat[[1]]))
+				extent <- sf::st_cast(sf::st_cast(sf::st_combine(zz), 'LINESTRING'), 'POLYGON')
+				masterExtent <- extent
 			}
+			
+		}
+	
+	
+		if (inherits(extent, 'character')) {
+			
+			if (!all(extent == 'auto')) {
+				stop("If extent is a character vector, it must be 'auto' or 'global'.")
+			}
+			
+			if (all(extent == 'auto')) {
+			
+				#get overall extent
+				masterExtent <- getExtentOfList(spDat)
+				percentWithin <- 0
+			}
+			
+			
+		} else if (!inherits(extent, 'bbox') & is.numeric(extent) & length(extent) == 4) {
+			# use user-specified bounds
+			masterExtent <- sf::st_bbox(spDat[[1]])
+			masterExtent[[1]] <- extent[1]
+			masterExtent[[2]] <- extent[3]
+			masterExtent[[3]] <- extent[2]
+			masterExtent[[4]] <- extent[4]
+			
+		} else if (inherits(extent, 'bbox')) {
+			masterExtent <- extent
+			
+		} else if (inherits(extent, c('SpatialPolygons', 'SpatialPolygonsDataFrame', 'SpatialPoints', 'SpatialPointsDataFrame', 'sf', 'sfc'))) {
+			
+			if (inherits(extent, c('SpatialPolygons', 'SpatialPolygonsDataFrame', 'SpatialPoints', 'SpatialPointsDataFrame'))) {
+				extent <- sf::st_as_sf(extent)
+			}
+				
+			if (!is.na(sf::st_crs(extent))) {
+				if (!identical(sf::st_crs(extent), proj)) {
+					extent <- sf::st_transform(extent, crs = proj)
+				}
+			} else {
+				sf::st_crs(extent) <- proj
+			}
+		  
+			if (inherits(extent, 'sfc')) {
+				extent <- sf::st_sf(extent)
+			}
+			
+			# get extent from spatial object
+			# masterExtent <- sf::st_bbox(extent)
+			masterExtent <- extent
+	
+		} else if (inherits(extent, 'Extent')) {
+			
+			masterExtent <- sf::st_bbox(spDat[[1]])
+			masterExtent[[1]] <- extent@xmin
+			masterExtent[[2]] <- extent@ymin
+			masterExtent[[3]] <- extent@xmax
+			masterExtent[[4]] <- extent@ymax
+			
 		} else {
-			sf::st_crs(extent) <- proj
+			stop("extent must be 'auto', a spatial object or a vector with minLong, maxLong, minLat, maxLat.")
 		}
-	  
-		if (inherits(extent, 'sfc')) {
-			extent <- sf::st_sf(extent)
-		}
-		
-		# get extent from spatial object
-		# masterExtent <- sf::st_bbox(extent)
-		masterExtent <- extent
-
-	} else if (inherits(extent, 'Extent')) {
-		
-		masterExtent <- sf::st_bbox(spDat[[1]])
-		masterExtent[[1]] <- extent@xmin
-		masterExtent[[2]] <- extent@ymin
-		masterExtent[[3]] <- extent@xmax
-		masterExtent[[4]] <- extent@ymax
-		
 	} else {
-		stop("extent must be 'auto', a spatial object or a vector with minLong, maxLong, minLat, maxLat.")
+		masterExtent <- NULL
 	}
 		
 	# percentWithin: Implement a filter based on the percentage that each species' range overlaps the extent.
@@ -578,8 +628,8 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	
 	if (cellType == 'hexagon') {
 		
-		# poly = spDat; method = method; percentThreshold = percentThreshold; extentVec = masterExtent; resolution = resolution; crs = proj; nGroups = nGroups; retainSmallRanges = retainSmallRanges; nThreads = nThreads; verbose = TRUE
-		spGridList <- polyToHex(poly = spDat, method = method, percentThreshold = percentThreshold, extentVec = masterExtent, resolution = resolution, crs = proj, nGroups = nGroups, retainSmallRanges = retainSmallRanges, nThreads = nThreads, verbose = verbose)
+		# poly = spDat; method = method; percentThreshold = percentThreshold; extentVec = masterExtent; resolution = resolution; crs = proj; nGroups = nGroups; retainSmallRanges = retainSmallRanges; nThreads = nThreads; verbose = TRUE; template = template
+		spGridList <- polyToHex(poly = spDat, method = method, percentThreshold = percentThreshold, extentVec = masterExtent, resolution = resolution, crs = proj, template = template, nGroups = nGroups, retainSmallRanges = retainSmallRanges, nThreads = nThreads, verbose = verbose)
 		
 	} else if (cellType == 'square') {
 		
@@ -682,7 +732,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		uniqueComm <- lapply(uniqueComm, function(x) sort(names(spGridList)[as.logical(x)]))
 
 		# remove empty cells if hexagonal grid
-		if (inherits(gridTemplate, 'sf')) {
+		if (inherits(gridTemplate, 'sf') & dropEmptyCells) {
 			gridTemplate <- gridTemplate[which(lengths(uniqueComm[cellCommVec]) > 0),]
 			cellCommVec <- cellCommVec[which(lengths(uniqueComm[cellCommVec]) > 0)]
 		}
@@ -744,7 +794,7 @@ fpaste <- function(dt, sep = ",") {
 }
 
 ## alternate version
-polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs, nGroups, retainSmallRanges, nThreads, verbose) {
+polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs, template, nGroups, retainSmallRanges, nThreads, verbose) {
 	
 	# Combine species polygons, keep only geometry, and return single sf object
 	taxonNames <- names(poly)
@@ -752,17 +802,21 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 	poly <- do.call(c, poly)
 	
 	# Generate template
-	if (!inherits(extentVec, 'sf')) {
-		masterExtent <-  sf::st_as_sfc(extentVec)
+	if (is.null(template)) {
+		if (!inherits(extentVec, 'sf')) {
+			masterExtent <-  sf::st_as_sfc(extentVec)
+		} else {
+			masterExtent <- extentVec
+		}
+		gridTemplate <- sf::st_make_grid(masterExtent, cellsize = c(resolution, resolution), square = FALSE, crs = sf::st_crs(masterExtent))
+		
+		# if extent was polygon, then mask the grid template
+		if (inherits(masterExtent, c('sf', 'sfc'))) {
+			gridTemplate <- gridTemplate[lengths(sf::st_intersects(gridTemplate, masterExtent)) > 0]
+		}	
 	} else {
-		masterExtent <- extentVec
+		gridTemplate <- template
 	}
-	gridTemplate <- sf::st_make_grid(masterExtent, cellsize = c(resolution, resolution), square = FALSE, crs = sf::st_crs(masterExtent))
-	
-	# if extent was polygon, then mask the grid template
-	if (inherits(masterExtent, c('sf', 'sfc'))) {
-		gridTemplate <- gridTemplate[lengths(sf::st_intersects(gridTemplate, masterExtent)) > 0]
-	}	
 	
 	gridTemplate <- sf::st_sf(gridTemplate, grid_id = 1:length(gridTemplate))
 	
@@ -817,7 +871,7 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 			}
 			if (verbose) cat('\n'); close(pb)
 		}
-	} else 	{
+	} else {
 		# for points
 		spGridList <- sf::st_intersects(poly, gridTemplate, sparse = TRUE)
 	}
@@ -836,7 +890,7 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 				# if (verbose) message('\t\ttaxon ', i)
 				setTxtProgressBar(pb, i)
 
-				spGridList[[smallSp[i]]] <- findTopCells5(poly[smallSp[i]], gridTemplate, resolution)
+				spGridList[[smallSp[i]]] <- findTopCells7(poly[smallSp[i]], gridTemplate, resolution)
 
 			}
 			if (verbose) cat('\n'); close(pb)
@@ -866,7 +920,7 @@ findTopCells <- function(x, grid) {
 			mergedPoly <- sf::st_union(x)
 			mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
 		} else {
-			mergedPoly <- sf::st_cast(x)
+			mergedPoly <- sf::st_cast(x, 'POLYGON')
 		}			
 		# now mergedPoly should be a set of separate polygons that do not share borders
 		topCells <- integer(length(mergedPoly))
@@ -904,7 +958,7 @@ findTopCells2 <- function(x, grid) {
 		# now mergedPoly should be a set of separate polygons that do not share borders
 
 		# rather than calculate intersection of range with each grid cell to determine percent coverage, 
-		## let's install sample 200 regularly spaced points and determine how many are intersected by range.
+		## let's instead sample 200 regularly spaced points and determine how many are intersected by range.
 		samplePts <- lapply(tmp, function(x) sf::st_sample(grid[x,], size = 200, type = 'regular'))
 		
 		topCells <- integer(length(mergedPoly))
@@ -1041,6 +1095,11 @@ findTopCells5 <- function(x, grid, resolution) {
 			# and identify most occupied cell per patch
 			topCells <- integer(max(terra::minmax(clusters)))
 			for (j in 1:max(terra::minmax(clusters))) {
+
+				# Maybe a touch faster?				
+				# yy <- terra::mask(polyRas, clusters, maskvalues = j, inverse = TRUE)
+				# topCells[j] <- gridcellras[which(terra::values(yy) == terra::minmax(yy)[2])][[1]]
+								
 				yy <- terra::mask(polyRas, clusters, maskvalues = j, inverse = TRUE)
 				yy <- terra::mask(gridcellras, yy)
 				topCells[j] <- as.integer(names(which.max(table(terra::values(yy)))))
@@ -1050,7 +1109,97 @@ findTopCells5 <- function(x, grid, resolution) {
 	} else {
 		numeric(0)
 	}
-}			
+}
+
+findTopCells6 <- function(x, grid) {
+	
+	tmp <- unlist(sf::st_intersects(x, grid))
+			
+	if (length(tmp) > 0) {
+		
+		if (length(tmp) == 1) {
+			tmp
+		} else {
+	
+			# of grid cells intersected by small-ranged species, keep the cell most occupied.
+			# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage.
+		  					
+			check <- sf::st_intersects(sf::st_cast(x, 'POLYGON'), sf::st_cast(x, 'POLYGON'))
+			if (any(lengths(check)) > 1) {
+				mergedPoly <- sf::st_union(x)
+				mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
+			} else {
+				mergedPoly <- sf::st_cast(x, 'POLYGON')
+			}
+			
+			tmp <- sf::st_intersects(mergedPoly, grid)
+			allCellAreas <- as.vector(sf::st_area(grid))
+			
+			# take min convex hull to speed up calculations
+			mergedPoly <- sf::st_convex_hull(mergedPoly)
+					
+			# now mergedPoly should be a set of separate polygons that do not share borders
+			topCells <- rep(NA, length(mergedPoly))
+			
+			for (j in 1:length(mergedPoly)) {
+				# message('\t', j)
+				x1 <- sf::st_intersection(mergedPoly[j], grid[tmp[[j]],])
+				x1 <- as.vector(sf::st_area(x1))
+				
+				percentArea <- x1 / allCellAreas[tmp[[j]]]
+				
+				if (length(percentArea) > 0) {
+					topCells[j] <- tmp[[j]][which.max(percentArea)]				
+				}
+			}
+			sort(unique(topCells))
+		}
+	} else {
+		numeric(0)
+	}
+}
+
+
+findTopCells7 <- function(x, grid, resolution) {
+
+	tmp <- unlist(sf::st_intersects(x, grid))
+			
+	if (length(tmp) > 0) {
+		
+		if (length(tmp) == 1) {
+			tmp
+		} else {
+				
+			# of grid cells intersected by small-ranged species, keep the cell most occupied.
+			# this is to avoid going from a species that would not appear in any cell, to a species occuring in multiple cells with 1% coverage, for example.
+		  					
+			ras <- terra::rast(extent = terra::ext(terra::vect(grid[tmp,])), resolution = rep(resolution/100, 2), crs = sf::st_crs(grid)$input)
+			gridcellras <- terra::rasterize(terra::vect(grid[tmp,]), ras, field = 'grid_id')
+			
+			check <- sf::st_intersects(sf::st_cast(x, 'POLYGON'), sf::st_cast(x, 'POLYGON'))
+			if (any(lengths(check)) > 1) {
+				mergedPoly <- sf::st_union(x)
+				mergedPoly <-sf::st_cast(mergedPoly, 'POLYGON')
+			} else {
+				mergedPoly <- sf::st_cast(x, 'POLYGON')
+			}
+			
+
+			xx <- terra::extract(gridcellras, terra::vect(mergedPoly))
+			xx[,'count'] <- 1
+			
+			cellcounts <- aggregate(xx[,3], by = list(poly = xx[,1], gridid = xx[,2]), FUN = length)
+			cellcounts <- setNames(cellcounts[,2], cellcounts[,1])
+			
+			sort(unique(cellcounts))			
+		}
+	} else {
+		numeric(0)
+	}
+}
+
+
+
 
 # microbenchmark::microbenchmark(test1 = findTopCells(poly[smallSp[i]], gridTemplate), test2 = findTopCells2(poly[smallSp[i]], gridTemplate), test3 = findTopCells3(poly[smallSp[i]], gridTemplate), test4 = findTopCells4(poly[smallSp[i]], gridTemplate, resolution), test5 = findTopCells5(poly[smallSp[i]], gridTemplate, resolution), times = 10)
 
