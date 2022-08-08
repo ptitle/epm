@@ -29,7 +29,11 @@ spCountIndex <- function(x, count) {
 		stop('Object must be of class epmGrid')
 	}
 	
-	ind <- which(lengths(x[['speciesList']]) %in% count & sapply(x[['speciesList']], anyNA) == FALSE)
+	cellCounts <- lengths(x[['speciesList']])
+	cellCounts[sapply(x[['speciesList']], anyNA)] <- 0
+	
+	ind <- which(cellCounts %in% count)
+	
 	indCells <- which(x[['cellCommInd']] %in% ind)
 	return(indCells)
 }
