@@ -235,7 +235,8 @@ tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'hexagon')
 
 # list of coordinate tables
 spOccList2 <- lapply(spOccList, function(x) st_coordinates(x))
-tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+tamiasEPM <- createEPMgrid(spOccList2, resolution = 100000, cellType = 'square', 
+	crs = st_crs(tamiasPolyList[[1]]))
 
 # single table of coordinates
 spOccList3 <- spOccList2
@@ -246,12 +247,13 @@ for (i in 1:length(spOccList3)) {
 spOccList3 <- do.call(rbind, spOccList3)
 rownames(spOccList3) <- NULL
 spOccList3[, "taxon"] <- as.character(spOccList3[, "taxon"])
-tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+tamiasEPM <- createEPMgrid(spOccList3, resolution = 100000, cellType = 'square', 
+	crs = st_crs(tamiasPolyList[[1]]))
 
 # a single labeled spatial object
 spOccList4 <- st_as_sf(spOccList3[, c("taxon", "X", "Y")], coords = c("X","Y"),
 crs = st_crs(spOccList[[1]]))
-tamiasEPM <- createEPMgrid(spOccList, resolution = 100000, cellType = 'square')
+tamiasEPM <- createEPMgrid(spOccList4, resolution = 100000, cellType = 'square')
 }
 
 
