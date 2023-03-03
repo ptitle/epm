@@ -1,12 +1,13 @@
-citHeader("To cite the epm package in publications, please use:")
-
-citEntry(entry="Article",
+bibentry(bibtype = "Article",
     title = "EcoPhyloMapper: an R package for integrating geographic ranges, phylogeny, and morphology",
-    author = personList(as.person("PO Title"),
-        as.person("DL Swiderski"),
-        as.person("ML Zelditch")),
+    author = c(person("Pascal", "Title"),
+            person("Donald", "Swiderski"),
+            person("Miriam", "Zelditch")),
     journal = "Methods in Ecology and Evolution",
     year = "2022",
-    DOI = "10.1111/2041-210X.13914",
-    textVersion = "Pascal O. Title, Donald L. Swiderski and Miriam L. Zelditch. 2022. EcoPhyloMapper: an R package for integrating geographic ranges, phylogeny, and morphology. Methods in Ecology and Evolution. https://doi.org/10.1111/2041-210X.13914")
+    volume = "13",
+    pages = "1912-1922",
+    doi = "10.1111/2041-210X.13914",
+    header = "To cite the epm package in publications, please use:"
+)
 
