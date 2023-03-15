@@ -733,7 +733,7 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		cellCommVec <- match(matCondensed, uniqueComm)
 		
 		# convert unique community codes to species names
-		uniqueComm <- strsplit(uniqueComm, split = '-')
+		uniqueComm <- strsplit(uniqueComm, split = '-', fixed = TRUE)
 		uniqueComm <- lapply(uniqueComm, as.integer)
 		uniqueComm <- lapply(uniqueComm, function(x) sort(names(spGridList)[as.logical(x)]))
 
@@ -1561,10 +1561,11 @@ occurrenceFormatting <- function(occ) {
 processSiteBySpeciesMatrix <- function(mat, gridTemplate) {
 		
 	taxonNames <- colnames(mat)
-	
-	# force to be 0's or 1's
-	mat[is.na(mat)] <- 0
-	mat[mat != 0] <- 1
+	if (!identical(range(mat), as.integer(c(0, 1)))) {
+		# force to be 0's or 1's
+		mat[is.na(mat)] <- 0
+		mat[mat != 0] <- 1
+	}
 	
 	# create condensed version that encodes species at each site
 	if (requireNamespace('data.table', quietly = TRUE)) {
@@ -1578,7 +1579,7 @@ processSiteBySpeciesMatrix <- function(mat, gridTemplate) {
 	cellCommVec <- match(matCondensed, uniqueComm)
 	
 	# convert unique community codes to species names
-	uniqueComm <- strsplit(uniqueComm, split = '-')
+	uniqueComm <- strsplit(uniqueComm, split = '-', fixed = TRUE)
 	uniqueComm <- lapply(uniqueComm, as.integer)
 	uniqueComm <- lapply(uniqueComm, function(x) sort(taxonNames[as.logical(x)]))
 
