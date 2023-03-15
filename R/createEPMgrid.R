@@ -301,7 +301,11 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 			}
 		
 			if (terra::ncell(template) != nrow(spDat)) {
-				stop("Grid template has different number of cells than there are rows in matrix.")
+				if (terra::ncell(template) == ncol(spDat)) {
+					stop("Grid template has different number of cells than there are rows in matrix.\n\tThe matrix may need to be transposed.")
+				} else {
+					stop("Grid template has different number of cells than there are rows in matrix.")
+				}
 			}
 			
 			proj <- terra::crs(template)
