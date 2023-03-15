@@ -479,12 +479,11 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 			# resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) faithPD(tree, y))
 			
 			spEdges <- ape::nodepath(tree)
+			spEdges <- lapply(spEdges, function(x) setdiff(match(x, tree$edge[,2]), NA))
 			names(spEdges) <- tree$tip.label
 				
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) {
-				yy <- spEdges[y]
-				yy <- lapply(yy, function(z) setdiff(match(z, tree$edge[,2]), NA))
-				sum(tree$edge.length[unique(unlist(yy))])
+				sum(tree$edge.length[unique(unlist(spEdges[y]))])
 			})
 			
 		}
