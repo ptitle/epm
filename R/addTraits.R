@@ -36,11 +36,11 @@ addTraits <- function(x, data, replace = FALSE, verbose = FALSE) {
 		stop('x must be of class epmGrid.')
 	}
 	
-	if (!inherits(data, c('numeric', 'matrix', 'data.frame'))) {
+	if (!inherits(data, c('numeric', 'integer', 'matrix', 'data.frame'))) {
 		stop('data must be either a numeric vector, matrix or dataframe.')
 	}
 	
-	if (inherits(x[['data']], c('numeric', 'matrix', 'data.frame')) & !replace) {
+	if (inherits(x[['data']], c('numeric', 'integer', 'matrix', 'data.frame')) & !replace) {
 		stop('Data already present. If data are to be replaced, set replace = TRUE')
 	}
 	
