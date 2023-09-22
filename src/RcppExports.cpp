@@ -185,14 +185,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // calcPairwisePhylosor2
-NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component);
-RcppExport SEXP _epm_calcPairwisePhylosor2(SEXP allCommSEXP, SEXP phyloSEXP, SEXP componentSEXP) {
+NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component, bool display_progress);
+RcppExport SEXP _epm_calcPairwisePhylosor2(SEXP allCommSEXP, SEXP phyloSEXP, SEXP componentSEXP, SEXP display_progressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< List >::type allComm(allCommSEXP);
     Rcpp::traits::input_parameter< List >::type phylo(phyloSEXP);
     Rcpp::traits::input_parameter< String >::type component(componentSEXP);
-    rcpp_result_gen = Rcpp::wrap(calcPairwisePhylosor2(allComm, phylo, component));
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(calcPairwisePhylosor2(allComm, phylo, component, display_progress));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -214,7 +215,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_epm_countCells", (DL_FUNC) &_epm_countCells, 2},
     {"_epm_calcPairwiseTaxonomicSorensen", (DL_FUNC) &_epm_calcPairwiseTaxonomicSorensen, 2},
     {"_epm_uniqueBranchesForSet", (DL_FUNC) &_epm_uniqueBranchesForSet, 3},
-    {"_epm_calcPairwisePhylosor2", (DL_FUNC) &_epm_calcPairwisePhylosor2, 3},
+    {"_epm_calcPairwisePhylosor2", (DL_FUNC) &_epm_calcPairwisePhylosor2, 4},
     {NULL, NULL, 0}
 };
 

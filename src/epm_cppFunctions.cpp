@@ -440,7 +440,7 @@ std::vector<int> uniqueBranchesForSet(std::vector<std::string> a, std::vector<st
 
 // Calculate phylogenetic beta diversity for each pair of communities in list
 // [[Rcpp::export(name = calcPairwisePhylosor2, rng = false)]]
-NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component) {
+NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component, bool display_progress=true) {
 
 	// extract relevant info from input tree for function FaithPD_branchIndices
 	// 		tip labels, branch lengths, and tipward nodes vector
@@ -456,7 +456,7 @@ NumericMatrix calcPairwisePhylosor2(List allComm, List phylo, String component) 
 	NumericMatrix out(nComm, nComm);
 
 	// Rcout << "Starting pairwise matrix..." << std::endl;
-	Progress p(nComm, true);
+	Progress p(nComm, display_progress);
 
 	for (int i = 0; i < nComm; i++) {
 		// Rcout << "row " << i << std::endl;

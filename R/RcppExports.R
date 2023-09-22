@@ -65,7 +65,7 @@ uniqueBranchesForSet <- function(a, tipLabels, spEdges) {
     .Call('_epm_uniqueBranchesForSet', PACKAGE = 'epm', a, tipLabels, spEdges)
 }
 
-calcPairwisePhylosor2 <- function(allComm, phylo, component) {
-    .Call('_epm_calcPairwisePhylosor2', PACKAGE = 'epm', allComm, phylo, component)
+calcPairwisePhylosor2 <- function(allComm, phylo, component, display_progress = TRUE) {
+    .Call('_epm_calcPairwisePhylosor2', PACKAGE = 'epm', allComm, phylo, component, display_progress)
 }
 
