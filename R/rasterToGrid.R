@@ -7,6 +7,7 @@
 ##' @param target epmGrid or sf object
 ##' @param fun function for summarizing raster cells to polygons
 ##' @param crop if TRUE, the raster will be cropped to the bounding box of the target
+##' @param na.rm determines how \code{NA} cells are summarized
 ##'
 ##' @details 
 ##' By default, raster cells that overlap with target grid cell polygons
@@ -42,7 +43,7 @@
 
 
 
-rasterToGrid <- function(x, target, fun = 'mean', crop = TRUE) {
+rasterToGrid <- function(x, target, fun = 'mean', crop = TRUE, na.rm = TRUE) {
 	
 	if (!inherits(x, c('RasterLayer', 'rasterStack', 'SpatRaster'))) {
 		stop('x must be either a rasterLayer, rasterStack or SpatRaster.')
@@ -79,7 +80,7 @@ rasterToGrid <- function(x, target, fun = 'mean', crop = TRUE) {
 		# res <- aggregate(x2, by = target, fun)
 		
 		df <- terra::extract(x, terra::vect(target), list = FALSE)
-		newvals <- aggregate(df, by = list(df$ID), FUN = fun)
+		newvals <- aggregate(df, by = list(df$ID), FUN = fun, na.rm = na.rm)
 		res <- sf::st_sf(vals = newvals[,3], geometry = sf::st_geometry(target))
 		
 	} else if (inherits(target, 'SpatRaster')) {

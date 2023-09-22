@@ -4,7 +4,7 @@
 \alias{rasterToGrid}
 \title{Convert raster to sf grid}
 \usage{
-rasterToGrid(x, target, fun = "mean", crop = TRUE)
+rasterToGrid(x, target, fun = "mean", crop = TRUE, na.rm = TRUE)
 }
 \arguments{
 \item{x}{rasterLayer or rasterStack or SpatRaster}
@@ -14,6 +14,8 @@ rasterToGrid(x, target, fun = "mean", crop = TRUE)
 \item{fun}{function for summarizing raster cells to polygons}
 
 \item{crop}{if TRUE, the raster will be cropped to the bounding box of the target}
+
+\item{na.rm}{determines how \code{NA} cells are summarized}
 }
 \value{
 sf polygons object
