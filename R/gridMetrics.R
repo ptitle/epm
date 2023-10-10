@@ -433,7 +433,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(apply(dat[y, y], 1, min, na.rm = TRUE)))
 		} else if (metric == 'min_NN_dist') {
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(apply(dat[y, y], 1, min, na.rm = TRUE)))
-		} else if (metric == 'evennness') {
+		} else if (metric == 'evenness') {
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) stats::var(apply(dat[y, y], 1, min, na.rm = TRUE)))
 		}
 	}
