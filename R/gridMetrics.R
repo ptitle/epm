@@ -132,9 +132,15 @@
 ##' }
 ##'@export
 
+# x <- tamiasEPM
+# x <- addPhylo(x, tamiasTree)
+# x <- addTraits(x, tamiasTraits)
+# metric <- 'disparity'
+# column <- 2:196
+# verbose = TRUE
 
-gridMetrics <- function(x, metric, column = NULL, verbose = TRUE) {
-	
+gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
+		
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
 	}
@@ -146,7 +152,7 @@ gridMetrics <- function(x, metric, column = NULL, verbose = TRUE) {
 	if (length(metric) > 1) {
 		stop('You can only specify one metric.')
 	}
-	
+		
 	if (inherits(x[['phylo']], 'phylo')) {
 		x[['phylo']] <- list(x[['phylo']])
 		class(x[['phylo']]) <- 'multiPhylo'
@@ -160,7 +166,7 @@ gridMetrics <- function(x, metric, column = NULL, verbose = TRUE) {
 	# if data is pairwise matrix, then set flag appropriately
 	if (inherits(x[['data']], c('matrix', 'data.frame'))) {
 		if (identical(rownames(x[['data']]), colnames(x[['data']]))) {
-			if (verbose) message('\t...detected pairwise distance matrix...\n') 
+			# if (verbose) message('\t...detected pairwise distance matrix...\n') 
 			column <- NULL
 			pairwise <- TRUE
 			# make the diagonal NA
@@ -201,6 +207,31 @@ gridMetrics <- function(x, metric, column = NULL, verbose = TRUE) {
 	} else {
 		metricType <- 'none'
 	}
+	
+	if (verbose) {
+		message('\tInput dataset:')
+		if (!is.null(x[['data']])) {
+			message('\t\ttrait dataset of class ', class(x[['data']]))
+			if (inherits(x[['data']], c('matrix', 'data.frame'))) {
+				message('\t\t\tdimensions: ', dim(x[['data']])[1], 'x', dim(x[['data']])[2])
+			} else {
+				message('\t\t\tdimensions: length ', length(x[['data']]))
+			}
+			message('\t\t\tThis ', ifelse(pairwise, 'has ', 'has not '), 'been recognized as a pairwise matrix.')
+			message('\t\t\tA ', ifelse(metricType == 'multiVar', 'multivariate ', 'univariate '), 'metric will be calculated.')
+			if (is.null(column)) {
+				message('\t\t\ttrait dataset will not be subset.')
+			} else {
+				message('\t\t\ttrait dataset will be subset to ', length(column), ' of ', ncol(x[['data']]), ' columns.')
+			}
+		}
+		if (!is.null(x[['phylo']])) {
+			message('\t\tphylo dataset of class ', class(x[['phylo']]))
+			message('\t\t\tnumber of trees: ', length(x[['phylo']]))
+			message('\t\t\tnumber of tree tips: ', ape::Ntip(x[['phylo']][[1]]))
+		}
+	}
+	
 	
 	# if a subset of data columns are requested, subset the data table
 	if (!is.null(column) & inherits(x[['data']], c('matrix', 'data.frame'))) {
@@ -273,6 +304,26 @@ gridMetrics <- function(x, metric, column = NULL, verbose = TRUE) {
 	}
 	
 	uniqueComm <- x[['speciesList']]
+
+	if (verbose) {
+		message('\n\tInput dataset has now been manipuated:')
+		if (!is.null(x[['data']])) {
+			message('\t\ttrait dataset of class ', class(x[['data']]))
+			if (inherits(x[['data']], c('matrix', 'data.frame'))) {
+				message('\t\t\tdimensions: ', dim(x[['data']])[1], 'x', dim(x[['data']])[2])
+			} else {
+				message('\t\t\tdimensions: length ', length(x[['data']]))
+			}
+			message('\t\t\tThis ', ifelse(pairwise, 'has ', 'has not '), 'been recognized as a pairwise matrix.')
+			message('\t\t\tA ', ifelse(metricType == 'multiVar', 'multivariate ', 'univariate '), 'metric will be calculated.')
+		}
+		if (!is.null(x[['phylo']])) {
+			message('\t\tphylo dataset of class ', class(x[['phylo']]))
+			message('\t\t\tnumber of trees: ', length(x[['phylo']]))
+			message('\t\t\tnumber of tree tips: ', ape::Ntip(x[['phylo']][[1]]))
+		}
+		message()
+	}
 	
 	if (phyloNeeded) {
 		

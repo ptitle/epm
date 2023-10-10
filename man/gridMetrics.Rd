@@ -4,7 +4,7 @@
 \alias{gridMetrics}
 \title{Grid Metrics}
 \usage{
-gridMetrics(x, metric, column = NULL, verbose = TRUE)
+gridMetrics(x, metric, column = NULL, verbose = FALSE)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
