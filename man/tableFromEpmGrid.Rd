@@ -4,7 +4,7 @@
 \alias{tableFromEpmGrid}
 \title{Data table from epmGrid}
 \usage{
-tableFromEpmGrid(..., n = NULL, minTaxCount = 1, coords = NULL)
+tableFromEpmGrid(..., n = NULL, minTaxCount = 1, coords = NULL, id = FALSE)
 }
 \arguments{
 \item{...}{objects of class \code{epmGrid}, \code{sf}, \code{sp},
@@ -17,6 +17,8 @@ have the same projection.}
 
 \item{coords}{if NULL, then points are sampled as needed, otherwise, data
 will be extracted at these specified coordinates.}
+
+\item{id}{boolean, should the grid cell index be returned as well?}
 }
 \value{
 data.frame with input variables, as well as \code{"x"} and
@@ -52,6 +54,11 @@ meanPat <- gridMetrics(tamiasEPM, metric='meanPatristic')
 
 tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
 minTaxCount = 2)
+
+# this time request grid cell ID's, which would be useful
+# for linking this table back to the grid system
+tableFromEpmGrid(tamiasEPM, morphoDisp, meanPat, n = 100, 
+minTaxCount = 2, id = TRUE)
 
 # from predetermined set of coordinates
 pts <- sf::st_sample(tamiasEPM[[1]], size = 10)
