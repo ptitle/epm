@@ -18,7 +18,7 @@ rasterToGrid(x, target, fun = "mean", crop = TRUE, na.rm = TRUE)
 \item{na.rm}{determines how \code{NA} cells are summarized}
 }
 \value{
-sf polygons object
+sf polygons object, or a list of such objects if input has multiple layers.
 }
 \description{
 Convert a raster to sf polygons object, matching the attributes
@@ -44,6 +44,16 @@ plot(env)
 
 newgrid <- rasterToGrid(env, target = tamiasEPM, fun = 'mean')
 plot(newgrid)
+
+
+# again but this time the input has multiple layers
+env <- rast(vect(tamiasEPM[[1]]), resolution = 100000, nlyr = 3)
+values(env[[1]]) <- sample(1:100, ncell(env), replace = TRUE)
+values(env[[2]]) <- sample(1:200, ncell(env), replace = TRUE)
+values(env[[3]]) <- sample(1:300, ncell(env), replace = TRUE)
+
+newgrid <- rasterToGrid(env, target = tamiasEPM, fun = 'mean')
+
 
 
 

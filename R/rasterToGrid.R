@@ -15,7 +15,7 @@
 ##'		is used. 
 ##' 
 ##'
-##' @return sf polygons object
+##' @return sf polygons object, or a list of such objects if input has multiple layers.
 ##'
 ##' @author Pascal Title
 ##'
@@ -34,6 +34,16 @@
 ##'
 ##' newgrid <- rasterToGrid(env, target = tamiasEPM, fun = 'mean')
 ##' plot(newgrid)
+##'
+##'
+##' # again but this time the input has multiple layers
+##' env <- rast(vect(tamiasEPM[[1]]), resolution = 100000, nlyr = 3)
+##' values(env[[1]]) <- sample(1:100, ncell(env), replace = TRUE)
+##' values(env[[2]]) <- sample(1:200, ncell(env), replace = TRUE)
+##' values(env[[3]]) <- sample(1:300, ncell(env), replace = TRUE)
+##'
+##' newgrid <- rasterToGrid(env, target = tamiasEPM, fun = 'mean')
+##' 
 ##' 
 ##' 
 ##' 
@@ -81,7 +91,12 @@ rasterToGrid <- function(x, target, fun = 'mean', crop = TRUE, na.rm = TRUE) {
 		
 		df <- terra::extract(x, terra::vect(target), list = FALSE)
 		newvals <- aggregate(df, by = list(df$ID), FUN = fun, na.rm = na.rm)
-		res <- sf::st_sf(vals = newvals[,3], geometry = sf::st_geometry(target))
+		
+		if (terra::nlyr(x) == 1) {
+			res <- sf::st_sf(vals = newvals[,3], geometry = sf::st_geometry(target))
+		} else {
+			res <- lapply(3:ncol(newvals), function(y) sf::st_sf(vals = newvals[,y], geometry = sf::st_geometry(target)))
+		}
 		
 	} else if (inherits(target, 'SpatRaster')) {
 		
