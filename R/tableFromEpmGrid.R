@@ -10,7 +10,7 @@
 ##'@param minTaxCount integer; cells with at least this many taxa will be included. 
 ##'@param coords if NULL, then points are sampled as needed, otherwise, data
 ##'  will be extracted at these specified coordinates.
-##'@param id boolean, should the grid cell index be returned as well?
+##'@param id boolean, should the grid cell index (of the first item in the inputs) be returned as well?
 ##'
 ##'@details A set of cells are identified in the input objects. If
 ##'  \code{n=NULL}, then all cells are used, otherwise cells are randomly
@@ -57,7 +57,8 @@
 
 tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL, id = FALSE) {
     
-    # x <- list(tamiasEPM, morphoDisp, meanPat); n = 100; minTaxCount = 2; coords = NULL
+    # x <- list(tamiasEPM, morphoDisp, meanPat); n = 100; minTaxCount = 2; coords = NULL; id = TRUE
+	# inputNames <- c('richness', 'morphdisp', 'meanpat')
 
 	# capture input names
 	inputNames <- as.list(substitute(list(...)))[-1L]
@@ -68,10 +69,14 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL, id =
 		stop('Not all inputs are of an acceptable class.')
 	}
 	
-	# coerce any RasterLayer or RasterStack objects to SpatRaster
+	# coerce any RasterLayer or RasterStack objects to SpatRaster, and any sp objects to sf
 	for (i in 1:length(x)) {
 		if (inherits(x[[i]], c('RasterStack', 'RasterLayer'))) {
 			x[[i]] <- as(x[[i]], 'SpatRaster')
+		}
+		
+		if (inherits(x[[i]], 'SpatialPolygonsDataFrame')) {
+			x[[i]] <- sf::st_as_sfc(x[[i]], crs = sf::st_crs(x[[i]]))
 		}
 	}
 		
@@ -287,14 +292,20 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL, id =
 	# add in grid cell index if requested
 	if (id) {
 		
-		if (inherits(x[[1]][[1]], 'sf')) {
+		if (inherits(x[[1]], 'epmGrid')) {
+			df_grid <- x[[1]][[1]]
+		} else {
+			df_grid <- x[[1]]
+		}
+		
+		if (inherits(df_grid, 'sf')) {
 			# convert the xy to spatial sf object
-			xxPts <- sf::st_geometry(sf::st_as_sf(df, coords = c('x', 'y'), crs = sf::st_crs(x[[1]][[1]])))
-			ptCheck <- sf::st_intersects(xxPts, x[[1]][[1]])
+			xxPts <- sf::st_geometry(sf::st_as_sf(df, coords = c('x', 'y'), crs = sf::st_crs(df_grid)))
+			ptCheck <- sf::st_intersects(xxPts, df_grid)
 			df$gridCellID <- unlist(ptCheck)
 
-		} else {
-			df$gridCellID <- terra::cellFromXY(x[[1]][[1]], df[, c('x', 'y')])
+		} else if (inherits(df_grid, 'SpatRaster')) {
+			df$gridCellID <- terra::cellFromXY(df_grid, df[, c('x', 'y')])
 		}
 		
 		df <- df[, c('x', 'y', 'gridCellID', setdiff(colnames(df), c('x', 'y', 'gridCellID')))]

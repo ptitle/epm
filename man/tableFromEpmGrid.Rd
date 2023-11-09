@@ -18,7 +18,7 @@ have the same projection.}
 \item{coords}{if NULL, then points are sampled as needed, otherwise, data
 will be extracted at these specified coordinates.}
 
-\item{id}{boolean, should the grid cell index be returned as well?}
+\item{id}{boolean, should the grid cell index (of the first item in the inputs) be returned as well?}
 }
 \value{
 data.frame with input variables, as well as \code{"x"} and
