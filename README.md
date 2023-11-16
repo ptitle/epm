@@ -13,7 +13,9 @@ The following R package dependencies are required:
 
 `terra, sf, ape, viridisLite, pbapply, Rcpp`
 
-Additionally, the R packages `tmap`, `data.table` and `spdep` provide additional functionality or speed improvements, and are recommended.
+Additionally, the R packages `exactextractr`, `tmap`, `data.table` and 
+`spdep` provide 
+additional functionality or speed improvements, and are recommended.
 
 The current release of epm can be [downloaded from CRAN]( https://cran.r-project.org/package=epm).
 
