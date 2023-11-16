@@ -57,7 +57,7 @@ addTraits <- function(x, data, replace = FALSE, verbose = FALSE) {
 			stop('There are no common species in geographic and trait data.')
 		}
 		x[['data']] <- data[traitSpecies]
-	} else if (class(data) %in% c('matrix','data.frame')) {
+	} else if (inherits(data, c('matrix','data.frame'))) {
 		if (is.null(rownames(data))) {
 			stop('Data must have rownames.')
 		}
