@@ -1350,6 +1350,11 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 					xx <- exactextractr::coverage_fraction(gridTemplate, poly[[smallSp[i]]])[[1]]
 				} else {
 					xx <- terra::rasterize(terra::vect(poly[[smallSp[i]]]), gridTemplate, cover = TRUE)
+					if (all(is.na(terra::minmax(xx)))) {
+						tmp <- terra::cells(gridTemplate, terra::vect(poly[[smallSp[i]]]), exact = TRUE)
+						xx <- terra::rast(gridTemplate, vals = NA)
+						xx[tmp[, 'cell']] <- tmp[, 'weights']
+					}
 				}
 							
 				# exclude some cells if needed
