@@ -1,7 +1,7 @@
 Package: epm
 Type: Package
 Title: EcoPhyloMapper
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: c(
 	person("Pascal", "Title", email = "pascal.title@stonybrook.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6316-0736")),
 	person("Donald", "Swiderski", role = "aut"),
