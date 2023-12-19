@@ -63,11 +63,12 @@
 ##' @author Pascal Title
 ##' 
 ##' @examples
-##' plot(tamiasEPM)
+##' plot(tamiasEPM, use_tmap = FALSE)
 ##' 
 ##' plot(tamiasEPM, legend = FALSE, use_tmap = FALSE, col = viridisLite::inferno)
 ##' addLegend(tamiasEPM, location = 'top', ramp = viridisLite::inferno)
-##' 
+##'
+##' \donttest{ 
 ##' # Example for how to plot multiple epmGrids on the same color scale
 ##' # for illustration purposes, we will compare weighted endemism to
 ##' # phylogenetic weighted endemism
@@ -82,7 +83,7 @@
 ##' map1 <- plot(epm1, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 ##' map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 ##' # tmap_arrange(map1, map2)
-##' \donttest{
+##'
 ##' # view your plot in the web-browser as a dynamic plot.
 ##' plot(tamiasEPM, basemap = 'interactive')
 ##' }
@@ -253,7 +254,8 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (basemap == 'worldmap') {
 
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
-				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.25)
+				# map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.25) #tmap v3
+				map <- tmap::tm_shape(worldmap, is.master = FALSE, crs = sf::st_crs(x[[1]]), bbox = x[[1]]) + tmap::tm_borders(lwd = 0.25) #tmap v4
 			}
 			
 			if (basemap == 'none') {
@@ -273,11 +275,13 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			
 			if (minTaxCount <= 1) {
 				
-				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), colorNA = NULL, legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
-								
+				# map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), colorNA = NULL, legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE) # v3								
+				map <- map + tmap::tm_shape(x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE) # v4
 			} else {
 				
-				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE)
+				# map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE) # tmap v3
+				
+				map <- map + tmap::tm_shape(grid_multiSp, is.master = TRUE, bbox = x[[1]]) + tmap::tm_fill(plotMetric, palette = colramp(ncolors), legend.show = legend, title = title, breaks = breaks, style = tmapStyle, midpoint = NA, alpha = alpha, legend.reverse = T) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_shape(grid_singleSp) + tmap::tm_fill(plotMetric, palette = ignoredColor, legend.show = FALSE, alpha = alpha) + tmap::tm_borders(col = borderCol, lwd = lwd, alpha = alpha) + tmap::tm_layout(frame = includeFrame, legend.outside = TRUE) # tmap v4
 			
 			}
 		
@@ -444,7 +448,7 @@ plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap
 			if (basemap == 'worldmap') {
 
 				# wrld <- sf::st_transform(worldmap, crs = sf::st_crs(x[[1]]))
-				map <- tmap::tm_shape(worldmap, is.master = FALSE, projection = sf::st_crs(x[[1]]), bbox = datBB) + tmap::tm_borders(lwd = 0.25)
+				map <- tmap::tm_shape(worldmap, is.master = FALSE, crs = sf::st_crs(x[[1]]), bbox = datBB) + tmap::tm_borders(lwd = 0.25)
 			}
 			
 			if (basemap == 'none') {

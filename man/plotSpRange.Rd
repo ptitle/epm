@@ -44,7 +44,7 @@ Plot one species' geographic range, as encoded in the epmGrid object.
 \examples{
 tamiasEPM
 
-plotSpRange(tamiasEPM, 'Tamias_speciosus')
+plotSpRange(tamiasEPM, 'Tamias_speciosus', use_tmap = FALSE)
 
 }
 \author{

@@ -36,7 +36,7 @@
 ##' 102(22), 7871–7876.
 ##' 
 ##' @examples
-##' plotDispersionField(tamiasEPM, c(-1944951, 69588.74))
+##' # plotDispersionField(tamiasEPM, c(-1944951, 69588.74))
 ##' plotDispersionField(tamiasEPM, c(-1944951, 69588.74), use_tmap = FALSE)
 ##' 
 ##' @export

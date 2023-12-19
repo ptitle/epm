@@ -21,7 +21,7 @@
 ##' @examples
 ##' tamiasEPM
 ##'
-##' plotSpRange(tamiasEPM, 'Tamias_speciosus')
+##' plotSpRange(tamiasEPM, 'Tamias_speciosus', use_tmap = FALSE)
 ##' 
 ##' @export
 

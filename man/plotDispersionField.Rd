@@ -63,7 +63,7 @@ Assemblage dispersion fields represent an overlapping of
 geographic ranges for the taxa that occur in the focal grid cells.
 }
 \examples{
-plotDispersionField(tamiasEPM, c(-1944951, 69588.74))
+# plotDispersionField(tamiasEPM, c(-1944951, 69588.74))
 plotDispersionField(tamiasEPM, c(-1944951, 69588.74), use_tmap = FALSE)
 
 }

@@ -106,11 +106,12 @@ If you would like more control over the legend, then plot with
 \code{\link{addLegend}}.
 }
 \examples{
-plot(tamiasEPM)
+plot(tamiasEPM, use_tmap = FALSE)
 
 plot(tamiasEPM, legend = FALSE, use_tmap = FALSE, col = viridisLite::inferno)
 addLegend(tamiasEPM, location = 'top', ramp = viridisLite::inferno)
 
+\donttest{ 
 # Example for how to plot multiple epmGrids on the same color scale
 # for illustration purposes, we will compare weighted endemism to
 # phylogenetic weighted endemism
@@ -125,7 +126,7 @@ minmax <- getMultiMapRamp(epm1, epm2)
 map1 <- plot(epm1, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 map2 <- plot(epm2, colorRampRange = log(minmax), log = TRUE, legend = FALSE)
 # tmap_arrange(map1, map2)
-\donttest{
+
 # view your plot in the web-browser as a dynamic plot.
 plot(tamiasEPM, basemap = 'interactive')
 }

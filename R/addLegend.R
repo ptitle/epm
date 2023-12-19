@@ -93,10 +93,10 @@
 
 ##' @return Invisibly returns a list with the following components.
 ##' \itemize{
-##'		\item{coords} {2-column matrix of xy coordinates for each color bin in the legend.}
-##'		\item{width} {Coordinates for the short dimension of the legend.}
-##'		\item{pal} {the color ramp}
-##'		\item{tickLocs} {the tick mark locations in plotting units}
+##'		\item coords: 2-column matrix of xy coordinates for each color bin in the legend.
+##'		\item width: Coordinates for the short dimension of the legend.
+##'		\item pal: the color ramp
+##'		\item tickLocs: the tick mark locations in plotting units
 ##' }
 
 ##' @author Pascal Title
