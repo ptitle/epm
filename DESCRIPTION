@@ -16,6 +16,6 @@ BugReports: https://github.com/ptitle/epm/issues
 NeedsCompilation: yes
 LinkingTo: Rcpp, RcppProgress
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 ByteCompile: true
 Encoding: UTF-8

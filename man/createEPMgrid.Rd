@@ -161,6 +161,8 @@ For very large datasets, this function will make a determination as to
 whether or not there is sufficient memory. If there is not, an alternative
 approach that uses the data.table package will be employed. Please install
 this R package to take advantage of this feature.
+
+This function is also enhanced by the installation of the exactextractr R package.
 }
 \examples{
 library(sf)

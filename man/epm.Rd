@@ -2,6 +2,7 @@
 % Please edit documentation in R/epm-package.R
 \docType{package}
 \name{epm}
+\alias{epm-package}
 \alias{epm}
 \title{EcoPhyloMapper (epm)}
 \description{
@@ -46,6 +47,14 @@ Use \code{\link{tableFromEpmGrid}} to pull data from epmGrids and rasters from a
 \strong{Writing to disk} \cr
 You can save an epmGrid with \code{\link{write.epmGrid}}, and read it back in with \code{\link{read.epmGrid}}.  \cr
 You can also write an epmGrid object to a spatial file format for use in GIS software with \code{\link{writeEpmSpatial}}. \cr
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/ptitle/epm}
+  \item Report bugs at \url{https://github.com/ptitle/epm/issues}
+}
+
 }
 \author{
 Pascal O. Title, Donald L. Swiderski, Miriam L. Zelditch

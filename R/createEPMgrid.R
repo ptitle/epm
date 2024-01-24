@@ -136,6 +136,8 @@
 ##'approach that uses the data.table package will be employed. Please install
 ##'this R package to take advantage of this feature.
 ##'
+##'This function is also enhanced by the installation of the exactextractr R package. 
+##'
 ##'@return an object of class \code{epmGrid}.
 ##'
 ##'@author Pascal Title
@@ -1348,6 +1350,7 @@ polyToTerra <- function(poly, method, percentThreshold, extentVec, resolution, c
 				
 				if (requireNamespace("exactextractr", quietly = TRUE)) {
 					xx <- exactextractr::coverage_fraction(gridTemplate, poly[[smallSp[i]]])[[1]]
+					xx[xx == 0] <- NaN
 				} else {
 					xx <- terra::rasterize(terra::vect(poly[[smallSp[i]]]), gridTemplate, cover = TRUE)
 					if (all(is.na(terra::minmax(xx)))) {

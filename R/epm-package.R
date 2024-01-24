@@ -47,7 +47,6 @@
 ##' @author Pascal O. Title, Donald L. Swiderski, Miriam L. Zelditch
 ##' 
 ##' @name epm
-##' @docType package
 ##' 
 ##' 
 ##' @useDynLib epm
@@ -66,5 +65,5 @@
 ##' 
 ##' 
 ##' 
-NULL
+"_PACKAGE"
 
