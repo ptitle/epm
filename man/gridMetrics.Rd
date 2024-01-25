@@ -4,7 +4,13 @@
 \alias{gridMetrics}
 \title{Grid Metrics}
 \usage{
-gridMetrics(x, metric, column = NULL, verbose = FALSE)
+gridMetrics(
+  x,
+  metric,
+  column = NULL,
+  verbose = FALSE,
+  dataType = c("auto", "univariate", "multivariate", "pairwise")
+)
 }
 \arguments{
 \item{x}{object of class \code{epmGrid}}
@@ -15,7 +21,10 @@ gridMetrics(x, metric, column = NULL, verbose = FALSE)
 in \code{x} are multivariate, which trait should be used? This can also
 specify which subset of columns a multivariate metric should be applied to.}
 
-\item{verbose}{print various messages to the console. Default is TRUE.}
+\item{verbose}{Print various messages to the console. Default is TRUE.}
+
+\item{dataType}{Specify the type of input data that the metric will be calculated from.
+Defaults to \code{'auto'} in which case this is determined based on the data structure.}
 }
 \value{
 object of class \code{epmGrid} where the grid represents calculations

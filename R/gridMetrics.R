@@ -12,8 +12,10 @@
 ##'  in \code{x} are multivariate, which trait should be used? This can also
 ##'  specify which subset of columns a multivariate metric should be applied to.
 ##'
+##'@param dataType Specify the type of input data that the metric will be calculated from.
+##'  Defaults to \code{'auto'} in which case this is determined based on the data structure.
 ##'
-##'@param verbose print various messages to the console. Default is TRUE.
+##'@param verbose Print various messages to the console. Default is TRUE.
 ##'
 ##'@return object of class \code{epmGrid} where the grid represents calculations
 ##'  of the metric at every cell. The species identities per grid cell are those
@@ -139,7 +141,10 @@
 # column <- 2:196
 # verbose = TRUE
 
-gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
+gridMetrics <- function(x, metric, column = NULL, verbose = FALSE, dataType = c('auto', 'univariate', 'multivariate', 'pairwise')) {
+	
+	# x <- tamiasEPM; x <- addPhylo(x, tamiasTree); x <- addTraits(x, tamiasTraits)
+	# x = x; metric = 'disparity'; column = 2:196; verbose = TRUE; dataType = 'auto'
 		
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')
@@ -152,6 +157,8 @@ gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
 	if (length(metric) > 1) {
 		stop('You can only specify one metric.')
 	}
+	
+	dataType <- match.arg(dataType, choices = c('auto', 'univariate', 'multivariate', 'pairwise'))
 		
 	if (inherits(x[['phylo']], 'phylo')) {
 		x[['phylo']] <- list(x[['phylo']])
@@ -312,6 +319,34 @@ gridMetrics <- function(x, metric, column = NULL, verbose = FALSE) {
 	
 	} else if (!metric %in% c('weightedEndemism', 'correctedWeightedEndemism')) {
 		stop('Metric not recognized!')
+	}
+	
+	# if input data type is specified, check and stop the function if anything funny is detected.
+	if (!metric %in% c('pd', 'meanPatristic', 'meanPatristicNN', 'minPatristicNN', 'phyloEvenness', 'phyloDisparity', 'phyloWeightedEndemism', 'PSV', 'PSR', 'DR')) {
+		if (dataType != 'auto') {
+			if (dataType == 'multivariate') {
+				if (!inherits(x[['data']], c('matrix', 'data.frame'))) {
+					stop('Multivariate data type specified but input data do not have table-like structure.')
+				} else {
+					if (identical(rownames(x[['data']]), colnames(x[['data']]))) {
+						stop('Multivariate data type specified but pairwise data detected.')
+					}
+				}
+			}
+			if (dataType == 'univariate') {
+				if (!inherits(x[['data']], c('numeric', 'integer'))) {
+					stop('Univariate data type specified but input data are not of vector class.')
+				}
+			}
+			if (dataType == 'pairwise') {
+				if (!identical(rownames(x[['data']]), colnames(x[['data']]))) {
+					stop('Pairwise data type specified but rownames and column names are not the same.')
+				}
+				if (!inherits(x[['data']], c('matrix', 'data.frame'))) {
+					stop('Pairwise data type specified but input data do not have table-like structure.')
+				}
+			}
+		}
 	}
 	
 	uniqueComm <- x[['speciesList']]
