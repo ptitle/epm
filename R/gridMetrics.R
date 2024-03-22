@@ -275,6 +275,10 @@ gridMetrics <- function(x, metric, column = NULL, verbose = FALSE, dataType = c(
 		}
 	}
 	
+	if (metric %in% c('arithmeticWeightedMean', 'geometricWeightedMean', 'rangePCA', 'partialDisparity') & pairwise) {
+		stop('This metric is not currently supported for pairwise dissimilarity matrices.')
+	}
+	
 	# For metrics that require both trait and phylogenetic data, prune the data and tree to the shared taxon set
 	if (metric == 'phylosignal') {
 		phyloNeeded <- TRUE
@@ -456,37 +460,61 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		}	
 	}
 	
-	if (metric %in% c('mean', 'median', 'variance', 'range', 'mean_NN_dist', 'min_NN_dist', 'evenness') & pairwise) {
+	# Pairwise dissimilarity metrics
+	if (pairwise) {
 	
 		# if pairwise matrix
 		if (verbose) message('\t...calculating pairwise metric: ', metric, '...\n')
 		
-		resVal <- rep(NA, length(uniqueComm)) # set up with NA
-		
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
-		ind <- which(sapply(uniqueComm, anyNA) == FALSE)
 
 		if (metric == 'mean') {
+			dat[upper.tri(dat, diag = TRUE)] <- NA
+			ind <- which(sapply(uniqueComm, anyNA) == FALSE)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(dat[y, y], na.rm = TRUE))
+			
 		} else if (metric == 'median') {
+			dat[upper.tri(dat, diag = TRUE)] <- NA
+			ind <- which(sapply(uniqueComm, anyNA) == FALSE)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) stats::median(dat[y, y], na.rm = TRUE))
+			
 		} else if (metric == 'variance') {
+			dat[upper.tri(dat, diag = TRUE)] <- NA
+			ind <- which(lengths(uniqueComm) > 1)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) stats::var(as.numeric(dat[y, y]), na.rm = TRUE))
-			ind <- which(lengths(uniqueComm) == 1 & sapply(uniqueComm, anyNA) == FALSE)
-			resVal[ind] <- 0 # set single-sp cells to zero variance
+			
+		} else if (metric == 'range') {
+			# for pairwise distance, the range is the maximum pairwise distance
+			ind <- which(lengths(uniqueComm) > 1)
+			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) max(dat[y, y], na.rm = TRUE))
+			
 		} else if (metric == 'mean_NN_dist') {
+			ind <- which(lengths(uniqueComm) > 1)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(apply(dat[y, y], 1, min, na.rm = TRUE)))
+			
 		} else if (metric == 'min_NN_dist') {
+			ind <- which(lengths(uniqueComm) > 1)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(apply(dat[y, y], 1, min, na.rm = TRUE)))
+			
 		} else if (metric == 'evenness') {
+			ind <- which(lengths(uniqueComm) > 1)
 			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) stats::var(apply(dat[y, y], 1, min, na.rm = TRUE)))
+			
+		} else if (metric == 'disparity') {
+			ind <- which(lengths(uniqueComm) > 1)
+			dat[upper.tri(dat, diag = TRUE)] <- NA
+			resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) sum((dat[y, y] - mean(dat[y,y], na.rm = TRUE)) ^ 2, na.rm = TRUE) / choose(length(y), 2))
+			
+		} else {
+			stop('Metric not recognized for pairwise data.')
 		}
 	}
 	
+	
 	## MULTIVARIATE
 	
-	if (metric == 'disparity' & metricType == 'multiVar') {
+	if (metric == 'disparity' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		# sum of the diagonal of the covariance matrix
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
@@ -496,13 +524,13 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) sum(diag(cov(dat[y,]))))
 	}
 	
-	if (metric == 'partialDisparity' & metricType == 'multiVar') {
+	if (metric == 'partialDisparity' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		partialDisp <- getSpPartialDisparities(dat)
 		resVal <- pbapply::pbsapply(uniqueComm, function(y) sum(partialDisp[y]) / sum(partialDisp))
 	}	
 	
-	if (metric == 'range' & metricType == 'multiVar') {
+	if (metric == 'range' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		# maximum of the distance matrix (0 if one sp)
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
@@ -511,7 +539,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) max(dist(dat[y, ])))
 	}
 	
-	if (metric == 'rangePCA' & metricType == 'multiVar') {
+	if (metric == 'rangePCA' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		pc <- prcomp(dat)
 		# retain 99% of the variation
@@ -526,7 +554,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		})	
 	}
 	
-	if (metric == 'mean_NN_dist' & metricType == 'multiVar') {
+	if (metric == 'mean_NN_dist' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
@@ -536,7 +564,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(apply(morphDists[y, y], 1, min, na.rm = TRUE)))
 	}
 
-	if (metric == 'min_NN_dist' & metricType == 'multiVar') {
+	if (metric == 'min_NN_dist' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
@@ -546,7 +574,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) min(apply(morphDists[y, y], 1, min, na.rm = TRUE)))
 	}
 
-	if (metric == 'evenness' & metricType == 'multiVar') {
+	if (metric == 'evenness' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')
 		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
 		resVal[sapply(uniqueComm, anyNA)] <- NA
@@ -555,7 +583,7 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 		diag(morphDists) <- NA
 		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) stats::var(apply(morphDists[y, y], 1, min, na.rm = TRUE)))
 	}
-	
+		
 	
 	## ----------------------------------
 	## PHYLOGENY-RELATED METRICS
