@@ -38,6 +38,8 @@
 ##'}
 ##'Multivariate trait metrics 
 ##'\itemize{ 
+##'    \item mean: mean of pairwise distance matrix derived from multivariate data
+##'    \item median: median of pairwise distance matrix derived from multivariate data
 ##'    \item disparity
 ##'    \item partialDisparity: contribution of species in each gridcell to 
 ##'    overall disparity, returned as the ratio of summed partial disparities
@@ -513,6 +515,20 @@ calcGridMetric <- function(x, uniqueComm, metric, tree = NULL, dat = NULL, metri
 	
 	
 	## MULTIVARIATE
+	
+	if (metric == 'mean' & metricType == 'multiVar' & !pairwise) {
+		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
+		resVal[sapply(uniqueComm, anyNA)] <- NA
+		ind <- which(lengths(uniqueComm) > 1)
+		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) mean(dist(dat[y, ])))
+	}
+
+	if (metric == 'median' & metricType == 'multiVar' & !pairwise) {
+		resVal <- numeric(length = length(uniqueComm)) # set up with zeros
+		resVal[sapply(uniqueComm, anyNA)] <- NA
+		ind <- which(lengths(uniqueComm) > 1)
+		resVal[ind] <- pbapply::pbsapply(uniqueComm[ind], function(y) stats::median(dist(dat[y, ])))
+	}
 	
 	if (metric == 'disparity' & metricType == 'multiVar' & !pairwise) {
 		if (verbose) message('\t...calculating multivariate metric: ', metric, '...\n')

@@ -54,6 +54,8 @@ Univariate trait metrics
 }
 Multivariate trait metrics 
 \itemize{ 
+   \item mean: mean of pairwise distance matrix derived from multivariate data
+   \item median: median of pairwise distance matrix derived from multivariate data
    \item disparity
    \item partialDisparity: contribution of species in each gridcell to 
    overall disparity, returned as the ratio of summed partial disparities
