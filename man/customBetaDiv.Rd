@@ -63,7 +63,7 @@ tamiasEPM <- addPhylo(tamiasEPM, tamiasTree)
 tamiasEPM <- addTraits(tamiasEPM, tamiasTraits)
 
 # An example using a multivariate dataset
-## For each focal cell + neighbors, calculate the morphological range
+## For each focal cell + neighbors, calculate the morphological standard deviation
 ## per grid cell and return the standard deviation.
 f <- function(cellList) {
 	vec <- numeric(length(cellList))
