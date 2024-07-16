@@ -79,6 +79,31 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL, id =
 			x[[i]] <- sf::st_as_sfc(x[[i]], crs = sf::st_crs(x[[i]]))
 		}
 	}
+	
+	# coerce multi-layer SpatRasters to separate SpatRasters
+	if (any(sapply(x, inherits, 'SpatRaster'))) {
+		newx <- list()
+		newnames <- c()
+		counter <- 1
+		for (i in 1:length(x)) {
+			if (inherits(x[[i]], 'SpatRaster')) {
+				if (terra::nlyr(x[[i]]) > 1) {
+					for (j in 1:terra::nlyr(x[[i]])) {
+						newx[[counter]] <- x[[i]][[j]]
+						newnames[counter] <- names(x[[i]])[j]
+						counter <- counter + 1
+					}
+				}
+			} else {
+				newx[[counter]] <- x[[i]]
+				newnames[counter] <- inputNames[i]
+				counter <- counter + 1
+			}
+		}
+		x <- newx
+		inputNames <- newnames
+		rm(newx, newnames)
+	}
 		
 	# check projections
 	xproj <- vector('list', length(x))
