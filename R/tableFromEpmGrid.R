@@ -93,6 +93,10 @@ tableFromEpmGrid <- function(..., n = NULL, minTaxCount = 1, coords = NULL, id =
 						newnames[counter] <- names(x[[i]])[j]
 						counter <- counter + 1
 					}
+				} else {
+					newx[[counter]] <- x[[i]]
+					newnames[counter] <- inputNames[i]
+					counter <- counter + 1
 				}
 			} else {
 				newx[[counter]] <- x[[i]]
