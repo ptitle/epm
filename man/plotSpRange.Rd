@@ -11,7 +11,7 @@ plotSpRange(
   basemap = "worldmap",
   lwd = 0.5,
   alpha = 1,
-  use_tmap = TRUE,
+  use_tmap = FALSE,
   add = FALSE
 )
 }

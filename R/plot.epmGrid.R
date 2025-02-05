@@ -98,13 +98,17 @@
 ##' @export
 ##' @export plot.epmGrid
 
-plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, minTaxCount = 'auto', zoom = TRUE, ignoredColor = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, fastPoints = FALSE, title = '', add = FALSE, ...) {
+plot.epmGrid <- function(x, log = FALSE, legend = TRUE, col, basemap = 'worldmap', colorRampRange = NULL, minTaxCount = 'auto', zoom = TRUE, ignoredColor = gray(0.9), lwd, borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = FALSE, fastPoints = FALSE, title = '', add = FALSE, ...) {
 	
 	# x = tamiasEPM; log = FALSE; legend = TRUE; basemap = 'worldmap'; colorRampRange = NULL; ignoredColor = gray(0.9); lwd = 0.25; borderCol = 'black'; includeFrame = FALSE; use_tmap = TRUE; alpha = 1; add = FALSE; fastPoints = FALSE; minTaxCount = 'auto'; title = ''
 	# integercheck <- epm:::integercheck
 	
 	if (!inherits(x, 'epmGrid')) {
 		stop('Object must be of class epmGrid')
+	}
+	
+	if (use_tmap) {
+		stop('Unfortunately tmap has been disabled as that package has undergone a major upgrade and epm updates are needed in response.')
 	}
 	
 	if (!basemap %in% c('worldmap', 'interactive', 'none')) {

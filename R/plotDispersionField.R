@@ -42,13 +42,17 @@
 ##' @export
 
 
-plotDispersionField <- function(x, coords, plotCoords = TRUE, legend = TRUE, col, lwd = 0.5, basemap = 'worldmap', borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = TRUE, add = FALSE) {
+plotDispersionField <- function(x, coords, plotCoords = TRUE, legend = TRUE, col, lwd = 0.5, basemap = 'worldmap', borderCol = 'black', alpha = 1, includeFrame = FALSE, use_tmap = FALSE, add = FALSE) {
 	
 	# x = tamiasEPM; coords = c(-1413764.0, 573610.8); legend = TRUE; basemap = 'worldmap'; lwd = 0.15; borderCol = 'black'; alpha = 1; includeFrame = FALSE; use_tmap = TRUE; add = FALSE; plotCoords = TRUE
 
 	if (!inherits(x, 'epmGrid')) {
 		stop('Object must be of class epmGrid')
 	}
+	
+	if (use_tmap) {
+		stop('Unfortunately tmap has been disabled as that package has undergone a major upgrade and epm updates are needed in response.')
+	}	
 	
 	if (!basemap %in% c('worldmap', 'interactive', 'none')) {
 		stop("basemap argument must be 'none', 'worldmap' or 'interactive'.")

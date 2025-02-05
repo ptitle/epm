@@ -30,12 +30,16 @@
 
 # plot one species' geographic range, as encoded in the epmGrid object.
 
-plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', lwd = 0.5, alpha = 1, use_tmap = TRUE, add = FALSE) {
+plotSpRange <- function(x, taxon, taxonColor = 'orange', basemap = 'worldmap', lwd = 0.5, alpha = 1, use_tmap = FALSE, add = FALSE) {
 	
 	if (use_tmap & !requireNamespace('tmap', quietly = TRUE)) {
 		message('\ttmap package not installed -- defaulting to sf/terra plot')
 		use_tmap <- FALSE
 	}
+	
+	if (use_tmap) {
+		stop('Unfortunately tmap has been disabled as that package has undergone a major upgrade and epm updates are needed in response.')
+	}	
 
 	if (!inherits(x, 'epmGrid')) {
 		stop('x must be of class epmGrid.')

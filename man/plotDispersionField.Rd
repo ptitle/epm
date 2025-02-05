@@ -15,7 +15,7 @@ plotDispersionField(
   borderCol = "black",
   alpha = 1,
   includeFrame = FALSE,
-  use_tmap = TRUE,
+  use_tmap = FALSE,
   add = FALSE
 )
 }
