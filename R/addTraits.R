@@ -44,8 +44,18 @@ addTraits <- function(x, data, replace = FALSE, verbose = FALSE) {
 		stop('Data already present. If data are to be replaced, set replace = TRUE')
 	}
 	
+	# if single variable table, convert to vector
+	if (inherits(data, c('matrix','data.frame'))) {
+		if (is.null(rownames(data))) {
+			stop('Data must have rownames.')
+		}
+		if (ncol(data) == 1) {
+			data <- setNames(data[, 1], rownames(data))
+		}
+	}
+	
 	# drop species from trait vector if missing from grid
-	if (is.null(dim(data))) {
+	if (is.null(dim(data))) { #then is vector
 		if (is.null(names(data))) {
 			stop('Data must have names.')
 		}

@@ -8,7 +8,7 @@ gridMetrics(
   x,
   metric,
   column = NULL,
-  verbose = FALSE,
+  verbose = TRUE,
   dataType = c("auto", "univariate", "multivariate", "pairwise")
 )
 }

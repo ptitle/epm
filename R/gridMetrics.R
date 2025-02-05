@@ -143,7 +143,7 @@
 # column <- 2:196
 # verbose = TRUE
 
-gridMetrics <- function(x, metric, column = NULL, verbose = FALSE, dataType = c('auto', 'univariate', 'multivariate', 'pairwise')) {
+gridMetrics <- function(x, metric, column = NULL, verbose = TRUE, dataType = c('auto', 'univariate', 'multivariate', 'pairwise')) {
 	
 	# x <- tamiasEPM; x <- addPhylo(x, tamiasTree); x <- addTraits(x, tamiasTraits)
 	# x = x; metric = 'disparity'; column = 2:196; verbose = TRUE; dataType = 'auto'
