@@ -836,7 +836,11 @@ polyToHex <- function(poly, method, percentThreshold, extentVec, resolution, crs
 	
 		# keep polygons if there are geometry collections
 		if (!all(as.character(sf::st_geometry_type(poly)) %in% c('MULTIPOLYGON', 'POLYGON'))) {
-			poly <- sf::st_collection_extract(poly, type = 'POLYGON')
+			geomCollectionInds <- which(!as.character(sf::st_geometry_type(poly)) %in% c('MULTIPOLYGON', 'POLYGON'))
+			for (i in 1:length(geomCollectionInds)) {
+				poly[geomCollectionInds[i]] <- sf::st_combine(sf::st_collection_extract(poly[geomCollectionInds[i]], type = 'POLYGON'))
+			}
+			# poly <- sf::st_collection_extract(poly, type = 'POLYGON')
 		}
 			
 		if (method == 'centroid') {
