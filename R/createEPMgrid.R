@@ -266,6 +266,10 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 	if (!inherits(spDat, c('sf', 'sfc')) & inherits(spDat[[1]], c('sf', 'sfc'))) {
 		if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) %in% c('MULTIPOLYGON', 'POLYGON', 'GEOMETRY')) {
 			datType <- 'polygons'
+			emptyCheck <- sapply(spDat, \(x) any(sf::st_is_empty(x)))
+			if (any(emptyCheck)) {
+				stop("At least one entry is an empty geometry. Run sf::st_is_empty on each element of your spDat list to check.")
+			}
 		} else if (unique(as.character(sf::st_geometry_type(spDat[[1]]))) == 'POINT') {
 			datType <- 'points'
 			proj <- sf::st_crs(spDat[[1]])
@@ -737,10 +741,14 @@ createEPMgrid <- function(spDat, resolution = 50000, method = 'centroid', cellTy
 		cellCommVec <- match(matCondensed, uniqueComm)
 		
 		# convert unique community codes to species names
-		uniqueComm <- strsplit(uniqueComm, split = '-', fixed = TRUE)
-		uniqueComm <- lapply(uniqueComm, as.integer)
-		uniqueComm <- lapply(uniqueComm, function(x) sort(names(spGridList)[as.logical(x)]))
-
+		if (length(spGridList) > 1) {
+			uniqueComm <- strsplit(uniqueComm, split = '-', fixed = TRUE)
+			uniqueComm <- lapply(uniqueComm, as.integer)
+			uniqueComm <- lapply(uniqueComm, function(x) sort(names(spGridList)[as.logical(x)]))
+		} else {
+			uniqueComm <- list(character(0), names(spGridList))
+		}
+		
 		# remove empty cells if hexagonal grid
 		if (inherits(gridTemplate, 'sf') & dropEmptyCells) {
 			gridTemplate <- gridTemplate[which(lengths(uniqueComm[cellCommVec]) > 0),]
